@@ -11,7 +11,7 @@
   
   
     
- "full:e2e": "node -r ts-node/register e2e/run-full-business-flow.ts",
+ "full:e2e": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' e2e/run-full-business-flow.ts",
   
     
   
