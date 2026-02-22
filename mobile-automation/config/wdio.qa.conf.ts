@@ -103,14 +103,7 @@ export const config: WebdriverIO.Config = {
     connectionRetryTimeout: 180000,
     connectionRetryCount: 5,
 
-    services: [
-        ['appium', {
-            command: 'appium',
-            args: {
-                relaxedSecurity: true
-            }
-        }]
-    ],
+    services: [],
 
     framework: 'mocha',
 
