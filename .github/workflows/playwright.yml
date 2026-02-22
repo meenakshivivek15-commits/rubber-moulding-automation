@@ -13,6 +13,12 @@ jobs:
     defaults:
       run:
         working-directory: web-app-automation
+     env:
+      LEGACY_URL: ${{ secrets.LEGACY_URL }}
+      PLANNER_URL: ${{ secrets.PLANNER_URL }}
+      PPA_USER: ${{ secrets.PPA_USER }}
+      PPA_PASSWORD: ${{ secrets.PPA_PASSWORD }}
+      PPA_COMPANY: ${{ secrets.PPA_COMPANY }}
 
     steps:
       - name: Checkout repository
