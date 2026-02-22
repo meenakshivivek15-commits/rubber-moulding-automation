@@ -10,12 +10,18 @@ on:
 jobs:
   mobile-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
 
     steps:
+    # -----------------------------
+    # Checkout Repo
+    # -----------------------------
     - name: Checkout Code
       uses: actions/checkout@v4
 
+    # -----------------------------
+    # Setup Node
+    # -----------------------------
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
@@ -25,7 +31,7 @@ jobs:
       run: npm install
 
     # -----------------------------
-    # Install Java (Required for Appium + Android)
+    # Setup Java (Required)
     # -----------------------------
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -40,12 +46,18 @@ jobs:
       uses: android-actions/setup-android@v3
 
     # -----------------------------
-    # Create Emulator
+    # Install Android System Image
     # -----------------------------
-    - name: Create Emulator
+    - name: Install System Image
       run: |
         sdkmanager "system-images;android-33;google_apis;x86_64"
-        avdmanager create avd -n ci-emulator -k "system-images;android-33;google_apis;x86_64" --device "pixel"
+
+    # -----------------------------
+    # Create Emulator
+    # -----------------------------
+    - name: Create AVD
+      run: |
+        echo "no" | avdmanager create avd -n ci-emulator -k "system-images;android-33;google_apis;x86_64" --device "pixel"
 
     # -----------------------------
     # Start Emulator
@@ -54,7 +66,8 @@ jobs:
       run: |
         emulator -avd ci-emulator -no-window -no-audio -no-boot-anim &
         adb wait-for-device
-        adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
+        adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 5; done;'
+        adb shell input keyevent 82
 
     # -----------------------------
     # Install Appium
@@ -67,34 +80,26 @@ jobs:
     # -----------------------------
     # Start Appium Server
     # -----------------------------
-    - name: Start Appium Server
+    - name: Start Appium
       run: |
         appium --relaxed-security &
-        sleep 10
+        sleep 15
 
     # -----------------------------
-    # Clean Old Reports
-    # -----------------------------
-    - name: Clean Reports
-      run: |
-        rm -rf reports/mobile/allure-results
-
-    # -----------------------------
-    # Run Tests
+    # Run Mobile Tests
     # -----------------------------
     - name: Run Mobile Tests
       env:
         DEVICE: emulator
         CI: true
       run: |
-        npx wdio run mobile-automation/config/wdio.conf.ts
+        npx wdio run mobile-automation/config/wdio.qa.conf.ts
 
     # -----------------------------
     # Install Allure CLI
     # -----------------------------
     - name: Install Allure
-      run: |
-        npm install -g allure-commandline --save-dev
+      run: npm install -g allure-commandline
 
     # -----------------------------
     # Generate Allure Report

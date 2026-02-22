@@ -18,7 +18,7 @@ const realDeviceName = process.env.ANDROID_DEVICE_NAME
 
 // Emulator values
 const emulatorUdid = 'emulator-5554'
-const emulatorName = 'Medium_Phone_API_36.1'
+const emulatorName = 'ci-emulator'
 
 // Selected values
 const selectedUdid = useEmulator ? emulatorUdid : realDeviceUdid
@@ -35,13 +35,19 @@ export const config: WebdriverIO.Config = {
 
     runner: 'local',
 
+    // ==============================
+    // Appium Connection (CI SAFE)
+    // ==============================
+    hostname: '127.0.0.1',
+    port: 4723,
+    path: '/',
+
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],
 
     maxInstances: 1,
 
-    // 🔁 Retry whole spec once if flaky
     specFileRetries: 1,
     specFileRetriesDelay: 5,
 
@@ -56,12 +62,12 @@ export const config: WebdriverIO.Config = {
         'appium:udid': selectedUdid,
 
         // ==============================
-        // APP
+        // APP (IMPORTANT CHANGE)
         // ==============================
-        'appium:appPackage': 'com.ppaoperator.app',
-        'appium:appActivity': 'com.example.app.MainActivity',
-        'appium:autoLaunch': true,
+        'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
+
         'appium:autoGrantPermissions': true,
+        'appium:autoLaunch': true,
 
         // Clean install in CI, keep state locally
         'appium:noReset': !isCI,
@@ -74,9 +80,9 @@ export const config: WebdriverIO.Config = {
         'appium:androidInstallTimeout': 120000,
         'appium:uiautomator2ServerLaunchTimeout': 120000,
         'appium:uiautomator2ServerInstallTimeout': 120000,
-        'appium:newCommandTimeout': 180000,
-        'appium:avdLaunchTimeout': 180000,
-        'appium:avdReadyTimeout': 180000,
+        'appium:newCommandTimeout': 240000,
+        'appium:avdLaunchTimeout': 240000,
+        'appium:avdReadyTimeout': 240000,
 
         // ==============================
         // HYBRID WEBVIEW SUPPORT
@@ -97,15 +103,14 @@ export const config: WebdriverIO.Config = {
     connectionRetryTimeout: 180000,
     connectionRetryCount: 5,
 
-    services: [[
-        'appium',
-        {
+    services: [
+        ['appium', {
             command: 'appium',
             args: {
                 relaxedSecurity: true
             }
-        }
-    ]],
+        }]
+    ],
 
     framework: 'mocha',
 
@@ -120,7 +125,7 @@ export const config: WebdriverIO.Config = {
 
     mochaOpts: {
         ui: 'bdd',
-        timeout: 120000
+        timeout: 180000
     },
 
     // ==========================================
