@@ -35,19 +35,11 @@ export const config: WebdriverIO.Config = {
 
     runner: 'local',
 
-    // ==============================
-    // Appium Connection (CI SAFE)
-    // ==============================
-    hostname: '127.0.0.1',
-    port: 4723,
-    path: '/',
+    // ❌ DO NOT define hostname/port when using Appium service
+    // WDIO service will start and manage Appium automatically
 
-    services: [
-    ['appium', {
-    command: 'appium'
-    }]
-    ],
-    
+    services: ['appium'],
+
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],
@@ -68,7 +60,7 @@ export const config: WebdriverIO.Config = {
         'appium:udid': selectedUdid,
 
         // ==============================
-        // APP (IMPORTANT CHANGE)
+        // APP
         // ==============================
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
 
@@ -108,8 +100,6 @@ export const config: WebdriverIO.Config = {
     waitforTimeout: 20000,
     connectionRetryTimeout: 180000,
     connectionRetryCount: 5,
-
-    
 
     framework: 'mocha',
 
