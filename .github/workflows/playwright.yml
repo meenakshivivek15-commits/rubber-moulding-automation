@@ -31,6 +31,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # ✅ ADD THIS BLOCK RIGHT HERE
+      - name: Install Web App Dependencies
+    run: |
+      cd web-app-automation
+      npm ci
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
