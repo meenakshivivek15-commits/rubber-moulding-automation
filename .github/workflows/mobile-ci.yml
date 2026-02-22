@@ -82,8 +82,8 @@ jobs:
       # -----------------------------
       - name: Start Appium Server
         run: |
-          nohup appium --relaxed-security --log appium.log > appium.out 2>&1 &
-          sleep 10
+          appium --relaxed-security --log-level info &
+          sleep 15
 
       # -----------------------------
       # Wait for Appium
@@ -100,7 +100,12 @@ jobs:
             echo "Waiting for Appium..."
             sleep 4
           done
-
+      - name: Check Appium Logs
+        run: |
+          echo "===== APPiUM.LOG ====="
+          cat appium.log || true
+          echo "===== APPiUM.OUT ====="
+          cat appium.out || true
       # -----------------------------
       # Run Mobile Tests
       # -----------------------------
