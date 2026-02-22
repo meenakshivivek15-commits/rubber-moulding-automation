@@ -18,7 +18,7 @@ export class LoginPage {
   }
 
   async open() {
-    await this.page.goto('/login');
+    await this.page.goto(`${process.env.PLANNER_URL}/login`);
   }
 
   async login() {
