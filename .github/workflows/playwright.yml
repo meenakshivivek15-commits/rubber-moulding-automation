@@ -1,16 +1,15 @@
-name: Playwright Tests
+name: Full Business Flow CI
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    
 
     env:
       LEGACY_URL: ${{ secrets.LEGACY_URL }}
@@ -28,17 +27,16 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install Root Dependencies
         run: npm ci
 
-      # ✅ ADD THIS BLOCK RIGHT HERE
       - name: Install Web App Dependencies
-    run: |
-      cd web-app-automation
-      npm ci
+        run: |
+          cd web-app-automation
+          npm ci
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name:  Run Full Business Flow
+      - name: Run Full Business Flow
         run: npm run full:e2e
