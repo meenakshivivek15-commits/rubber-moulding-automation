@@ -1,0 +1,9 @@
+node_modules/
+web-app-automation/node_modules/
+mobile-automation/node_modules/
+
+reports/**/allure-report
+reports/**/allure-results
+reports/**/html-report
+
+.env
