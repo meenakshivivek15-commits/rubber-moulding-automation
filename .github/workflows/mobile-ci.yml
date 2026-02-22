@@ -27,7 +27,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies
+      - name: Install Mobile Dependencies
+        working-directory: mobile-automation
         run: npm install
 
       # -----------------------------
@@ -109,12 +110,12 @@ jobs:
       # Run Mobile Tests
       # -----------------------------
       - name: Run Mobile Tests
+        working-directory: mobile-automation
         env:
           DEVICE: emulator
           CI: true
         run: |
-          npx wdio run mobile-automation/config/wdio.qa.conf.ts
-
+            npx wdio run config/wdio.qa.conf.ts
       # -----------------------------
       # Install Allure CLI
       # -----------------------------

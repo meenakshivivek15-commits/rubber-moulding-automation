@@ -42,6 +42,12 @@ export const config: WebdriverIO.Config = {
     port: 4723,
     path: '/',
 
+    services: [
+    ['appium', {
+    command: 'appium'
+    }]
+    ],
+    
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],
@@ -103,7 +109,7 @@ export const config: WebdriverIO.Config = {
     connectionRetryTimeout: 180000,
     connectionRetryCount: 5,
 
-    services: [],
+    
 
     framework: 'mocha',
 
