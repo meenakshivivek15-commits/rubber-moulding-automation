@@ -80,10 +80,23 @@ jobs:
     # -----------------------------
     # Start Appium Server
     # -----------------------------
-    - name: Start Appium
+    - name: Start Appium Server
       run: |
-        appium --relaxed-security &
+        nohup appium --relaxed-security --log appium.log > appium.out 2>&1 &
         sleep 15
+     # -----------------------------
+    # Wait for Appium  ✅ ADD HERE
+    # -----------------------------
+    - name: Wait for Appium
+    run: |
+      for i in {1..20}; do
+      if curl -s http://127.0.0.1:4723/status | grep -q "ready"; then
+        echo "Appium is ready"
+        break
+      fi
+      echo "Waiting for Appium..."
+      sleep 3
+      done
 
     # -----------------------------
     # Run Mobile Tests
