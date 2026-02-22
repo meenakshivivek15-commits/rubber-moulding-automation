@@ -13,7 +13,8 @@ jobs:
     defaults:
       run:
         working-directory: web-app-automation
-     env:
+
+    env:
       LEGACY_URL: ${{ secrets.LEGACY_URL }}
       PLANNER_URL: ${{ secrets.PLANNER_URL }}
       PPA_USER: ${{ secrets.PPA_USER }}
@@ -37,10 +38,3 @@ jobs:
 
       - name: Run Playwright tests
         run: npx playwright test
-
-      - name: Upload Playwright Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: web-app-automation/playwright-report/
