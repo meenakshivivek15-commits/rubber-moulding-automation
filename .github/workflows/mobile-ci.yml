@@ -82,9 +82,8 @@ jobs:
       # -----------------------------
       - name: Start Appium Server
         run: |
-          appium --relaxed-security --log-level info &
+          appium --address 0.0.0.0 --port 4723 --relaxed-security --base-path / &
           sleep 15
-
       # -----------------------------
       # Wait for Appium
       # -----------------------------
