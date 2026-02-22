@@ -1,0 +1,8 @@
+Create PO screen opened
+Supplier selected
+Location selected
+Quantity filled
+Waiting for Generate PO to be enabled...
+Clicking Generate PO...
+Generated PO Number: 25KP0168
+Generated PO: 25KP0168

@@ -1,0 +1,70 @@
+{
+  
+  
+  "name": "rubber-moulding-automation",
+  
+  
+  "private": true,
+  
+  
+  "scripts": {
+  
+  
+    
+  
+  "full:e2e": "ts-node e2e/run-full-business-flow.ts",
+  
+  
+    
+  
+  "web:qa": "cd web-app-automation && npx playwright test --config=config/playwright.qa.config.ts",
+  
+  
+    
+  
+  "mobile:qa": "cd mobile-automation && npx wdio config/wdio.qa.conf.ts",
+  
+  
+    
+  
+  "mobile:emulator": "cd mobile-automation && cross-env DEVICE=emulator npx wdio config/wdio.qa.conf.ts",
+  
+  
+    
+  
+  "e2e:cross": "npm run web:qa && npm run mobile:qa",
+  
+  
+    
+  
+  "e2e:emulator": "npm run web:qa && npm run mobile:emulator"
+  
+  
+  },
+  
+  
+  "devDependencies": {
+  
+  
+    
+  
+  "@types/node": "^20.0.0",
+  
+  
+    
+  
+  "cross-env": "^10.1.0",
+  
+  
+    
+  
+  "ts-node": "^10.9.2",
+  
+  
+    
+  
+  "typescript": "^5.9.3"
+  
+  
+  }
+}

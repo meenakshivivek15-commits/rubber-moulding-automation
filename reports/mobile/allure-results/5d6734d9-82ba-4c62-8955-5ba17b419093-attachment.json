@@ -1,0 +1,5 @@
+{
+  "error": "no such element",
+  "message": "no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"ion-toast\"}\n  (Session info: chrome=144.0.7559.132)",
+  "stacktrace": "Symbols not available. Dumping unresolved backtrace:\n\t0x7ff731615715\n\t0x7ff731615770\n\t0x7ff7313c108d\n\t0x7ff73141c3be\n\t0x7ff73141c6cc\n\t0x7ff73146d2f7\n\t0x7ff731469e45\n\t0x7ff73140cc28\n\t0x7ff73140db33\n\t0x7ff7318fe9f0\n\t0x7ff7318f8ded\n\t0x7ff73191969a\n\t0x7ff7316311e5\n\t0x7ff7316399cc\n\t0x7ff73161ebf4\n\t0x7ff73161eda6\n\t0x7ff731604e87\n\t0x7ffed3ede8d7\n\t0x7ffed496c40c\n"
+}

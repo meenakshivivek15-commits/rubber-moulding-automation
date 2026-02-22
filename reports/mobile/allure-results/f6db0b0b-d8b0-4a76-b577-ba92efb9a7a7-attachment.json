@@ -1,0 +1,4 @@
+{
+  "using": "xpath",
+  "value": "//ion-img[contains(@ng-reflect-src,\"receipt.png\")]"
+}

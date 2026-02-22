@@ -1,0 +1,1081 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - button "menu" [ref=e9] [cursor=pointer]:
+        - generic [ref=e11]:
+          - img:
+            - generic:
+              - img
+      - generic [ref=e13]:
+        - img [ref=e15]
+        - generic [ref=e16]:
+          - heading "Plan" [level=2] [ref=e17]
+          - generic [ref=e18]:
+            - button [ref=e20] [cursor=pointer]:
+              - generic [ref=e21]:
+                - generic:
+                  - img:
+                    - generic:
+                      - img
+            - heading "Purchase Order" [level=2] [ref=e22]
+  - main [ref=e25]:
+    - generic [ref=e27]:
+      - banner [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e33]:
+              - textbox "reset" [ref=e34]:
+                - /placeholder: Search
+                - text: Neoprene
+              - button "reset" [ref=e35] [cursor=pointer]:
+                - img [ref=e36]:
+                  - img [ref=e38]
+              - img [ref=e40]:
+                - img [ref=e42]
+            - generic [ref=e44]:
+              - generic [ref=e46]:
+                - generic [ref=e47]: All Materials
+                - combobox [ref=e49]
+              - status [ref=e51]
+          - button "Delete" [ref=e54] [cursor=pointer]:
+            - generic [ref=e55]:
+              - generic: Delete
+      - main [ref=e58]:
+        - generic:
+          - generic [ref=e60]:
+            - generic:
+              - generic [ref=e61]:
+                - generic:
+                  - generic [ref=e62] [cursor=pointer]:
+                    - generic: Name (77)
+                  - generic [ref=e63] [cursor=pointer]:
+                    - generic: Grade
+                  - generic [ref=e64] [cursor=pointer]:
+                    - generic: Rty
+                  - generic [ref=e65] [cursor=pointer]:
+                    - generic: Stk
+              - generic [ref=e67]:
+                - generic [ref=e68]:
+                  - generic:
+                    - generic [ref=e69]:
+                      - generic: NBR70Blue A
+                    - generic [ref=e70]:
+                      - generic: Medium Nitrile (Kg)
+                    - generic [ref=e71]:
+                      - generic: "1"
+                    - generic [ref=e72]:
+                      - generic: "0"
+                    - img [ref=e74] [cursor=pointer]:
+                      - img [ref=e76]
+                - generic [ref=e80]:
+                  - generic:
+                    - generic [ref=e81]:
+                      - generic: Neoprene
+                    - generic [ref=e82]:
+                      - generic: B30 (Kg)
+                    - generic [ref=e83]:
+                      - generic: "150"
+                    - generic [ref=e84]:
+                      - generic: "0"
+                    - img [ref=e86] [cursor=pointer]:
+                      - img [ref=e88]
+                - generic [ref=e92]:
+                  - generic:
+                    - generic [ref=e93]:
+                      - generic: NBR-PVC
+                    - generic [ref=e94]:
+                      - generic: Rubaloy 70 (Kg)
+                    - generic [ref=e95]:
+                      - generic: "25"
+                    - generic [ref=e96]:
+                      - generic: "0"
+                    - img [ref=e98] [cursor=pointer]:
+                      - img [ref=e100]
+                - generic [ref=e104]:
+                  - generic:
+                    - generic [ref=e105]:
+                      - generic: Silicon 80
+                    - generic [ref=e106]:
+                      - generic: KCC 80 (Kg)
+                    - generic [ref=e107]:
+                      - generic: "20"
+                    - generic [ref=e108]:
+                      - generic: "0"
+                    - img [ref=e110] [cursor=pointer]:
+                      - img [ref=e112]
+                - generic [ref=e116]:
+                  - generic:
+                    - generic [ref=e117]:
+                      - generic: Silicon 40
+                    - generic [ref=e118]:
+                      - generic: KCC 40 (Kg)
+                    - generic [ref=e119]:
+                      - generic: "20"
+                    - generic [ref=e120]:
+                      - generic: "0"
+                    - img [ref=e122] [cursor=pointer]:
+                      - img [ref=e124]
+                - generic [ref=e128]:
+                  - generic:
+                    - generic [ref=e129]:
+                      - generic: Reclaim Rubber
+                    - generic [ref=e130]:
+                      - generic: Reclaim (Kg)
+                    - generic [ref=e131]:
+                      - generic: "20"
+                    - generic [ref=e132]:
+                      - generic: "0"
+                    - img [ref=e134] [cursor=pointer]:
+                      - img [ref=e136]
+                - generic [ref=e140]:
+                  - generic:
+                    - generic [ref=e141]:
+                      - generic: Silicon 40
+                    - generic [ref=e142]:
+                      - generic: Elastosil R401-40 (Kg)
+                    - generic [ref=e143]:
+                      - generic: "20"
+                    - generic [ref=e144]:
+                      - generic: "0"
+                    - img [ref=e146] [cursor=pointer]:
+                      - img [ref=e148]
+                - generic [ref=e152]:
+                  - generic:
+                    - generic [ref=e153]:
+                      - generic: FKM
+                    - generic [ref=e154]:
+                      - generic: Solvay FOR531C (Kg)
+                    - generic [ref=e155]:
+                      - generic: "20"
+                    - generic [ref=e156]:
+                      - generic: "0"
+                    - img [ref=e158] [cursor=pointer]:
+                      - img [ref=e160]
+                - generic [ref=e164]:
+                  - generic:
+                    - generic [ref=e165]:
+                      - generic: LOW MEDIUM NITRILE RUBBER
+                    - generic [ref=e166]:
+                      - generic: 1945 (Kg)
+                    - generic [ref=e167]:
+                      - generic: "20"
+                    - generic [ref=e168]:
+                      - generic: "0"
+                    - img [ref=e170] [cursor=pointer]:
+                      - img [ref=e172]
+                - generic [ref=e176]:
+                  - generic:
+                    - generic [ref=e177]:
+                      - generic: Polyacrylic
+                    - generic [ref=e178]:
+                      - generic: AR240 L (Kg)
+                    - generic [ref=e179]:
+                      - generic: "20"
+                    - generic [ref=e180]:
+                      - generic: "0"
+                    - img [ref=e182] [cursor=pointer]:
+                      - img [ref=e184]
+                - generic [ref=e188]:
+                  - generic:
+                    - generic [ref=e189]:
+                      - generic: Silicon 80
+                    - generic [ref=e190]:
+                      - generic: NE- 5180 (Kg)
+                    - generic [ref=e191]:
+                      - generic: "20"
+                    - generic [ref=e192]:
+                      - generic: "0"
+                    - img [ref=e194] [cursor=pointer]:
+                      - img [ref=e196]
+                - generic [ref=e200]:
+                  - generic:
+                    - generic [ref=e201]:
+                      - generic: Nylon
+                    - generic [ref=e202]:
+                      - generic: PA66GF 30% RAL 1015 (Kg)
+                    - generic [ref=e203]:
+                      - generic: "10"
+                    - generic [ref=e204]:
+                      - generic: "0"
+                    - img [ref=e206] [cursor=pointer]:
+                      - img [ref=e208]
+                - generic [ref=e212]:
+                  - generic:
+                    - generic [ref=e213]:
+                      - generic: NBR-PVC
+                    - generic [ref=e214]:
+                      - generic: Paracryl OZOM50 (Kg)
+                    - generic [ref=e215]:
+                      - generic: "10"
+                    - generic [ref=e216]:
+                      - generic: "0"
+                    - img [ref=e218] [cursor=pointer]:
+                      - img [ref=e220]
+                - generic [ref=e224]:
+                  - generic:
+                    - generic [ref=e225]:
+                      - generic: Nitrile (Ultra High)
+                    - generic [ref=e226]:
+                      - generic: (Kg)
+                    - generic [ref=e227]:
+                      - generic: "1"
+                    - generic [ref=e228]:
+                      - generic: "0"
+                    - img [ref=e230] [cursor=pointer]:
+                      - img [ref=e232]
+                - generic [ref=e236]:
+                  - generic:
+                    - generic [ref=e237]:
+                      - generic: SIBI
+                    - generic [ref=e238]:
+                      - generic: 123 (Kg)
+                    - generic [ref=e239]:
+                      - generic: "1"
+                    - generic [ref=e240]:
+                      - generic: "0"
+                    - img [ref=e242] [cursor=pointer]:
+                      - img [ref=e244]
+                - generic [ref=e248]:
+                  - generic:
+                    - generic [ref=e249]:
+                      - generic: FEF
+                    - generic [ref=e250]:
+                      - generic: N 550 Sterling SO (Kg)
+                    - generic [ref=e251]:
+                      - generic: "300"
+                    - generic [ref=e252]:
+                      - generic: "0"
+                    - img [ref=e254] [cursor=pointer]:
+                      - img [ref=e256]
+                - generic [ref=e260]:
+                  - generic:
+                    - generic [ref=e261]:
+                      - generic: MT
+                    - generic [ref=e262]:
+                      - generic: N 990 (Kg)
+                    - generic [ref=e263]:
+                      - generic: "20"
+                    - generic [ref=e264]:
+                      - generic: "0"
+                    - img [ref=e266] [cursor=pointer]:
+                      - img [ref=e268]
+                - generic [ref=e272]:
+                  - generic:
+                    - generic [ref=e273]:
+                      - generic: CBS
+                    - generic [ref=e274]:
+                      - generic: Pilcure (Kg)
+                    - generic [ref=e275]:
+                      - generic: "15"
+                    - generic [ref=e276]:
+                      - generic: "0"
+                    - img [ref=e278] [cursor=pointer]:
+                      - img [ref=e280]
+                - generic [ref=e284]:
+                  - generic:
+                    - generic [ref=e285]:
+                      - generic: SILICA FILLER
+                    - generic [ref=e286]:
+                      - generic: Ultrasil VN3 (Kg)
+                    - generic [ref=e287]:
+                      - generic: "15"
+                    - generic [ref=e288]:
+                      - generic: "0"
+                    - img [ref=e290] [cursor=pointer]:
+                      - img [ref=e292]
+                - generic [ref=e296]:
+                  - generic:
+                    - generic [ref=e297]:
+                      - generic: CALCIUM STEARATE
+                    - generic [ref=e298]:
+                      - generic: Rubber grade (Kg)
+                    - generic [ref=e299]:
+                      - generic: "10"
+                    - generic [ref=e300]:
+                      - generic: "0"
+                    - img [ref=e302] [cursor=pointer]:
+                      - img [ref=e304]
+                - generic [ref=e308]:
+                  - generic:
+                    - generic [ref=e309]:
+                      - generic: SPHERON 4000
+                    - generic [ref=e310]:
+                      - generic: Spheron 4000 (Kg)
+                    - generic [ref=e311]:
+                      - generic: "1"
+                    - generic [ref=e312]:
+                      - generic: "0"
+                    - img [ref=e314] [cursor=pointer]:
+                      - img [ref=e316]
+                - generic [ref=e320]:
+                  - generic:
+                    - generic [ref=e321]:
+                      - generic: STERLING 1120
+                    - generic [ref=e322]:
+                      - generic: Sterling 1120 (Kg)
+                    - generic [ref=e323]:
+                      - generic: "1"
+                    - generic [ref=e324]:
+                      - generic: "0"
+                    - img [ref=e326] [cursor=pointer]:
+                      - img [ref=e328]
+                - generic [ref=e332]:
+                  - generic:
+                    - generic [ref=e333]:
+                      - generic: Paraffinic oil
+                    - generic [ref=e334]:
+                      - generic: P25/IPOL2300 (Kg)
+                    - generic [ref=e335]:
+                      - generic: "70"
+                    - generic [ref=e336]:
+                      - generic: "0"
+                    - img [ref=e338] [cursor=pointer]:
+                      - img [ref=e340]
+                - generic [ref=e344]:
+                  - generic:
+                    - generic [ref=e345]:
+                      - generic: DOA Oil
+                    - generic [ref=e346]:
+                      - generic: Kanatol 8A (Kg)
+                    - generic [ref=e347]:
+                      - generic: "70"
+                    - generic [ref=e348]:
+                      - generic: "0"
+                    - img [ref=e350] [cursor=pointer]:
+                      - img [ref=e352]
+                - generic [ref=e356]:
+                  - generic:
+                    - generic [ref=e357]:
+                      - generic: TCP
+                    - generic [ref=e358]:
+                      - generic: KLJ (Kg)
+                    - generic [ref=e359]:
+                      - generic: "50"
+                    - generic [ref=e360]:
+                      - generic: "0"
+                    - img [ref=e362] [cursor=pointer]:
+                      - img [ref=e364]
+                - generic [ref=e368]:
+                  - generic:
+                    - generic [ref=e369]:
+                      - generic: Petroleum Jelly
+                    - generic [ref=e370]:
+                      - generic: Industrial grade (Kg)
+                    - generic [ref=e371]:
+                      - generic: "5"
+                    - generic [ref=e372]:
+                      - generic: "0"
+                    - img [ref=e374] [cursor=pointer]:
+                      - img [ref=e376]
+                - generic [ref=e380]:
+                  - generic:
+                    - generic [ref=e381]:
+                      - generic: SP OIL
+                    - generic [ref=e382]:
+                      - generic: Pilnox SP (Kg)
+                    - generic [ref=e383]:
+                      - generic: "5"
+                    - generic [ref=e384]:
+                      - generic: "0"
+                    - img [ref=e386] [cursor=pointer]:
+                      - img [ref=e388]
+                - generic [ref=e392]:
+                  - generic:
+                    - generic [ref=e393]:
+                      - generic: Zinc Oxide
+                    - generic [ref=e394]:
+                      - generic: White Seal (Kg)
+                    - generic [ref=e395]:
+                      - generic: "75"
+                    - generic [ref=e396]:
+                      - generic: "0"
+                    - img [ref=e398] [cursor=pointer]:
+                      - img [ref=e400]
+                - generic [ref=e404]:
+                  - generic:
+                    - generic [ref=e405]:
+                      - generic: TDQ
+                    - generic [ref=e406]:
+                      - generic: Pilnox (Kg)
+                    - generic [ref=e407]:
+                      - generic: "15"
+                    - generic [ref=e408]:
+                      - generic: "0"
+                    - img [ref=e410] [cursor=pointer]:
+                      - img [ref=e412]
+                - generic [ref=e416]:
+                  - generic:
+                    - generic [ref=e417]:
+                      - generic: Stearic Acid
+                    - generic [ref=e418]:
+                      - generic: Lubstric 995 (Kg)
+                    - generic [ref=e419]:
+                      - generic: "15"
+                    - generic [ref=e420]:
+                      - generic: "0"
+                    - img [ref=e422] [cursor=pointer]:
+                      - img [ref=e424]
+                - generic [ref=e428]:
+                  - generic:
+                    - generic [ref=e429]:
+                      - generic: STRUKTOL WB16
+                    - generic [ref=e430]:
+                      - generic: Struktol WB16 (Kg)
+                    - generic [ref=e431]:
+                      - generic: "10"
+                    - generic [ref=e432]:
+                      - generic: "0"
+                    - img [ref=e434] [cursor=pointer]:
+                      - img [ref=e436]
+                - generic [ref=e440]:
+                  - generic:
+                    - generic [ref=e441]:
+                      - generic: Calcium Carbonate
+                    - generic [ref=e442]:
+                      - generic: Precipitated (Kg)
+                    - generic [ref=e443]:
+                      - generic: "10"
+                    - generic [ref=e444]:
+                      - generic: "0"
+                    - img [ref=e446] [cursor=pointer]:
+                      - img [ref=e448]
+                - generic [ref=e452]:
+                  - generic:
+                    - generic [ref=e453]:
+                      - generic: SULPHUR
+                    - generic [ref=e454]:
+                      - generic: MC-98 (Kg)
+                    - generic [ref=e455]:
+                      - generic: "10"
+                    - generic [ref=e456]:
+                      - generic: "0"
+                    - img [ref=e458] [cursor=pointer]:
+                      - img [ref=e460]
+                - generic [ref=e464]:
+                  - generic:
+                    - generic [ref=e465]:
+                      - generic: MGO
+                    - generic [ref=e466]:
+                      - generic: Star Mag (Kg)
+                    - generic [ref=e467]:
+                      - generic: "10"
+                    - generic [ref=e468]:
+                      - generic: "0"
+                    - img [ref=e470] [cursor=pointer]:
+                      - img [ref=e472]
+                - generic [ref=e476]:
+                  - generic:
+                    - generic [ref=e477]:
+                      - generic: NA 22 ETU
+                    - generic [ref=e478]:
+                      - generic: NA 22 ETU (Kg)
+                    - generic [ref=e479]:
+                      - generic: "10"
+                    - generic [ref=e480]:
+                      - generic: "0"
+                    - img [ref=e482] [cursor=pointer]:
+                      - img [ref=e484]
+                - generic [ref=e488]:
+                  - generic:
+                    - generic [ref=e489]:
+                      - generic: KH 69
+                    - generic [ref=e490]:
+                      - generic: KH 69 (Kg)
+                    - generic [ref=e491]:
+                      - generic: "5"
+                    - generic [ref=e492]:
+                      - generic: "0"
+                    - img [ref=e494] [cursor=pointer]:
+                      - img [ref=e496]
+                - generic [ref=e500]:
+                  - generic:
+                    - generic [ref=e501]:
+                      - generic: Pilflex 13
+                    - generic [ref=e502]:
+                      - generic: NOCIL (Kg)
+                    - generic [ref=e503]:
+                      - generic: "5"
+                    - generic [ref=e504]:
+                      - generic: "0"
+                    - img [ref=e506] [cursor=pointer]:
+                      - img [ref=e508]
+                - generic [ref=e512]:
+                  - generic:
+                    - generic [ref=e513]:
+                      - generic: MBI
+                    - generic [ref=e514]:
+                      - generic: Accinox (Kg)
+                    - generic [ref=e515]:
+                      - generic: "3"
+                    - generic [ref=e516]:
+                      - generic: "0"
+                    - img [ref=e518] [cursor=pointer]:
+                      - img [ref=e520]
+                - generic [ref=e524]:
+                  - generic:
+                    - generic [ref=e525]:
+                      - generic: Calcium Hydroxide
+                    - generic [ref=e526]:
+                      - generic: Qualigence (Kg)
+                    - generic [ref=e527]:
+                      - generic: "2"
+                    - generic [ref=e528]:
+                      - generic: "0"
+                    - img [ref=e530] [cursor=pointer]:
+                      - img [ref=e532]
+                - generic [ref=e536]:
+                  - generic:
+                    - generic [ref=e537]:
+                      - generic: CHEMLOK 220
+                    - generic [ref=e538]:
+                      - generic: chemlok220 (Kg)
+                    - generic [ref=e539]:
+                      - generic: "2"
+                    - generic [ref=e540]:
+                      - generic: "0"
+                    - img [ref=e542] [cursor=pointer]:
+                      - img [ref=e544]
+                - generic [ref=e548]:
+                  - generic:
+                    - generic [ref=e549]:
+                      - generic: Sodium Stearate
+                    - generic [ref=e550]:
+                      - generic: N.A (Kg)
+                    - generic [ref=e551]:
+                      - generic: "1"
+                    - generic [ref=e552]:
+                      - generic: "0"
+                    - img [ref=e554] [cursor=pointer]:
+                      - img [ref=e556]
+                - generic [ref=e560]:
+                  - generic:
+                    - generic [ref=e561]:
+                      - generic: Carnauba Wax
+                    - generic [ref=e562]:
+                      - generic: wax (Kg)
+                    - generic [ref=e563]:
+                      - generic: "1"
+                    - generic [ref=e564]:
+                      - generic: "0"
+                    - img [ref=e566] [cursor=pointer]:
+                      - img [ref=e568]
+                - generic [ref=e572]:
+                  - generic:
+                    - generic [ref=e573]:
+                      - generic: PVI
+                    - generic [ref=e574]:
+                      - generic: Pilgard PVI NOCIL (Kg)
+                    - generic [ref=e575]:
+                      - generic: "1"
+                    - generic [ref=e576]:
+                      - generic: "0"
+                    - img [ref=e578] [cursor=pointer]:
+                      - img [ref=e580]
+                - generic [ref=e584]:
+                  - generic:
+                    - generic [ref=e585]:
+                      - generic: EG 3
+                    - generic [ref=e586]:
+                      - generic: Deovulc EG3 (Kg)
+                    - generic [ref=e587]:
+                      - generic: "25"
+                    - generic [ref=e588]:
+                      - generic: "0"
+                    - img [ref=e590] [cursor=pointer]:
+                      - img [ref=e592]
+                - generic [ref=e596]:
+                  - generic:
+                    - generic [ref=e597]:
+                      - generic: TMT
+                    - generic [ref=e598]:
+                      - generic: Pilcure (Kg)
+                    - generic [ref=e599]:
+                      - generic: "15"
+                    - generic [ref=e600]:
+                      - generic: "0"
+                    - img [ref=e602] [cursor=pointer]:
+                      - img [ref=e604]
+                - generic [ref=e608]:
+                  - generic:
+                    - generic [ref=e609]:
+                      - generic: MBTS
+                    - generic [ref=e610]:
+                      - generic: Pilcure (Kg)
+                    - generic [ref=e611]:
+                      - generic: "10"
+                    - generic [ref=e612]:
+                      - generic: "0"
+                    - img [ref=e614] [cursor=pointer]:
+                      - img [ref=e616]
+                - generic [ref=e620]:
+                  - generic:
+                    - generic [ref=e621]:
+                      - generic: yellow powder
+                    - generic [ref=e622]:
+                      - generic: Rva (Kg)
+                    - generic [ref=e623]:
+                      - generic: "10"
+                    - generic [ref=e624]:
+                      - generic: "0"
+                    - img [ref=e626] [cursor=pointer]:
+                      - img [ref=e628]
+                - generic [ref=e632]:
+                  - generic:
+                    - generic [ref=e633]:
+                      - generic: FOR-1
+                    - generic [ref=e634]:
+                      - generic: asd (Kg)
+                    - generic [ref=e635]:
+                      - generic: "4"
+                    - generic [ref=e636]:
+                      - generic: "0"
+                    - img [ref=e638] [cursor=pointer]:
+                      - img [ref=e640]
+                - generic [ref=e644]:
+                  - generic:
+                    - generic [ref=e645]:
+                      - generic: DI CUP 98
+                    - generic [ref=e646]:
+                      - generic: Dicup 98 (Kg)
+                    - generic [ref=e647]:
+                      - generic: "3"
+                    - generic [ref=e648]:
+                      - generic: "0"
+                    - img [ref=e650] [cursor=pointer]:
+                      - img [ref=e652]
+                - generic [ref=e656]:
+                  - generic:
+                    - generic [ref=e657]:
+                      - generic: N26715055
+                    - generic [ref=e658]:
+                      - generic: insert (No)
+                    - generic [ref=e659]:
+                      - generic: "2000"
+                    - generic [ref=e660]:
+                      - generic: "0"
+                    - img [ref=e662] [cursor=pointer]:
+                      - img [ref=e664]
+                - generic [ref=e668]:
+                  - generic:
+                    - generic [ref=e669]:
+                      - generic: N26241365
+                    - generic [ref=e670]:
+                      - generic: NA (No)
+                    - generic [ref=e671]:
+                      - generic: "1000"
+                    - generic [ref=e672]:
+                      - generic: "0"
+                    - img [ref=e674] [cursor=pointer]:
+                      - img [ref=e676]
+                - generic [ref=e680]:
+                  - generic:
+                    - generic [ref=e681]:
+                      - generic: N26142510
+                    - generic [ref=e682]:
+                      - generic: insert (No)
+                    - generic [ref=e683]:
+                      - generic: "1000"
+                    - generic [ref=e684]:
+                      - generic: "0"
+                    - img [ref=e686] [cursor=pointer]:
+                      - img [ref=e688]
+                - generic [ref=e692]:
+                  - generic:
+                    - generic [ref=e693]:
+                      - generic: N26241083
+                    - generic [ref=e694]:
+                      - generic: insert (No)
+                    - generic [ref=e695]:
+                      - generic: "1000"
+                    - generic [ref=e696]:
+                      - generic: "0"
+                    - img [ref=e698] [cursor=pointer]:
+                      - img [ref=e700]
+                - generic [ref=e704]:
+                  - generic:
+                    - generic [ref=e705]:
+                      - generic: N26247359
+                    - generic [ref=e706]:
+                      - generic: INSERT (No)
+                    - generic [ref=e707]:
+                      - generic: "1000"
+                    - generic [ref=e708]:
+                      - generic: "0"
+                    - img [ref=e710] [cursor=pointer]:
+                      - img [ref=e712]
+                - generic [ref=e716]:
+                  - generic:
+                    - generic [ref=e717]:
+                      - generic: N26246284A9SUB)
+                    - generic [ref=e718]:
+                      - generic: WIRE (No)
+                    - generic [ref=e719]:
+                      - generic: "1000"
+                    - generic [ref=e720]:
+                      - generic: "0"
+                    - img [ref=e722] [cursor=pointer]:
+                      - img [ref=e724]
+                - generic [ref=e728]:
+                  - generic:
+                    - generic [ref=e729]:
+                      - generic: N26259044 D
+                    - generic [ref=e730]:
+                      - generic: NA (No)
+                    - generic [ref=e731]:
+                      - generic: "1000"
+                    - generic [ref=e732]:
+                      - generic: "0"
+                    - img [ref=e734] [cursor=pointer]:
+                      - img [ref=e736]
+                - generic [ref=e740]:
+                  - generic:
+                    - generic [ref=e741]:
+                      - generic: N26261071
+                    - generic [ref=e742]:
+                      - generic: CRCA (No)
+                    - generic [ref=e743]:
+                      - generic: "500"
+                    - generic [ref=e744]:
+                      - generic: "0"
+                    - img [ref=e746] [cursor=pointer]:
+                      - img [ref=e748]
+                - generic [ref=e752]:
+                  - generic:
+                    - generic [ref=e753]:
+                      - generic: L 26247508A
+                    - generic [ref=e754]:
+                      - generic: 8M/14 WIRE (No)
+                    - generic [ref=e755]:
+                      - generic: "100"
+                    - generic [ref=e756]:
+                      - generic: "0"
+                    - img [ref=e758] [cursor=pointer]:
+                      - img [ref=e760]
+                - generic [ref=e764]:
+                  - generic:
+                    - generic [ref=e765]:
+                      - generic: CHEMLOK250/ 6150
+                    - generic [ref=e766]:
+                      - generic: chemlok 6150 (Kg)
+                    - generic [ref=e767]:
+                      - generic: "3"
+                    - generic [ref=e768]:
+                      - generic: "0"
+                    - img [ref=e770] [cursor=pointer]:
+                      - img [ref=e772]
+                - generic [ref=e776]:
+                  - generic:
+                    - generic [ref=e777]:
+                      - generic: N26247508
+                    - generic [ref=e778]:
+                      - generic: insert (No)
+                    - generic [ref=e779]:
+                      - generic: "1"
+                    - generic [ref=e780]:
+                      - generic: "0"
+                    - img [ref=e782] [cursor=pointer]:
+                      - img [ref=e784]
+                - generic [ref=e788]:
+                  - generic:
+                    - generic [ref=e789]:
+                      - generic: N26240387
+                    - generic [ref=e790]:
+                      - generic: wire (No)
+                    - generic [ref=e791]:
+                      - generic: "1"
+                    - generic [ref=e792]:
+                      - generic: "0"
+                    - img [ref=e794] [cursor=pointer]:
+                      - img [ref=e796]
+                - generic [ref=e800]:
+                  - generic:
+                    - generic [ref=e801]:
+                      - generic: N26259044
+                    - generic [ref=e802]:
+                      - generic: insert (No)
+                    - generic [ref=e803]:
+                      - generic: "1"
+                    - generic [ref=e804]:
+                      - generic: "0"
+                    - img [ref=e806] [cursor=pointer]:
+                      - img [ref=e808]
+                - generic [ref=e812]:
+                  - generic:
+                    - generic [ref=e813]:
+                      - generic: N26244519
+                    - generic [ref=e814]:
+                      - generic: ms (No)
+                    - generic [ref=e815]:
+                      - generic: "1"
+                    - generic [ref=e816]:
+                      - generic: "0"
+                    - img [ref=e818] [cursor=pointer]:
+                      - img [ref=e820]
+                - generic [ref=e824]:
+                  - generic:
+                    - generic [ref=e825]:
+                      - generic: N26249324
+                    - generic [ref=e826]:
+                      - generic: NA (No)
+                    - generic [ref=e827]:
+                      - generic: "1"
+                    - generic [ref=e828]:
+                      - generic: "0"
+                    - img [ref=e830] [cursor=pointer]:
+                      - img [ref=e832]
+                - generic [ref=e836]:
+                  - generic:
+                    - generic [ref=e837]:
+                      - generic: N26243305
+                    - generic [ref=e838]:
+                      - generic: LEAD ASSLY (No)
+                    - generic [ref=e839]:
+                      - generic: "1"
+                    - generic [ref=e840]:
+                      - generic: "0"
+                    - img [ref=e842] [cursor=pointer]:
+                      - img [ref=e844]
+                - generic [ref=e848]:
+                  - generic:
+                    - generic [ref=e849]:
+                      - generic: N26262508
+                    - generic [ref=e850]:
+                      - generic: insert (No)
+                    - generic [ref=e851]:
+                      - generic: "1"
+                    - generic [ref=e852]:
+                      - generic: "0"
+                    - img [ref=e854] [cursor=pointer]:
+                      - img [ref=e856]
+                - generic [ref=e860]:
+                  - generic:
+                    - generic [ref=e861]:
+                      - generic: N26720699
+                    - generic [ref=e862]:
+                      - generic: insert (No)
+                    - generic [ref=e863]:
+                      - generic: "1"
+                    - generic [ref=e864]:
+                      - generic: "0"
+                    - img [ref=e866] [cursor=pointer]:
+                      - img [ref=e868]
+                - generic [ref=e872]:
+                  - generic:
+                    - generic [ref=e873]:
+                      - generic: S26720699
+                    - generic [ref=e874]:
+                      - generic: MS Spring (No)
+                    - generic [ref=e875]:
+                      - generic: "1"
+                    - generic [ref=e876]:
+                      - generic: "0"
+                    - img [ref=e878] [cursor=pointer]:
+                      - img [ref=e880]
+                - generic [ref=e884]:
+                  - generic:
+                    - generic [ref=e885]:
+                      - generic: N26260220
+                    - generic [ref=e886]:
+                      - generic: NA (No)
+                    - generic [ref=e887]:
+                      - generic: "1"
+                    - generic [ref=e888]:
+                      - generic: "0"
+                    - img [ref=e890] [cursor=pointer]:
+                      - img [ref=e892]
+                - generic [ref=e896]:
+                  - generic:
+                    - generic [ref=e897]:
+                      - generic: N26246284
+                    - generic [ref=e898]:
+                      - generic: insert (No)
+                    - generic [ref=e899]:
+                      - generic: "1"
+                    - generic [ref=e900]:
+                      - generic: "0"
+                    - img [ref=e902] [cursor=pointer]:
+                      - img [ref=e904]
+                - generic [ref=e908]:
+                  - generic:
+                    - generic [ref=e909]:
+                      - generic: N26247509
+                    - generic [ref=e910]:
+                      - generic: NA (No)
+                    - generic [ref=e911]:
+                      - generic: "1"
+                    - generic [ref=e912]:
+                      - generic: "0"
+                    - img [ref=e914] [cursor=pointer]:
+                      - img [ref=e916]
+                - generic [ref=e920]:
+                  - generic:
+                    - generic [ref=e921]:
+                      - generic: N26241365B
+                    - generic [ref=e922]:
+                      - generic: wire (No)
+                    - generic [ref=e923]:
+                      - generic: "1"
+                    - generic [ref=e924]:
+                      - generic: "0"
+                    - img [ref=e926] [cursor=pointer]:
+                      - img [ref=e928]
+                - generic [ref=e932]:
+                  - generic:
+                    - generic [ref=e933]:
+                      - generic: N26248984
+                    - generic [ref=e934]:
+                      - generic: NA (No)
+                    - generic [ref=e935]:
+                      - generic: "1"
+                    - generic [ref=e936]:
+                      - generic: "0"
+                    - img [ref=e938] [cursor=pointer]:
+                      - img [ref=e940]
+                - generic [ref=e944]:
+                  - generic:
+                    - generic [ref=e945]:
+                      - generic: DILUENT 102
+                    - generic [ref=e946]:
+                      - generic: d102 (ML)
+                    - generic [ref=e947]:
+                      - generic: "20"
+                    - generic [ref=e948]:
+                      - generic: "0"
+                    - img [ref=e950] [cursor=pointer]:
+                      - img [ref=e952]
+                - generic [ref=e956]:
+                  - generic:
+                    - generic [ref=e957]:
+                      - generic: DILUENT 101
+                    - generic [ref=e958]:
+                      - generic: D101 (ML)
+                    - generic [ref=e959]:
+                      - generic: "5"
+                    - generic [ref=e960]:
+                      - generic: "0"
+                    - img [ref=e962] [cursor=pointer]:
+                      - img [ref=e964]
+                - generic [ref=e968]:
+                  - generic:
+                    - generic [ref=e969]:
+                      - generic: Polyester
+                    - generic [ref=e970]:
+                      - generic: General Purpose (Kg)
+                    - generic [ref=e971]:
+                      - generic: "50"
+                    - generic [ref=e972]:
+                      - generic: "0"
+                    - img [ref=e974] [cursor=pointer]:
+                      - img [ref=e976]
+                - generic [ref=e980]:
+                  - generic:
+                    - generic [ref=e981]:
+                      - generic: Nylon 66
+                    - generic [ref=e982]:
+                      - generic: 3M (Kg)
+                    - generic [ref=e983]:
+                      - generic: "5"
+                    - generic [ref=e984]:
+                      - generic: "0"
+                    - img [ref=e986] [cursor=pointer]:
+                      - img [ref=e988]
+          - generic [ref=e992]:
+            - generic [ref=e993]:
+              - paragraph [ref=e994]: Purchase Order
+              - img [ref=e996]:
+                - img [ref=e998]
+            - generic [ref=e1002]:
+              - generic:
+                - generic [ref=e1004]:
+                  - generic [ref=e1005]: Raw Material
+                  - generic [ref=e1006]: Neoprene
+                - generic [ref=e1008]:
+                  - generic [ref=e1009]: Grade
+                  - generic [ref=e1010]: B30
+                - generic [ref=e1012]:
+                  - generic [ref=e1013]: Supplier
+                  - combobox [ref=e1014]:
+                    - option "Select Supplier"
+                    - option "R. K. Polymer" [selected]
+                    - option "Tulasiram Hanumanbagas Gilada"
+                    - option "JMF Synthetics India Pvt. Ltd - CHN"
+                    - option "JMF Synthetics India Pvt. Ltd - MUM"
+                    - option "Texim International"
+                    - option "Universal Commodities"
+                    - option "South India Polymer And Chemicals"
+                    - option "Overseas Polymers Pvt Ltd"
+                    - option "Anka Trading"
+                    - option "Chemrub India"
+                    - option "Aarchem Corporation"
+                    - option "VIKAS ELASTOCHEM AGENCIES (P) LTD"
+                    - option "RIDDHI POLYMERS"
+                    - option "Padmanabha Elastosil Private ltd"
+                    - option "shri ganesh enterprises"
+                    - option "VISTA BUSINESS VENTURES"
+                    - option "surendra elastomers pvt ltd"
+                    - option "KARNATAKA CHEMICAL INDUSTRIES"
+                - generic [ref=e1016]:
+                  - generic [ref=e1017]: Previous GRN Ref
+                  - generic [ref=e1018]: "25-0096 dated: 13-02-2026"
+                - generic [ref=e1020]:
+                  - generic [ref=e1021]: Quote Reference
+                  - textbox [ref=e1025]:
+                    - /placeholder: Verbal
+                - generic [ref=e1027]:
+                  - generic [ref=e1028]: Delivery At
+                  - combobox [ref=e1029]:
+                    - option "Select Location" [selected]
+                    - option "2PI"
+                    - option "MMPL"
+                - generic [ref=e1031]:
+                  - generic [ref=e1032]: Standard Packing Quantity
+                  - generic [ref=e1033]: 0.000 Kg
+                - generic [ref=e1035]:
+                  - generic [ref=e1036]: Quantity
+                  - spinbutton [ref=e1040]: "1510"
+                - generic [ref=e1042]:
+                  - generic [ref=e1043]: Delivery Date
+                  - textbox [ref=e1044]
+                - generic [ref=e1046]:
+                  - generic [ref=e1047]: For Jobwork
+                  - generic [ref=e1049] [cursor=pointer]:
+                    - checkbox [ref=e1050]
+                    - img [ref=e1052]
+                - generic [ref=e1055]:
+                  - generic [ref=e1056]: Foreign Curr. Rate (If App.)
+                  - spinbutton [ref=e1060]: "0"
+                  - combobox [ref=e1061]:
+                    - option "Type" [selected]
+                    - option "EUR"
+                    - option "GBP"
+                    - option "JPY"
+                    - option "USD"
+                - generic [ref=e1063]:
+                  - generic [ref=e1064]: Rate
+                  - spinbutton [ref=e1068]: "44.4"
+                - generic [ref=e1070]:
+                  - generic [ref=e1071]: Value
+                  - textbox [disabled] [ref=e1075]: "67044"
+                - generic [ref=e1077]:
+                  - generic [ref=e1078]: Insurance
+                  - spinbutton [ref=e1082]: "0"
+                - generic [ref=e1084]:
+                  - generic [ref=e1085]: Freight Value
+                  - spinbutton [ref=e1089]: "0"
+                - generic [ref=e1091]:
+                  - generic [ref=e1092]: Order Value
+                  - textbox [disabled] [ref=e1096]: "67044"
+                - generic [ref=e1098]:
+                  - generic [ref=e1099]: Remarks
+                  - textbox [ref=e1104]
+            - generic [ref=e1105]:
+              - button "Generate" [ref=e1107] [cursor=pointer]:
+                - generic [ref=e1108]:
+                  - generic: Generate
+              - button "Close" [ref=e1110] [cursor=pointer]:
+                - generic [ref=e1111]:
+                  - generic: Close
+```

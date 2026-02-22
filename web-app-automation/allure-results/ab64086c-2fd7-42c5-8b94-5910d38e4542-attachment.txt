@@ -1,0 +1,6 @@
+{
+  material: 'Paraffinic oil',
+  supplier: 'South India Polymer And Chemicals',
+  location: '2PI',
+  quantity: 1000
+}

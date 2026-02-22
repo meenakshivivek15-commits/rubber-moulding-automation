@@ -1,0 +1,113 @@
+name: Mobile Automation CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  mobile-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Dependencies
+      run: npm install
+
+    # -----------------------------
+    # Install Java (Required for Appium + Android)
+    # -----------------------------
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    # -----------------------------
+    # Setup Android SDK
+    # -----------------------------
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    # -----------------------------
+    # Create Emulator
+    # -----------------------------
+    - name: Create Emulator
+      run: |
+        sdkmanager "system-images;android-33;google_apis;x86_64"
+        avdmanager create avd -n ci-emulator -k "system-images;android-33;google_apis;x86_64" --device "pixel"
+
+    # -----------------------------
+    # Start Emulator
+    # -----------------------------
+    - name: Start Emulator
+      run: |
+        emulator -avd ci-emulator -no-window -no-audio -no-boot-anim &
+        adb wait-for-device
+        adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
+
+    # -----------------------------
+    # Install Appium
+    # -----------------------------
+    - name: Install Appium
+      run: |
+        npm install -g appium
+        appium driver install uiautomator2
+
+    # -----------------------------
+    # Start Appium Server
+    # -----------------------------
+    - name: Start Appium Server
+      run: |
+        appium --relaxed-security &
+        sleep 10
+
+    # -----------------------------
+    # Clean Old Reports
+    # -----------------------------
+    - name: Clean Reports
+      run: |
+        rm -rf reports/mobile/allure-results
+
+    # -----------------------------
+    # Run Tests
+    # -----------------------------
+    - name: Run Mobile Tests
+      env:
+        DEVICE: emulator
+        CI: true
+      run: |
+        npx wdio run mobile-automation/config/wdio.conf.ts
+
+    # -----------------------------
+    # Install Allure CLI
+    # -----------------------------
+    - name: Install Allure
+      run: |
+        npm install -g allure-commandline --save-dev
+
+    # -----------------------------
+    # Generate Allure Report
+    # -----------------------------
+    - name: Generate Allure Report
+      run: |
+        allure generate reports/mobile/allure-results --clean -o reports/mobile/allure-report
+
+    # -----------------------------
+    # Upload Allure Report
+    # -----------------------------
+    - name: Upload Allure Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: mobile-allure-report
+        path: reports/mobile/allure-report
