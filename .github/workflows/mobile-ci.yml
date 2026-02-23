@@ -51,9 +51,11 @@ jobs:
           adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 5; done;'
           adb shell input keyevent 82
 
-      - name: Install Appium
+      - name: Install Appium & Drivers
         working-directory: mobile-automation
-        run: npm install
+        run: |
+          npm install
+          npx appium driver install uiautomator2
 
       - name: Start Appium
         working-directory: mobile-automation
