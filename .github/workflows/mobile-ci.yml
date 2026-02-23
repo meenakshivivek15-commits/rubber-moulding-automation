@@ -33,8 +33,7 @@ jobs:
       - name: Install UiAutomator2 Driver
         working-directory: mobile-automation
         run: |
-              npx appium driver install uiautomator2 --unsafe-perm=true
-
+              npx appium driver install uiautomator2
       # -----------------------------
       # Setup Java
       # -----------------------------
