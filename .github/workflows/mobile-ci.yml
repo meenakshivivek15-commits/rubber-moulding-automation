@@ -30,7 +30,12 @@ jobs:
       - name: Install Mobile Dependencies
         working-directory: mobile-automation
         run: npm install
-      
+        
+      - name: Install Appium
+        run: npm install -g appium@2
+
+      - name: Install UiAutomator2 Driver
+        run: appium driver install uiautomator2
       # -----------------------------
       # Setup Java
       # -----------------------------
