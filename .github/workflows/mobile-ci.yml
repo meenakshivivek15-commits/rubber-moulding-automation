@@ -45,8 +45,10 @@ jobs:
       # Install UiAutomator2 Driver
       # -----------------------------
       - name: Install UiAutomator2 Driver
-        run: appium driver install uiautomator2
+        run: appium driver install uiautomator2@5.0.1
 
+      - name: Verify Installed Drivers
+        run: appium driver list --installed
       # -----------------------------
       # Setup Java
       # -----------------------------

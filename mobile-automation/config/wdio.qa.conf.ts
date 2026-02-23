@@ -38,7 +38,7 @@ export const config: WebdriverIO.Config = {
     // ❌ DO NOT define hostname/port when using Appium service
     // WDIO service will start and manage Appium automatically
 
-    services: ['appium'],
+    services: [],
 
     specs: [
         '../test/specs/**/*.e2e.ts'
