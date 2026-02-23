@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "rimraf ./allure-results ./allure-report",
     "mobile": "npm run clean && wdio run wdio.conf.ts",
+    "postinstall": "appium driver install uiautomator2 || true",
     "report": "allure generate ./allure-results --clean -o ./allure-report",
     "open": "allure open ./allure-report"
   },
