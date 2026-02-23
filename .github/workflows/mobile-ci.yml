@@ -26,6 +26,16 @@ jobs:
         working-directory: mobile-automation
         run: npm install
 
+      # ✅ Install Appium locally (no global)
+      - name: Install Appium
+        working-directory: mobile-automation
+        run: npm install appium@3
+
+      # ✅ Install UiAutomator2 driver
+      - name: Install UiAutomator2 Driver
+        working-directory: mobile-automation
+        run: npx appium driver install uiautomator2
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -51,6 +61,7 @@ jobs:
           adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 5; done;'
           adb shell input keyevent 82
 
+      # 🚀 WDIO will start Appium automatically
       - name: Run Mobile Tests
         working-directory: mobile-automation
         env:
