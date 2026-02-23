@@ -39,16 +39,21 @@ jobs:
       # Install Appium Globally
       # -----------------------------
       - name: Install Appium
-        run: npm install -g appium@2
+        run: npm install -g appium@3
 
       # -----------------------------
       # Install UiAutomator2 Driver
       # -----------------------------
       - name: Install UiAutomator2 Driver
-        run: appium driver install uiautomator2@5.0.1
+        run: appium driver install uiautomator2
 
       - name: Verify Installed Drivers
         run: appium driver list --installed
+
+      - name: Start Appium
+        run: |
+          appium --port 4723 &
+          sleep 10
       # -----------------------------
       # Setup Java
       # -----------------------------
