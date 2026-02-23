@@ -10,9 +10,10 @@ on:
 jobs:
   mobile-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
+
       # -----------------------------
       # Checkout Repo
       # -----------------------------
@@ -27,15 +28,25 @@ jobs:
         with:
           node-version: 20
 
+      # -----------------------------
+      # Install Mobile Dependencies
+      # -----------------------------
       - name: Install Mobile Dependencies
         working-directory: mobile-automation
         run: npm install
-        
+
+      # -----------------------------
+      # Install Appium Globally
+      # -----------------------------
       - name: Install Appium
         run: npm install -g appium@2
 
+      # -----------------------------
+      # Install UiAutomator2 Driver
+      # -----------------------------
       - name: Install UiAutomator2 Driver
         run: appium driver install uiautomator2
+
       # -----------------------------
       # Setup Java
       # -----------------------------
@@ -63,7 +74,9 @@ jobs:
       # -----------------------------
       - name: Create AVD
         run: |
-          echo "no" | avdmanager create avd -n ci-emulator -k "system-images;android-33;google_apis;x86_64" --device "pixel"
+          echo "no" | avdmanager create avd -n ci-emulator \
+          -k "system-images;android-33;google_apis;x86_64" \
+          --device "pixel"
 
       # -----------------------------
       # Start Emulator
@@ -75,7 +88,14 @@ jobs:
           adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 5; done;'
           adb shell input keyevent 82
 
-      
+      # -----------------------------
+      # Start Appium Server
+      # -----------------------------
+      - name: Start Appium
+        run: |
+          appium --port 4723 --relaxed-security &
+          sleep 15
+
       # -----------------------------
       # Run Mobile Tests
       # -----------------------------
@@ -84,8 +104,8 @@ jobs:
         env:
           DEVICE: emulator
           CI: true
-        run: |
-            npx wdio run config/wdio.qa.conf.ts
+        run: npx wdio run config/wdio.qa.conf.ts
+
       # -----------------------------
       # Install Allure CLI
       # -----------------------------
@@ -97,7 +117,9 @@ jobs:
       # -----------------------------
       - name: Generate Allure Report
         run: |
-          allure generate reports/mobile/allure-results --clean -o reports/mobile/allure-report
+          allure generate reports/mobile/allure-results \
+          --clean \
+          -o reports/mobile/allure-report
 
       # -----------------------------
       # Upload Allure Report
