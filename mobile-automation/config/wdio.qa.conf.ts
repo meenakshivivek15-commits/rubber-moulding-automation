@@ -41,13 +41,10 @@ export const config: Options.Testrunner & { capabilities: any } = {
     // ==============================
     // Appium 3 Connection
     // ==============================
-    protocol: 'http',
-    hostname: '127.0.0.1',
-    port: 4723,
-    path: '/',
+   
 
     // DO NOT use Appium service (CI starts manually)
-    services: [],
+    services: ['appium'],
 
     specs: [
         '../test/specs/**/*.e2e.ts'
