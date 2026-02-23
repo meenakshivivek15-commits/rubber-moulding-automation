@@ -1,5 +1,5 @@
+// @ts-nocheck
 import type { Options } from '@wdio/types'
-import { browser } from '@wdio/globals'
 import path from 'path'
 import dotenv from 'dotenv'
 
