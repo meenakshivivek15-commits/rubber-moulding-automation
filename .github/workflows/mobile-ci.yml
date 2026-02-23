@@ -26,6 +26,22 @@ jobs:
         with:
           node-version: 20
 
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('mobile-automation/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: mobile-automation/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('mobile-automation/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
       - name: Install Mobile Dependencies
         working-directory: mobile-automation
         run: npm ci
