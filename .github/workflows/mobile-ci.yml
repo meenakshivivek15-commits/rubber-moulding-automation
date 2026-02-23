@@ -14,80 +14,51 @@ jobs:
 
     steps:
 
-      # -----------------------------
-      # Checkout Repo
-      # -----------------------------
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # -----------------------------
-      # Setup Node
-      # -----------------------------
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # -----------------------------
-      # Install Mobile Dependencies
-      # -----------------------------
+      # Install dependencies inside mobile-automation
       - name: Install Mobile Dependencies
         working-directory: mobile-automation
         run: npm install
 
-      # -----------------------------
-      # Install Appium Globally
-      # -----------------------------
+      # Install Appium LOCALLY inside mobile-automation
       - name: Install Appium
-        run: npm install -g appium@3
+        working-directory: mobile-automation
+        run: npm install appium@3
 
-      # -----------------------------
-      # Install UiAutomator2 Driver
-      # -----------------------------
+      # Install UiAutomator2 driver
       - name: Install UiAutomator2 Driver
-        run: appium driver install uiautomator2
+        working-directory: mobile-automation
+        run: npx appium driver install uiautomator2
 
       - name: Verify Installed Drivers
-        run: appium driver list --installed
+        working-directory: mobile-automation
+        run: npx appium driver list --installed
 
-      - name: Start Appium
-        run: |
-          appium --port 4723 &
-          sleep 15
-      # -----------------------------
-      # Setup Java
-      # -----------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # -----------------------------
-      # Setup Android SDK
-      # -----------------------------
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # -----------------------------
-      # Install Android System Image
-      # -----------------------------
       - name: Install System Image
-        run: |
-          sdkmanager "system-images;android-33;google_apis;x86_64"
+        run: sdkmanager "system-images;android-33;google_apis;x86_64"
 
-      # -----------------------------
-      # Create Emulator
-      # -----------------------------
       - name: Create AVD
         run: |
           echo "no" | avdmanager create avd -n ci-emulator \
           -k "system-images;android-33;google_apis;x86_64" \
           --device "pixel"
 
-      # -----------------------------
-      # Start Emulator
-      # -----------------------------
       - name: Start Emulator
         run: |
           emulator -avd ci-emulator -no-window -no-audio -no-boot-anim &
@@ -95,17 +66,14 @@ jobs:
           adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 5; done;'
           adb shell input keyevent 82
 
-      # -----------------------------
-      # Start Appium Server
-      # -----------------------------
+      # 🔥 Start Appium AFTER emulator is ready
       - name: Start Appium
+        working-directory: mobile-automation
         run: |
-          appium --port 4723 --relaxed-security &
-          sleep 15
+          npx appium --port 4723 --relaxed-security > appium.log 2>&1 &
+          sleep 20
+          curl http://127.0.0.1:4723/status
 
-      # -----------------------------
-      # Run Mobile Tests
-      # -----------------------------
       - name: Run Mobile Tests
         working-directory: mobile-automation
         env:
@@ -113,24 +81,20 @@ jobs:
           CI: true
         run: npx wdio run config/wdio.qa.conf.ts
 
-      # -----------------------------
-      # Install Allure CLI
-      # -----------------------------
+      - name: Print Appium Logs (if failed)
+        if: failure()
+        working-directory: mobile-automation
+        run: cat appium.log
+
       - name: Install Allure
         run: npm install -g allure-commandline
 
-      # -----------------------------
-      # Generate Allure Report
-      # -----------------------------
       - name: Generate Allure Report
         run: |
           allure generate reports/mobile/allure-results \
           --clean \
           -o reports/mobile/allure-report
 
-      # -----------------------------
-      # Upload Allure Report
-      # -----------------------------
       - name: Upload Allure Report
         uses: actions/upload-artifact@v4
         with:
