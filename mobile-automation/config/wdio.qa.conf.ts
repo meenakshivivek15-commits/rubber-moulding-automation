@@ -44,11 +44,11 @@ export const config: Options.Testrunner & { capabilities: any } = {
     // ==============================
    
 
-    // DO NOT use Appium service (CI starts manually)
-   hostname: '127.0.0.1',
-port: 4723,
-path: '/',
-services: [],
+    // Use Appium service for local runs; CI is expected to start Appium externally
+    hostname: '127.0.0.1',
+    port: 4723,
+    path: '/',
+    services: isCI ? [] : [['appium', { args: { relaxedSecurity: true }, command: 'appium' }]],
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],
@@ -68,6 +68,7 @@ services: [],
 
         'appium:deviceName': selectedDeviceName,
         'appium:udid': selectedUdid,
+        'appium:avd': useEmulator ? emulatorName : undefined,
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
 

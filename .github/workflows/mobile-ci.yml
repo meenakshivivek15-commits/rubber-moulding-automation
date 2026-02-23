@@ -3,8 +3,12 @@ name: Mobile Automation CI
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'mobile-automation/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'mobile-automation/**'
   workflow_dispatch:
 
 jobs:
@@ -24,7 +28,7 @@ jobs:
 
       - name: Install Mobile Dependencies
         working-directory: mobile-automation
-        run: npm install
+        run: npm ci
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -76,7 +80,8 @@ jobs:
 
       - name: Generate Allure Report
         run: |
-          allure generate reports/mobile/allure-results \
+          # Generate report from the test results produced by WDIO
+          allure generate mobile-automation/allure-results \
           --clean \
           -o reports/mobile/allure-report
 
@@ -85,3 +90,9 @@ jobs:
         with:
           name: mobile-allure-report
           path: reports/mobile/allure-report
+
+      - name: Upload raw Allure results
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-allure-results
+          path: mobile-automation/allure-results
