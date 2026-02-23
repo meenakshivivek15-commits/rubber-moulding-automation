@@ -15,6 +15,8 @@ jobs:
   mobile-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      APPIUM_HOME: ${{ github.workspace }}/.appium
 
     steps:
 
@@ -74,17 +76,18 @@ jobs:
       - name: Install Appium & Drivers
         working-directory: mobile-automation
         run: |
-          npm install
+          npx appium driver list --installed || true
           npx appium driver install uiautomator2
+          npx appium driver list --installed
 
       - name: Start Appium (background) and wait
         working-directory: mobile-automation
         run: |
           # start Appium in background and capture logs
-          nohup npx appium --port 4723 --base-path / --relaxed-security > appium.log 2>&1 &
+          nohup npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security --log-level debug > appium.log 2>&1 &
 
           # wait for Appium /status to be reachable
-          for i in {1..30}; do
+          for i in {1..60}; do
             if curl -sS --fail http://127.0.0.1:4723/status >/dev/null 2>&1; then
               echo "Appium is ready"
               break
@@ -99,6 +102,18 @@ jobs:
             sed -n '1,200p' appium.log || true
             exit 1
           fi
+
+      - name: Diagnose Appium before tests (logs & ports)
+        if: always()
+        run: |
+          echo "== Appium /status (verbose) =="
+          curl -v http://127.0.0.1:4723/status || true
+          echo "\n== Listening ports for 4723 =="
+          ss -ltnp | grep 4723 || netstat -tlnp | grep 4723 || true
+          echo "\n== Appium process =="
+          ps aux | grep appium || true
+          echo "\n== Head of appium.log =="
+          head -n 200 mobile-automation/appium.log || true
 
       - name: Run Mobile Tests
         working-directory: mobile-automation
