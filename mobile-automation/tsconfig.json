@@ -1,37 +1,17 @@
 {
   "compilerOptions": {
-    "moduleResolution": "node",
+    "target": "ES2022",
     "module": "commonjs",
-    "target": "es2022",
-    "lib": [
-      "es2022",
-      "dom"
-    ],
-    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "types": ["node"],
     "resolveJsonModule": true,
-
-    "types": [
-      "node",
-      "@wdio/globals/types",
-      "expect-webdriverio",
-      "@wdio/mocha-framework",
-      "@wdio/appium-service"
-    ],
-
+    "esModuleInterop": true,
+    "strict": false,
     "skipLibCheck": true,
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
-    "isolatedModules": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "outDir": "./dist"
   },
-
   "include": [
-  "../common/**/*",
-  "./**/*"
-]
-
-
+    "config/**/*.ts",
+    "test/**/*.ts"
+  ]
 }

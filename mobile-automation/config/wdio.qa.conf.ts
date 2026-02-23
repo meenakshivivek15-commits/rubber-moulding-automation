@@ -31,19 +31,24 @@ console.log('Device Name:', selectedDeviceName)
 console.log('UDID:', selectedUdid)
 console.log('======================================')
 
-export const config: WebdriverIO.Config = {
+// =====================================================
+// WDIO CONFIG
+// =====================================================
 
+export const config: Options.Testrunner & { capabilities: any } = {
     runner: 'local',
 
-    // ❌ DO NOT define hostname/port when using Appium service
-    // WDIO service will start and manage Appium automatically
-
-    services: [],
-
+    // ==============================
+    // Appium 3 Connection
+    // ==============================
+    protocol: 'http',
     hostname: '127.0.0.1',
     port: 4723,
     path: '/',
-    protocol: 'http',
+
+    // DO NOT use Appium service (CI starts manually)
+    services: [],
+
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],
@@ -53,31 +58,25 @@ export const config: WebdriverIO.Config = {
     specFileRetries: 1,
     specFileRetriesDelay: 5,
 
+    // ==============================
+    // CAPABILITIES
+    // ==============================
+
     capabilities: [{
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
 
-        // ==============================
-        // DEVICE
-        // ==============================
         'appium:deviceName': selectedDeviceName,
         'appium:udid': selectedUdid,
 
-        // ==============================
-        // APP
-        // ==============================
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
 
         'appium:autoGrantPermissions': true,
         'appium:autoLaunch': true,
 
-        // Clean install in CI, keep state locally
         'appium:noReset': !isCI,
         'appium:fullReset': false,
 
-        // ==============================
-        // STABILITY
-        // ==============================
         'appium:adbExecTimeout': 120000,
         'appium:androidInstallTimeout': 120000,
         'appium:uiautomator2ServerLaunchTimeout': 120000,
@@ -86,9 +85,7 @@ export const config: WebdriverIO.Config = {
         'appium:avdLaunchTimeout': 240000,
         'appium:avdReadyTimeout': 240000,
 
-        // ==============================
-        // HYBRID WEBVIEW SUPPORT
-        // ==============================
+        // Hybrid support
         'appium:chromedriverAutodownload': true,
         'appium:ensureWebviewsHavePages': true,
         'appium:webviewConnectTimeout': 120000,
@@ -96,8 +93,7 @@ export const config: WebdriverIO.Config = {
         'appium:autoWebview': false,
         'appium:nativeWebScreenshot': true,
         'appium:enableWebviewDetailsCollection': true
-
-    } as any],
+    }],
 
     logLevel: 'info',
 
@@ -121,9 +117,9 @@ export const config: WebdriverIO.Config = {
         timeout: 180000
     },
 
-    // ==========================================
+    // ==============================
     // HOOKS
-    // ==========================================
+    // ==============================
 
     beforeSession: function () {
         console.log('CI:', isCI)
@@ -138,7 +134,7 @@ export const config: WebdriverIO.Config = {
         allure.addEnvironment('CI', isCI ? 'Yes' : 'No')
     },
 
-    afterTest: async function (_test, _context, result) {
+    afterTest: async function (_test, _context, result: any) {
         if (result.error) {
             await browser.takeScreenshot()
         }
