@@ -53,7 +53,7 @@ jobs:
       - name: Start Appium
         run: |
           appium --port 4723 &
-          sleep 10
+          sleep 15
       # -----------------------------
       # Setup Java
       # -----------------------------

@@ -40,6 +40,10 @@ export const config: WebdriverIO.Config = {
 
     services: [],
 
+    hostname: '127.0.0.1',
+    port: 4723,
+    path: '/',
+    protocol: 'http',
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],
