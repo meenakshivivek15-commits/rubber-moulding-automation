@@ -1,4 +1,5 @@
 import type { Options } from '@wdio/types'
+import { browser } from '@wdio/globals'
 import path from 'path'
 import dotenv from 'dotenv'
 
@@ -44,8 +45,10 @@ export const config: Options.Testrunner & { capabilities: any } = {
    
 
     // DO NOT use Appium service (CI starts manually)
-    services: ['appium'],
-
+   hostname: '127.0.0.1',
+port: 4723,
+path: '/',
+services: [],
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],

@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
-    "types": ["node"],
+    "types": ["node", "@wdio/globals"],
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "strict": false,
