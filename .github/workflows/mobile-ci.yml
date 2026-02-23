@@ -77,12 +77,28 @@ jobs:
           npm install
           npx appium driver install uiautomator2
 
-      - name: Start Appium
+      - name: Start Appium (background) and wait
         working-directory: mobile-automation
         run: |
-          npx appium --port 4723 --relaxed-security > appium.log 2>&1 &
-          sleep 20
-          curl http://127.0.0.1:4723/status  
+          # start Appium in background and capture logs
+          nohup npx appium --port 4723 --base-path / --relaxed-security > appium.log 2>&1 &
+
+          # wait for Appium /status to be reachable
+          for i in {1..30}; do
+            if curl -sS --fail http://127.0.0.1:4723/status >/dev/null 2>&1; then
+              echo "Appium is ready"
+              break
+            fi
+            echo "Waiting for Appium... ($i)"
+            sleep 2
+          done
+
+          # if Appium still not ready, print logs and exit with failure
+          if ! curl -sS --fail http://127.0.0.1:4723/status >/dev/null 2>&1; then
+            echo "Appium failed to start, dumping appium.log:"
+            sed -n '1,200p' appium.log || true
+            exit 1
+          fi
 
       - name: Run Mobile Tests
         working-directory: mobile-automation
@@ -112,3 +128,10 @@ jobs:
         with:
           name: mobile-allure-results
           path: mobile-automation/allure-results
+
+      - name: Upload Appium logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-log
+          path: mobile-automation/appium.log
