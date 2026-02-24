@@ -6,7 +6,6 @@ import dotenv from 'dotenv'
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 const CI = process.env.CI === 'true'
-const EXTERNAL_APPIUM = process.env.EXTERNAL_APPIUM === 'true'
 
 // In CI emulator is always emulator-5554
 // Locally you can still override via ANDROID_SERIAL

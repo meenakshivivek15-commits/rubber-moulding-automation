@@ -42,6 +42,29 @@ jobs:
             echo "===== ADB DEVICES ====="
             adb devices
 
+            echo "Waiting for emulator device..."
+            adb wait-for-device
+
+            echo "Waiting for Android boot completion..."
+            for i in {1..60}; do
+              BOOT_COMPLETED=$(adb shell getprop sys.boot_completed | tr -d '\r')
+              if [ "$BOOT_COMPLETED" = "1" ]; then
+                echo "Emulator boot completed ✅"
+                break
+              fi
+              sleep 2
+            done
+
+            EMULATOR_SERIAL=$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')
+            if [ -z "$EMULATOR_SERIAL" ]; then
+              echo "No online emulator found ❌"
+              adb devices
+              exit 1
+            fi
+
+            export ANDROID_SERIAL="$EMULATOR_SERIAL"
+            echo "Using ANDROID_SERIAL=$ANDROID_SERIAL"
+
             echo "Starting Appium..."
             npm install -g appium
             appium driver install uiautomator2
