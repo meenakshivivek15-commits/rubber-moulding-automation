@@ -67,7 +67,7 @@ jobs:
               sleep 5
             done
             adb shell input keyevent 82 || true
-            export ANDROID_SERIAL="$(adb devices | awk '/emulator-/{print $1; exit}' | tr -d '\r')"
+            export ANDROID_SERIAL="$(adb devices | awk '/^emulator-[0-9]+[[:space:]]+device$/{print $1; exit}' | tr -d '\r')"
             echo "Detected emulator serial: ${ANDROID_SERIAL}"
             if [ -z "${ANDROID_SERIAL}" ]; then
               echo "No emulator serial detected from adb devices"

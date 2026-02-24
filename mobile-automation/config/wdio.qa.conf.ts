@@ -45,7 +45,7 @@ const selectedDeviceName = useEmulator
     ? emulatorName
     : realDeviceName
 const detectedCiUdid = (useEmulator && isCI) ? detectConnectedEmulatorUdid() : undefined
-const resolvedUdid = (useEmulator && isCI)
+const resolvedUdid = useEmulator
     ? (ciEmulatorUdid || detectedCiUdid || emulatorUdid)
     : selectedUdid
 const resolvedDeviceName = useEmulator
