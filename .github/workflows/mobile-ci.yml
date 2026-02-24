@@ -1,4 +1,4 @@
-# CI Trigger: FINAL COMPREHENSIVE FIX - 2026-02-24
+# CI: Simplified foolproof device detection fix
 name: Mobile Automation CI
 
 on:
