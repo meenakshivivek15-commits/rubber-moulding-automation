@@ -64,9 +64,13 @@ const resolvedDeviceName = useEmulator
     ? (selectedDeviceName || 'Android Emulator')
     : (selectedDeviceName || 'Android Device')
 
-// Validate resolved UDID is never undefined
-if (!resolvedUdid || resolvedUdid === 'undefined') {
-    throw new Error(`CRITICAL: resolvedUdid is empty or undefined! Value: ${resolvedUdid}`)
+// CRITICAL VALIDATION: UDID must NEVER be undefined, 'undefined', or empty
+if (!resolvedUdid || resolvedUdid === 'undefined' || resolvedUdid.trim() === '') {
+    console.error('🔴🔴🔴 FATAL ERROR 🔴🔴🔴')
+    console.error('UDID resolved to invalid value:', resolvedUdid)
+    console.error('Type:', typeof resolvedUdid)
+    console.error('This will cause Appium to fail!')
+    throw new Error(`FATAL: Invalid UDID resolved: "${resolvedUdid}"`)
 }
 
 console.log('======================================')
@@ -78,10 +82,17 @@ console.log('  CI:', process.env.CI)
 console.log('  ANDROID_SERIAL:', process.env.ANDROID_SERIAL)
 console.log('  ANDROID_DEVICE:', process.env.ANDROID_DEVICE)
 console.log('')
-console.log('Resolved values:')
+console.log('Resolution process:')
+console.log('  useEmulator:', useEmulator)
+console.log('  resolveEmulatorUdid():', useEmulator ? resolveEmulatorUdid() : 'N/A')
+console.log('  realDeviceUdid:', realDeviceUdid)
+console.log('')
+console.log('Final resolved values:')
 console.log('  Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
 console.log('  Type:', useEmulator ? 'EMULATOR' : 'REAL DEVICE')
 console.log('  Resolved UDID:', resolvedUdid)
+console.log('  Resolved UDID (typeof):', typeof resolvedUdid)
+console.log('  Resolved UDID (length):', resolvedUdid.length)
 console.log('  Resolved Name:', resolvedDeviceName)
 console.log('======================================')
 console.log()
