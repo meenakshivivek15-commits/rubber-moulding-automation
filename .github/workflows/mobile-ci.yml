@@ -74,6 +74,14 @@ jobs:
               adb devices -l
               exit 1
             fi
+            for i in {1..30}; do
+              STATE="$(adb -s "${ANDROID_SERIAL}" get-state 2>/dev/null | tr -d '\r')"
+              BOOTED="$(adb -s "${ANDROID_SERIAL}" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
+              if [ "${STATE}" = "device" ] && [ "${BOOTED}" = "1" ]; then
+                break
+              fi
+              sleep 2
+            done
             adb -s "${ANDROID_SERIAL}" get-state
             adb -s "${ANDROID_SERIAL}" shell getprop sys.boot_completed
             cd mobile-automation

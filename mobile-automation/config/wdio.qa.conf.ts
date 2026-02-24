@@ -22,6 +22,7 @@ const realDeviceName = process.env.ANDROID_DEVICE_NAME
 // Emulator values
 const emulatorUdid = 'emulator-5554'
 const emulatorName = 'ci-emulator'
+const emulatorDeviceName = 'Android Emulator'
 const ciEmulatorUdid = process.env.ANDROID_SERIAL
 const forcedAppiumUdid = process.env.APPIUM_UDID
 
@@ -38,7 +39,9 @@ const detectConnectedEmulatorUdid = (): string | undefined => {
 
 // Selected values
 const selectedUdid = useEmulator ? emulatorUdid : realDeviceUdid
-const selectedDeviceName = useEmulator ? emulatorName : realDeviceName
+const selectedDeviceName = useEmulator
+    ? (isCI ? emulatorDeviceName : emulatorName)
+    : realDeviceName
 const detectedCiUdid = (useEmulator && isCI) ? detectConnectedEmulatorUdid() : undefined
 const resolvedUdid = (useEmulator && isCI)
     ? (forcedAppiumUdid || ciEmulatorUdid || detectedCiUdid)
