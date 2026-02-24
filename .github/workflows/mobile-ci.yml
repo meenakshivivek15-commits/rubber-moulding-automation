@@ -57,20 +57,21 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -memory 2048 -cores 2
           disable-animations: true
-          boot-timeout: 600
           script: |
             adb start-server
             adb devices -l
             adb wait-for-device
-            for i in {1..120}; do
+            echo "Emulator detected by adb, waiting for full boot..."
+            for i in {1..240}; do
               BOOT_COMPLETE="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
               if [ "${BOOT_COMPLETE}" = "1" ]; then
-                echo "Emulator booted successfully"
+                echo "✓ Emulator booted successfully at iteration $i"
                 break
               fi
-              echo "Waiting for emulator boot... ($i/120)"
+              PROGRESS=$((i * 100 / 240))
+              echo "[$PROGRESS%] Waiting for emulator boot... (attempt $i/240, sleeping 5s)"
               sleep 5
             done
             adb shell input keyevent 82 || true
