@@ -8,105 +8,62 @@ import { execSync } from 'child_process'
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 // =====================================================
-// ENVIRONMENT & DEVICE SWITCHING
+// SIMPLE, FOOLPROOF DEVICE DETECTION
 // =====================================================
 
-const useEmulator = process.env.DEVICE === 'emulator'
-const isCI = process.env.CI === 'true'
-const useExternalAppium = process.env.EXTERNAL_APPIUM === 'true'
+const CI = process.env.CI === 'true'
+const DEVICE = process.env.DEVICE
+const EXTERNAL_APPIUM = process.env.EXTERNAL_APPIUM === 'true'
+
+// HARDCODED FALLBACKS - These will ALWAYS work
+const EMULATOR_UDID = 'emulator-5554'
+const DEVICE_UDID = 'device'
+
+// Get the actual UDID - use this ONE source of truth
+let FINAL_UDID = ''
+
+if (CI || DEVICE === 'emulator') {
+    // CI mode or explicitly using emulator
+    // Try env var first (most reliable from workflow)
+    const fromEnv = process.env.ANDROID_SERIAL
+    if (fromEnv && fromEnv.trim() && fromEnv !== 'undefined') {
+        FINAL_UDID = fromEnv.trim()
+        console.log('✅ Using ANDROID_SERIAL from env:', FINAL_UDID)
+    } else {
+        // Env var not available, use hardcoded fallback
+        FINAL_UDID = EMULATOR_UDID
+        console.log('⚠️  Using hardcoded emulator UDID:', FINAL_UDID)
+    }
+} else {
+    // Real device mode
+    const fromEnv = process.env.ANDROID_DEVICE
+    if (fromEnv && fromEnv.trim() && fromEnv !== 'undefined') {
+        FINAL_UDID = fromEnv.trim()
+        console.log('✅ Using ANDROID_DEVICE from env:', FINAL_UDID)
+    } else {
+        FINAL_UDID = DEVICE_UDID
+        console.log('⚠️  Using default device UDID:', FINAL_UDID)
+    }
+}
+
+// VALIDATE: UDID is NEVER undefined, null, empty, or the string 'undefined'
+if (!FINAL_UDID || FINAL_UDID === '' || FINAL_UDID === 'undefined' || FINAL_UDID === 'null') {
+    throw new Error(`FATAL: Device UDID is invalid: "${FINAL_UDID}"`)
+}
+
+console.log('')
+console.log('════════════════════════════════════════')
+console.log('📱 DEVICE CONFIGURATION')
+console.log('════════════════════════════════════════')
+console.log('CI Mode:', CI)
+console.log('Device Type:', DEVICE === 'emulator' ? 'EMULATOR' : 'REAL DEVICE')
+console.log('Final UDID:', FINAL_UDID)
+console.log('════════════════════════════════════════')
+console.log('')
 
 if (!process.env.ANDROID_HOME && process.env.ANDROID_SDK_ROOT) {
     process.env.ANDROID_HOME = process.env.ANDROID_SDK_ROOT
 }
-
-// Real device values (from .env)
-const realDeviceUdid = process.env.ANDROID_DEVICE
-const realDeviceName = process.env.ANDROID_DEVICE_NAME
-
-// Emulator values - ALWAYS have a hardcoded fallback
-const DEFAULT_EMULATOR_SERIAL = 'emulator-5554'
-const emulatorName = 'ci-emulator'
-const envAndroidSerial = process.env.ANDROID_SERIAL?.trim()
-
-const detectConnectedEmulatorUdid = (): string | undefined => {
-    try {
-        const output = execSync('adb devices', { encoding: 'utf-8' })
-        const lines = output.split('\n').map((line) => line.trim())
-        const onlineEmulator = lines.find((line) => /^emulator-\d+\s+device$/.test(line))
-        return onlineEmulator?.split(/\s+/)[0]
-    } catch {
-        return undefined
-    }
-}
-
-// Resolve emulator UDID with explicit fallback chain - NEVER returns undefined/empty
-const resolveEmulatorUdid = (): string => {
-    // Priority: env var > detected > hardcoded default
-    
-    // 1. Try env var first
-    if (envAndroidSerial && envAndroidSerial !== 'undefined') {
-        console.log('✓ Using ANDROID_SERIAL from env:', envAndroidSerial)
-        return envAndroidSerial
-    }
-    
-    // 2. Try adb detection
-    const detected = detectConnectedEmulatorUdid()
-    if (detected && detected !== 'undefined') {
-        console.log('✓ Detected emulator from adb:', detected)
-        return detected
-    }
-    
-    // 3. Fall back to hardcoded - ALWAYS return this if all else fails
-    console.log('⚠️  Falling back to hardcoded DEFAULT_EMULATOR_SERIAL:', DEFAULT_EMULATOR_SERIAL)
-    return DEFAULT_EMULATOR_SERIAL
-}
-
-// Selected values
-const selectedDeviceName = useEmulator ? emulatorName : realDeviceName
-const resolvedUdid = useEmulator ? resolveEmulatorUdid() : (realDeviceUdid || 'device')
-const resolvedDeviceName = useEmulator
-    ? (selectedDeviceName || 'Android Emulator')
-    : (selectedDeviceName || 'Android Device')
-
-// CRITICAL VALIDATION: UDID must NEVER be undefined, 'undefined', or empty
-if (!resolvedUdid || resolvedUdid === 'undefined' || resolvedUdid.trim() === '') {
-    console.error('🔴🔴🔴 FATAL ERROR 🔴🔴🔴')
-    console.error('UDID resolved to invalid value:', resolvedUdid)
-    console.error('Type:', typeof resolvedUdid)
-    console.error('String representation:', String(resolvedUdid))
-    console.error('JSON representation:', JSON.stringify(resolvedUdid))
-    console.error('This will cause Appium to fail!')
-    
-    // Extra safety: check if it's literally the string 'undefined'
-    const asString = String(resolvedUdid).toLowerCase().trim()
-    if (asString === 'undefined' || asString === 'null' || asString === '') {
-        throw new Error(`FATAL: Invalid UDID resolved: "${resolvedUdid}" (as string: "${asString}")`)
-    }
-}
-
-console.log('======================================')
-console.log('🚀 WDIO Config Initialization')
-console.log('======================================')
-console.log('All env vars at load time:')
-console.log('  DEVICE:', process.env.DEVICE)
-console.log('  CI:', process.env.CI)
-console.log('  ANDROID_SERIAL:', process.env.ANDROID_SERIAL)
-console.log('  ANDROID_DEVICE:', process.env.ANDROID_DEVICE)
-console.log('')
-console.log('Resolution process:')
-console.log('  useEmulator:', useEmulator)
-console.log('  resolveEmulatorUdid():', useEmulator ? resolveEmulatorUdid() : 'N/A')
-console.log('  realDeviceUdid:', realDeviceUdid)
-console.log('')
-console.log('Final resolved values:')
-console.log('  Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
-console.log('  Type:', useEmulator ? 'EMULATOR' : 'REAL DEVICE')
-console.log('  Resolved UDID:', resolvedUdid)
-console.log('  Resolved UDID (typeof):', typeof resolvedUdid)
-console.log('  Resolved UDID (length):', resolvedUdid.length)
-console.log('  Resolved Name:', resolvedDeviceName)
-console.log('======================================')
-console.log()
 // =====================================================
 // WDIO CONFIG
 // =====================================================
@@ -155,16 +112,16 @@ export const config: Options.Testrunner & { capabilities: any } = {
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
 
-        'appium:deviceName': resolvedDeviceName || 'Android Device',
-        'appium:udid': (resolvedUdid && resolvedUdid !== 'undefined') ? resolvedUdid : DEFAULT_EMULATOR_SERIAL,
-        'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
+        'appium:deviceName': 'Android Device',
+        'appium:udid': FINAL_UDID,
+        'appium:avd': (DEVICE === 'emulator' && !CI) ? 'ci-emulator' : undefined,
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
 
         'appium:autoGrantPermissions': true,
         'appium:autoLaunch': true,
 
-        'appium:noReset': !isCI,
+        'appium:noReset': !CI,
         'appium:fullReset': false,
 
         'appium:adbExecTimeout': 120000,
@@ -212,54 +169,16 @@ export const config: Options.Testrunner & { capabilities: any } = {
     // ==============================
 
     onPrepare: function (config: any) {
-        console.log('\n\n===========================================')
-        console.log('🔧 onPrepare HOOK - FINAL VALIDATION')
+        console.log('\n===========================================')
+        console.log('✅ onPrepare: Validating capabilities')
         console.log('===========================================')
-        
-        if (!config.capabilities || !config.capabilities[0]) {
-            throw new Error('CRITICAL: config.capabilities is missing!')
-        }
-        
-        const cap = config.capabilities[0]
-        const currentUdid = cap['appium:udid']
-        const currentDeviceName = cap['appium:deviceName']
-        
-        console.log('Current capability values:')
-        console.log('  appium:udid:', currentUdid)
-        console.log('  appium:deviceName:', currentDeviceName)
-        
-        // Validate UDID is not undefined or 'undefined'
-        if (!currentUdid || currentUdid === 'undefined' || currentUdid === 'undefined') {
-            console.error('❌ CRITICAL: UDID is invalid!', currentUdid)
-            throw new Error(`CRITICAL: appium:udid is invalid: ${currentUdid}`)
-        }
-        
-        console.log('✅ Device capabilities validated:')
-        console.log('  UDID:', currentUdid)
-        console.log('  Device Name:', currentDeviceName)
-        
-        // Show ADB state
-        try {
-            const adbDevices = execSync('adb devices -l', { encoding: 'utf-8' })
-            console.log('\n📱 ADB Devices at hook time:\n', adbDevices)
-        } catch (error: any) {
-            console.log('⚠️  ADB check failed:', error?.message)
-        }
-        
+        console.log('UDID:', config.capabilities[0]['appium:udid'])
+        console.log('Device:', config.capabilities[0]['appium:deviceName'])
         console.log('===========================================\n')
     },
 
     beforeSession: function (_config: any) {
-        console.log('=== beforeSession ===')
-        console.log('CI:', isCI)
-        console.log('Device:', selectedDeviceName)
-        console.log('External Appium:', useExternalAppium)
-        try {
-            const adbDevices = execSync('adb devices -l', { encoding: 'utf-8' })
-            console.log('ADB Devices:\n' + adbDevices)
-        } catch (error: any) {
-            console.log('ADB Devices check failed:', error?.message || error)
-        }
+        console.log('📱 beforeSession: About to create Appium session')
     },
 
     before: async function () {
