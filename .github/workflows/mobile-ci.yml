@@ -78,10 +78,38 @@ jobs:
               BOOT_ITER=$((BOOT_ITER + 1))
             done
             adb shell input keyevent 82 || true
-            export ANDROID_SERIAL="$(adb devices | awk '/^emulator-[0-9]+[[:space:]]+device$/{print $1; exit}' | tr -d '\r')"
-            echo "Detected emulator serial: ${ANDROID_SERIAL}"
-            if [ -z "${ANDROID_SERIAL}" ]; then
-              echo "No emulator serial detected from adb devices"
+            # ROBUST device detection with multiple fallback strategies
+            echo "🔍 Detecting emulator device serial..."
+            
+            # Strategy 1: Try awk with device status
+            DETECTED_SERIAL="$(adb devices | awk '/^emulator-[0-9]+[[:space:]]+device$/{print $1; exit}' | tr -d '\r')"
+            
+            # Strategy 2: If empty, try simpler grep
+            if [ -z "$DETECTED_SERIAL" ]; then
+              DETECTED_SERIAL="$(adb devices | grep 'emulator-' | awk '{print $1; exit}' | tr -d '\r')"
+            fi
+            
+            # Strategy 3: Last resort - look for any emulator line
+            if [ -z "$DETECTED_SERIAL" ]; then
+              DETECTED_SERIAL="$(adb devices -l | grep 'emulator' | awk '{print $1; exit}' | tr -d '\r')"
+            fi
+            
+            # Strategy 4: Force the default if all else fails
+            if [ -z "$DETECTED_SERIAL" ]; then
+              echo "⚠️  Could not detect emulator, using hardcoded fallback: emulator-5554"
+              DETECTED_SERIAL="emulator-5554"
+            fi
+            
+            # Clean serial and set as env var
+            export ANDROID_SERIAL="$(echo "$DETECTED_SERIAL" | tr -d ' \r\n')"
+            
+            echo "✅ Detected ANDROID_SERIAL: [${ANDROID_SERIAL}]"
+            echo "✅ Length: ${#ANDROID_SERIAL}"
+            
+            # Validate it's not empty or "undefined"
+            if [ -z "${ANDROID_SERIAL}" ] || [ "${ANDROID_SERIAL}" = "undefined" ]; then
+              echo "❌ CRITICAL: ANDROID_SERIAL is empty or 'undefined'"
+              echo "adb devices output:"
               adb devices -l
               exit 1
             fi

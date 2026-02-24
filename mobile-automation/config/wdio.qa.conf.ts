@@ -39,20 +39,24 @@ const detectConnectedEmulatorUdid = (): string | undefined => {
     }
 }
 
-// Resolve emulator UDID with explicit fallback chain
+// Resolve emulator UDID with explicit fallback chain - NEVER returns undefined/empty
 const resolveEmulatorUdid = (): string => {
     // Priority: env var > detected > hardcoded default
-    if (envAndroidSerial) {
+    
+    // 1. Try env var first
+    if (envAndroidSerial && envAndroidSerial !== 'undefined') {
         console.log('✓ Using ANDROID_SERIAL from env:', envAndroidSerial)
         return envAndroidSerial
     }
     
+    // 2. Try adb detection
     const detected = detectConnectedEmulatorUdid()
-    if (detected) {
+    if (detected && detected !== 'undefined') {
         console.log('✓ Detected emulator from adb:', detected)
         return detected
     }
     
+    // 3. Fall back to hardcoded - ALWAYS return this if all else fails
     console.log('⚠️  Falling back to hardcoded DEFAULT_EMULATOR_SERIAL:', DEFAULT_EMULATOR_SERIAL)
     return DEFAULT_EMULATOR_SERIAL
 }
@@ -69,8 +73,15 @@ if (!resolvedUdid || resolvedUdid === 'undefined' || resolvedUdid.trim() === '')
     console.error('🔴🔴🔴 FATAL ERROR 🔴🔴🔴')
     console.error('UDID resolved to invalid value:', resolvedUdid)
     console.error('Type:', typeof resolvedUdid)
+    console.error('String representation:', String(resolvedUdid))
+    console.error('JSON representation:', JSON.stringify(resolvedUdid))
     console.error('This will cause Appium to fail!')
-    throw new Error(`FATAL: Invalid UDID resolved: "${resolvedUdid}"`)
+    
+    // Extra safety: check if it's literally the string 'undefined'
+    const asString = String(resolvedUdid).toLowerCase().trim()
+    if (asString === 'undefined' || asString === 'null' || asString === '') {
+        throw new Error(`FATAL: Invalid UDID resolved: "${resolvedUdid}" (as string: "${asString}")`)
+    }
 }
 
 console.log('======================================')
@@ -144,8 +155,8 @@ export const config: Options.Testrunner & { capabilities: any } = {
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
 
-        'appium:deviceName': resolvedDeviceName,
-        'appium:udid': resolvedUdid,  // ALWAYS resolved, never undefined
+        'appium:deviceName': resolvedDeviceName || 'Android Device',
+        'appium:udid': (resolvedUdid && resolvedUdid !== 'undefined') ? resolvedUdid : DEFAULT_EMULATOR_SERIAL,
         'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
