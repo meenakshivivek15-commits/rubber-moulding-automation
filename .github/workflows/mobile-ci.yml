@@ -1,9 +1,6 @@
-# CI: Simplified foolproof device detection fix
 name: Mobile Automation CI
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -12,11 +9,8 @@ jobs:
   mobile-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    env:
-      APPIUM_HOME: ${{ github.workspace }}/.appium
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -24,22 +18,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('mobile-automation/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: mobile-automation/node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('mobile-automation/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
 
       - name: Install Mobile Dependencies
         working-directory: mobile-automation
@@ -54,116 +32,50 @@ jobs:
       - name: Run tests on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 33
           target: google_apis
-          arch: x86
+          arch: x86_64
           profile: pixel
           emulator-options: -no-window -no-audio -no-boot-anim -gpu off
           disable-animations: true
           script: |
-            adb start-server
-            adb devices -l
-            adb wait-for-device
-            echo "Emulator detected by adb, waiting for full boot..."
-            BOOT_ITER=1
-            while [ $BOOT_ITER -le 240 ]; do
-              BOOT_COMPLETE="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
-              if [ "${BOOT_COMPLETE}" = "1" ]; then
-                echo "✓ Emulator booted successfully at iteration $BOOT_ITER"
-                break
-              fi
-              PROGRESS=$((BOOT_ITER * 100 / 240))
-              echo "[$PROGRESS%] Waiting for emulator boot... (attempt $BOOT_ITER/240, sleeping 5s)"
-              sleep 5
-              BOOT_ITER=$((BOOT_ITER + 1))
-            done
-            adb shell input keyevent 82 || true
-            # ROBUST device detection with multiple fallback strategies
-            echo "🔍 Detecting emulator device serial..."
-            
-            # Strategy 1: Try awk with device status
-            DETECTED_SERIAL="$(adb devices | awk '/^emulator-[0-9]+[[:space:]]+device$/{print $1; exit}' | tr -d '\r')"
-            
-            # Strategy 2: If empty, try simpler grep
-            if [ -z "$DETECTED_SERIAL" ]; then
-              DETECTED_SERIAL="$(adb devices | grep 'emulator-' | awk '{print $1; exit}' | tr -d '\r')"
-            fi
-            
-            # Strategy 3: Last resort - look for any emulator line
-            if [ -z "$DETECTED_SERIAL" ]; then
-              DETECTED_SERIAL="$(adb devices -l | grep 'emulator' | awk '{print $1; exit}' | tr -d '\r')"
-            fi
-            
-            # Strategy 4: Force the default if all else fails
-            if [ -z "$DETECTED_SERIAL" ]; then
-              echo "⚠️  Could not detect emulator, using hardcoded fallback: emulator-5554"
-              DETECTED_SERIAL="emulator-5554"
-            fi
-            
-            # Clean serial and set as env var
-            export ANDROID_SERIAL="$(echo "$DETECTED_SERIAL" | tr -d ' \r\n')"
-            
-            echo "✅ Detected ANDROID_SERIAL: [${ANDROID_SERIAL}]"
-            echo "✅ Length: ${#ANDROID_SERIAL}"
-            
-            # Validate it's not empty or "undefined"
-            if [ -z "${ANDROID_SERIAL}" ] || [ "${ANDROID_SERIAL}" = "undefined" ]; then
-              echo "❌ CRITICAL: ANDROID_SERIAL is empty or 'undefined'"
-              echo "adb devices output:"
-              adb devices -l
-              exit 1
-            fi
-            FINAL_ITER=1
-            while [ $FINAL_ITER -le 30 ]; do
-              STATE="$(adb -s "${ANDROID_SERIAL}" get-state 2>/dev/null | tr -d '\r')"
-              BOOTED="$(adb -s "${ANDROID_SERIAL}" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
-              if [ "${STATE}" = "device" ] && [ "${BOOTED}" = "1" ]; then
-                break
-              fi
-              sleep 2
-              FINAL_ITER=$((FINAL_ITER + 1))
-            done
-            adb -s "${ANDROID_SERIAL}" get-state
-            adb -s "${ANDROID_SERIAL}" shell getprop sys.boot_completed
-            export ANDROID_SDK_ROOT="$(dirname "$(dirname "$(command -v adb)")")"
-            export ANDROID_HOME="${ANDROID_SDK_ROOT}"
-            export PATH="${ANDROID_SDK_ROOT}/platform-tools:${ANDROID_SDK_ROOT}/emulator:${PATH}"
-            echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
-            which adb
-            adb version
-            cd mobile-automation
-            npx appium driver list --installed || true
-            npx appium driver install uiautomator2
-            npx appium driver list --installed
-            mkdir -p ../reports/mobile/diagnostics
-            until [ "$(adb -s "${ANDROID_SERIAL}" get-state 2>/dev/null | tr -d '\r')" = "device" ]; do
-              sleep 2
-            done
-            npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > ../reports/mobile/diagnostics/appium.log 2>&1 &
+            echo "===== ADB DEVICES ====="
+            adb devices
+
+            echo "Starting Appium..."
+            npm install -g appium
+            appium driver install uiautomator2
+
+            appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > appium.log 2>&1 &
             APPIUM_PID=$!
+
+            echo "Waiting for Appium to be ready..."
             until curl -s http://127.0.0.1:4723/status >/dev/null; do
               sleep 2
             done
-            echo "Pre-WDIO adb state for ${ANDROID_SERIAL}:"
-            adb devices -l
-            adb -s "${ANDROID_SERIAL}" get-state
-            set +e
-            ANDROID_SERIAL="${ANDROID_SERIAL}" ANDROID_HOME="${ANDROID_HOME}" ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT}" DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
+
+            echo "Appium is ready ✅"
+
+            cd mobile-automation
+            npx wdio run config/wdio.qa.conf.ts
             TEST_EXIT_CODE=$?
-            if [ $TEST_EXIT_CODE -ne 0 ]; then
-              adb devices -l > ../reports/mobile/diagnostics/adb-devices.txt || true
-              adb shell getprop > ../reports/mobile/diagnostics/device-props.txt || true
-              adb logcat -d > ../reports/mobile/diagnostics/logcat.txt || true
-            fi
+
             kill $APPIUM_PID || true
             exit $TEST_EXIT_CODE
+
+      - name: Upload Appium Log (if failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-log
+          path: appium.log
+          if-no-files-found: ignore
 
       - name: Install Allure
         run: npm install -g allure-commandline
 
       - name: Generate Allure Report
         run: |
-          # Generate report from the test results produced by WDIO
           allure generate mobile-automation/allure-results \
           --clean \
           -o reports/mobile/allure-report
@@ -174,17 +86,8 @@ jobs:
           name: mobile-allure-report
           path: reports/mobile/allure-report
 
-      - name: Upload raw Allure results
+      - name: Upload Raw Allure Results
         uses: actions/upload-artifact@v4
         with:
           name: mobile-allure-results
           path: mobile-automation/allure-results
-
-      - name: Upload mobile diagnostics (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mobile-diagnostics
-          path: reports/mobile/diagnostics
-          if-no-files-found: ignore
-
