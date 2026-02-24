@@ -2,6 +2,7 @@
 import type { Options } from '@wdio/types'
 import path from 'path'
 import dotenv from 'dotenv'
+import { execSync } from 'child_process'
 
 // Load root .env
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
@@ -22,15 +23,28 @@ const emulatorUdid = 'emulator-5554'
 const emulatorName = 'ci-emulator'
 const ciEmulatorUdid = process.env.ANDROID_SERIAL
 
+const detectConnectedEmulatorUdid = (): string | undefined => {
+    try {
+        const output = execSync('adb devices', { encoding: 'utf-8' })
+        const lines = output.split('\n').map((line) => line.trim())
+        const onlineEmulator = lines.find((line) => /^emulator-\d+\s+device$/.test(line))
+        return onlineEmulator?.split(/\s+/)[0]
+    } catch {
+        return undefined
+    }
+}
+
 // Selected values
 const selectedUdid = useEmulator ? emulatorUdid : realDeviceUdid
 const selectedDeviceName = useEmulator ? emulatorName : realDeviceName
-const resolvedUdid = (useEmulator && isCI) ? (ciEmulatorUdid || selectedUdid) : selectedUdid
+const detectedCiUdid = (useEmulator && isCI) ? detectConnectedEmulatorUdid() : undefined
+const resolvedUdid = (useEmulator && isCI) ? (ciEmulatorUdid || detectedCiUdid || selectedUdid) : selectedUdid
 
 console.log('======================================')
 console.log('Execution Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
 console.log('Running on:', useEmulator ? 'EMULATOR' : 'REAL DEVICE')
 console.log('Device Name:', selectedDeviceName)
+console.log('Detected CI UDID:', detectedCiUdid)
 console.log('UDID:', resolvedUdid)
 console.log('======================================')
 
