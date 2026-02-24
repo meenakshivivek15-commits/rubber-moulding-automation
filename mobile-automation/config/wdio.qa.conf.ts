@@ -27,20 +27,7 @@ export const config: Options.Testrunner = {
     port: 4723,
     path: '/',
 
-    services: EXTERNAL_APPIUM
-        ? []
-        : [[
-            'appium',
-            {
-                command: 'appium',
-                args: {
-                    address: '127.0.0.1',
-                    port: 4723,
-                    basePath: '/',
-                    relaxedSecurity: true
-                }
-            }
-        ]],
+    services: [],
 
     specs: [
         '../test/specs/**/*.e2e.ts'
@@ -108,10 +95,10 @@ export const config: Options.Testrunner = {
     // HOOKS
     // ======================
 
-    onPrepare: function (config: any) {
+    onPrepare: function () {
         console.log('\n===========================================')
         console.log('🚀 Preparing Test Execution')
-        console.log('UDID:', config.capabilities[0]['appium:udid'])
+        console.log('UDID:', UDID)
         console.log('===========================================\n')
     },
 
