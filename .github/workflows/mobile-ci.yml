@@ -65,15 +65,17 @@ jobs:
             adb devices -l
             adb wait-for-device
             echo "Emulator detected by adb, waiting for full boot..."
-            for i in {1..240}; do
+            BOOT_ITER=1
+            while [ $BOOT_ITER -le 240 ]; do
               BOOT_COMPLETE="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
               if [ "${BOOT_COMPLETE}" = "1" ]; then
-                echo "✓ Emulator booted successfully at iteration $i"
+                echo "✓ Emulator booted successfully at iteration $BOOT_ITER"
                 break
               fi
-              PROGRESS=$((i * 100 / 240))
-              echo "[$PROGRESS%] Waiting for emulator boot... (attempt $i/240, sleeping 5s)"
+              PROGRESS=$((BOOT_ITER * 100 / 240))
+              echo "[$PROGRESS%] Waiting for emulator boot... (attempt $BOOT_ITER/240, sleeping 5s)"
               sleep 5
+              BOOT_ITER=$((BOOT_ITER + 1))
             done
             adb shell input keyevent 82 || true
             export ANDROID_SERIAL="$(adb devices | awk '/^emulator-[0-9]+[[:space:]]+device$/{print $1; exit}' | tr -d '\r')"
@@ -83,13 +85,15 @@ jobs:
               adb devices -l
               exit 1
             fi
-            for i in {1..30}; do
+            FINAL_ITER=1
+            while [ $FINAL_ITER -le 30 ]; do
               STATE="$(adb -s "${ANDROID_SERIAL}" get-state 2>/dev/null | tr -d '\r')"
               BOOTED="$(adb -s "${ANDROID_SERIAL}" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
               if [ "${STATE}" = "device" ] && [ "${BOOTED}" = "1" ]; then
                 break
               fi
               sleep 2
+              FINAL_ITER=$((FINAL_ITER + 1))
             done
             adb -s "${ANDROID_SERIAL}" get-state
             adb -s "${ANDROID_SERIAL}" shell getprop sys.boot_completed
