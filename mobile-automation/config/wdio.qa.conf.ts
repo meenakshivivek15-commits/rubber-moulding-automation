@@ -115,6 +115,10 @@ export const config: Options.Testrunner = {
         console.log('===========================================\n')
     },
 
+    beforeSession: function () {
+        console.log('Creating session...')
+    },
+
     before: async function () {
         const allure = require('@wdio/allure-reporter').default
         allure.addEnvironment('Platform', 'Android')
