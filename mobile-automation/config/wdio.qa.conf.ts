@@ -114,8 +114,8 @@ export const config: Options.Testrunner & { capabilities: any } = {
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
 
-        'appium:deviceName': resolvedDeviceName || 'Android',
-        'appium:udid': resolvedUdid || emulatorUdid,
+        'appium:deviceName': 'Android',
+        'appium:udid': useEmulator ? (process.env.ANDROID_SERIAL?.trim() || 'emulator-5554') : (selectedUdid || 'device'),
         'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
@@ -175,33 +175,36 @@ export const config: Options.Testrunner & { capabilities: any } = {
         console.log('🔧 onPrepare HOOK EXECUTING')
         console.log('===========================================')
         console.log('ENV ANDROID_SERIAL:', process.env.ANDROID_SERIAL)
-        console.log('ENV ANDROID_HOME:', process.env.ANDROID_HOME)
         console.log('ENV DEVICE:', process.env.DEVICE)
         console.log('ENV CI:', process.env.CI)
-        console.log('useEmulator variable:', useEmulator)
-        console.log('isCI variable:', isCI)
-        console.log('resolvedUdid variable:', resolvedUdid)
-        console.log('emulatorUdid variable:', emulatorUdid)
-        console.log('Current config.capabilities:', JSON.stringify(config.capabilities, null, 2))
         
-        if (useEmulator && config.capabilities && config.capabilities[0]) {
-            const currentAdbUdid = detectConnectedEmulatorUdid()
-            const sessionUdid = currentAdbUdid || process.env.ANDROID_SERIAL?.trim() || resolvedUdid || emulatorUdid
-            console.log('🎯 Detected ADB UDID:', currentAdbUdid)
-            console.log('🎯 Final session UDID will be:', sessionUdid)
+        if (!config.capabilities || !config.capabilities[0]) {
+            console.error('❌ CRITICAL: No capabilities found!')
+            throw new Error('onPrepare: config.capabilities is missing or empty!')
+        }
+        
+        if (useEmulator) {
+            // For CI: try env var first, then fallback to standard emulator serial
+            let finalUdid = process.env.ANDROID_SERIAL?.trim() || 'emulator-5554'
             
-            config.capabilities[0]['appium:udid'] = sessionUdid
+            console.log('🎯 Setting UDID to:', finalUdid)
+            config.capabilities[0]['appium:udid'] = finalUdid
             config.capabilities[0]['appium:deviceName'] = 'Android'
             
-            console.log('✅ Set appium:udid to:', config.capabilities[0]['appium:udid'])
-            console.log('✅ Set appium:deviceName to:', config.capabilities[0]['appium:deviceName'])
-            console.log('Updated capabilities:', JSON.stringify(config.capabilities[0], null, 2))
+            console.log('✅ Modified capabilities[0]:')
+            console.log('   appium:udid =', config.capabilities[0]['appium:udid'])
+            console.log('   appium:deviceName =', config.capabilities[0]['appium:deviceName'])
+            
+            if (!config.capabilities[0]['appium:udid']) {
+                throw new Error('onPrepare: Failed to set appium:udid!')
+            }
         }
+        
         try {
             const adbDevices = execSync('adb devices -l', { encoding: 'utf-8' })
-            console.log('📱 ADB Devices at onPrepare:\n' + adbDevices)
+            console.log('📱 ADB Devices:\n', adbDevices)
         } catch (error: any) {
-            console.log('❌ ADB Devices check failed:', error?.message || error)
+            console.log('⚠️  ADB check failed:', error?.message)
         }
         console.log('===========================================\n')
     },
