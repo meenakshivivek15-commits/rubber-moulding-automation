@@ -115,33 +115,6 @@ export const config: Options.Testrunner = {
         console.log('===========================================\n')
     },
 
-    beforeSession: async function () {
-        const { execSync } = require('child_process')
-        const sleepMs = 40000
-        console.log(`⏳ Waiting ${sleepMs / 1000}s before WDIO session start...`)
-        await new Promise(resolve => setTimeout(resolve, sleepMs))
-        console.log('📱 Pre-session device verification...')
-        
-        try {
-            // Verify device is still online
-            const state = execSync(`adb -s ${UDID} get-state`, { encoding: 'utf-8' }).trim()
-            console.log(`✓ Device ${UDID} state: ${state}`)
-            
-            if (state !== 'device') {
-                throw new Error(`Device state is "${state}", expected "device"`)
-            }
-            
-            // Verify boot is complete
-            const bootComplete = execSync(`adb -s ${UDID} shell getprop sys.boot_completed`, { encoding: 'utf-8' }).trim()
-            console.log(`✓ Boot completed: ${bootComplete}`)
-            
-            console.log('✅ Device ready for Appium session\n')
-        } catch (error: any) {
-            console.error('❌ Device verification failed:', error.message)
-            throw error
-        }
-    },
-
     before: async function () {
         const allure = require('@wdio/allure-reporter').default
         allure.addEnvironment('Platform', 'Android')
