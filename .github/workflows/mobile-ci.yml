@@ -92,13 +92,13 @@ jobs:
             until [ "$(adb -s "${ANDROID_SERIAL}" get-state 2>/dev/null | tr -d '\r')" = "device" ]; do
               sleep 2
             done
-            APPIUM_UDID="${ANDROID_SERIAL}" npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > ../reports/mobile/diagnostics/appium.log 2>&1 &
+            npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > ../reports/mobile/diagnostics/appium.log 2>&1 &
             APPIUM_PID=$!
             until curl -s http://127.0.0.1:4723/status >/dev/null; do
               sleep 2
             done
             set +e
-            APPIUM_UDID="${ANDROID_SERIAL}" DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
+            DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
             TEST_EXIT_CODE=$?
             if [ $TEST_EXIT_CODE -ne 0 ]; then
               adb devices -l > ../reports/mobile/diagnostics/adb-devices.txt || true

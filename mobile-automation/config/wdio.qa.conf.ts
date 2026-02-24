@@ -22,9 +22,7 @@ const realDeviceName = process.env.ANDROID_DEVICE_NAME
 // Emulator values
 const emulatorUdid = 'emulator-5554'
 const emulatorName = 'ci-emulator'
-const emulatorDeviceName = 'Android Emulator'
 const ciEmulatorUdid = process.env.ANDROID_SERIAL
-const forcedAppiumUdid = process.env.APPIUM_UDID
 
 const detectConnectedEmulatorUdid = (): string | undefined => {
     try {
@@ -40,18 +38,17 @@ const detectConnectedEmulatorUdid = (): string | undefined => {
 // Selected values
 const selectedUdid = useEmulator ? emulatorUdid : realDeviceUdid
 const selectedDeviceName = useEmulator
-    ? (isCI ? emulatorDeviceName : emulatorName)
+    ? emulatorName
     : realDeviceName
 const detectedCiUdid = (useEmulator && isCI) ? detectConnectedEmulatorUdid() : undefined
 const resolvedUdid = (useEmulator && isCI)
-    ? (forcedAppiumUdid || ciEmulatorUdid || detectedCiUdid)
+    ? undefined
     : selectedUdid
 
 console.log('======================================')
 console.log('Execution Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
 console.log('Running on:', useEmulator ? 'EMULATOR' : 'REAL DEVICE')
 console.log('Device Name:', selectedDeviceName)
-console.log('Forced Appium UDID:', forcedAppiumUdid)
 console.log('Detected CI UDID:', detectedCiUdid)
 console.log('UDID:', resolvedUdid)
 console.log('======================================')
@@ -104,7 +101,7 @@ export const config: Options.Testrunner & { capabilities: any } = {
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
 
-        'appium:deviceName': selectedDeviceName,
+        'appium:deviceName': (useEmulator && isCI) ? 'Android' : selectedDeviceName,
         'appium:udid': resolvedUdid,
         'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
 
