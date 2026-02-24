@@ -1,4 +1,4 @@
-# CI Trigger: 2026-02-24T$(date +%s)
+# CI Trigger: Testing POSIX shell syntax fix
 name: Mobile Automation CI
 
 on:
