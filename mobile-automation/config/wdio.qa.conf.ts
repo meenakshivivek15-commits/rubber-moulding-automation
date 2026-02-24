@@ -69,24 +69,24 @@ export const config: Options.Testrunner = {
         'appium:fullReset': false,
 
         // Stability timeouts (important for CI - be generous)
-        'appium:adbExecTimeout': 180000,
-        'appium:androidInstallTimeout': 180000,
-        'appium:uiautomator2ServerLaunchTimeout': 180000,
-        'appium:uiautomator2ServerInstallTimeout': 180000,
-        'appium:newCommandTimeout': 300000,
+        'appium:adbExecTimeout': 300000,
+        'appium:androidInstallTimeout': 300000,
+        'appium:uiautomator2ServerLaunchTimeout': 300000,
+        'appium:uiautomator2ServerInstallTimeout': 300000,
+        'appium:newCommandTimeout': 600000,
 
         // Hybrid app support
         'appium:chromedriverAutodownload': true,
         'appium:ensureWebviewsHavePages': true,
-        'appium:webviewConnectTimeout': 120000,
+        'appium:webviewConnectTimeout': 180000,
         'appium:autoWebview': false
     }],
 
     logLevel: 'info',
 
-    waitforTimeout: 20000,
-    connectionRetryTimeout: 300000,  // Increased for Appium device discovery
-    connectionRetryCount: 5,  // Retry more times
+    waitforTimeout: 60000,
+    connectionRetryTimeout: 600000,  // Increased for Appium device discovery
+    connectionRetryCount: 8,  // Retry more times
 
     framework: 'mocha',
 
@@ -101,7 +101,7 @@ export const config: Options.Testrunner = {
 
     mochaOpts: {
         ui: 'bdd',
-        timeout: 180000
+        timeout: 300000
     },
 
     // ======================
@@ -115,8 +115,11 @@ export const config: Options.Testrunner = {
         console.log('===========================================\n')
     },
 
-    beforeSession: function () {
+    beforeSession: async function () {
         const { execSync } = require('child_process')
+        const sleepMs = 40000
+        console.log(`⏳ Waiting ${sleepMs / 1000}s before WDIO session start...`)
+        await new Promise(resolve => setTimeout(resolve, sleepMs))
         console.log('📱 Pre-session device verification...')
         
         try {
