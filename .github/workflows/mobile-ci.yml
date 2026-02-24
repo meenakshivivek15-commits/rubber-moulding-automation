@@ -1,4 +1,4 @@
-# CI Trigger: Testing defensive device detection
+# CI Trigger: Back to x86 API 30 - proven stable
 name: Mobile Automation CI
 
 on:
