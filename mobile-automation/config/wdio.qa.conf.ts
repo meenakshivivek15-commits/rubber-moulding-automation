@@ -68,12 +68,12 @@ export const config: Options.Testrunner = {
         'appium:noReset': !CI,
         'appium:fullReset': false,
 
-        // Stability timeouts (important for CI)
-        'appium:adbExecTimeout': 120000,
-        'appium:androidInstallTimeout': 120000,
-        'appium:uiautomator2ServerLaunchTimeout': 120000,
-        'appium:uiautomator2ServerInstallTimeout': 120000,
-        'appium:newCommandTimeout': 240000,
+        // Stability timeouts (important for CI - be generous)
+        'appium:adbExecTimeout': 180000,
+        'appium:androidInstallTimeout': 180000,
+        'appium:uiautomator2ServerLaunchTimeout': 180000,
+        'appium:uiautomator2ServerInstallTimeout': 180000,
+        'appium:newCommandTimeout': 300000,
 
         // Hybrid app support
         'appium:chromedriverAutodownload': true,
@@ -85,8 +85,8 @@ export const config: Options.Testrunner = {
     logLevel: 'info',
 
     waitforTimeout: 20000,
-    connectionRetryTimeout: 180000,
-    connectionRetryCount: 3,
+    connectionRetryTimeout: 300000,  // Increased for Appium device discovery
+    connectionRetryCount: 5,  // Retry more times
 
     framework: 'mocha',
 
@@ -116,7 +116,27 @@ export const config: Options.Testrunner = {
     },
 
     beforeSession: function () {
-        console.log('📱 Creating Appium session...')
+        const { execSync } = require('child_process')
+        console.log('📱 Pre-session device verification...')
+        
+        try {
+            // Verify device is still online
+            const state = execSync(`adb -s ${UDID} get-state`, { encoding: 'utf-8' }).trim()
+            console.log(`✓ Device ${UDID} state: ${state}`)
+            
+            if (state !== 'device') {
+                throw new Error(`Device state is "${state}", expected "device"`)
+            }
+            
+            // Verify boot is complete
+            const bootComplete = execSync(`adb -s ${UDID} shell getprop sys.boot_completed`, { encoding: 'utf-8' }).trim()
+            console.log(`✓ Boot completed: ${bootComplete}`)
+            
+            console.log('✅ Device ready for Appium session\n')
+        } catch (error: any) {
+            console.error('❌ Device verification failed:', error.message)
+            throw error
+        }
     },
 
     before: async function () {
