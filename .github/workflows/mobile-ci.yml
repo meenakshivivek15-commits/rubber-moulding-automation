@@ -103,6 +103,9 @@ jobs:
             until curl -s http://127.0.0.1:4723/status >/dev/null; do
               sleep 2
             done
+            echo "Pre-WDIO adb state for ${ANDROID_SERIAL}:"
+            adb devices -l
+            adb -s "${ANDROID_SERIAL}" get-state
             set +e
             ANDROID_SERIAL="${ANDROID_SERIAL}" ANDROID_HOME="${ANDROID_HOME}" ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT}" DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
             TEST_EXIT_CODE=$?

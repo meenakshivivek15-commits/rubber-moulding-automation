@@ -164,10 +164,17 @@ export const config: Options.Testrunner & { capabilities: any } = {
     // HOOKS
     // ==============================
 
-    beforeSession: function () {
+    beforeSession: function (_config, capabilities: any) {
         console.log('CI:', isCI)
         console.log('Device:', selectedDeviceName)
         console.log('External Appium:', useExternalAppium)
+        const currentAdbUdid = detectConnectedEmulatorUdid()
+        if (useEmulator) {
+            const sessionUdid = currentAdbUdid || resolvedUdid
+            capabilities['appium:udid'] = sessionUdid
+            capabilities['appium:deviceName'] = capabilities['appium:deviceName'] || resolvedDeviceName
+            console.log('Resolved session UDID:', sessionUdid)
+        }
         try {
             const adbDevices = execSync('adb devices -l', { encoding: 'utf-8' })
             console.log('ADB Devices:\n' + adbDevices)
