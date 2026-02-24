@@ -79,7 +79,7 @@ export const config: Options.Testrunner & { capabilities: any } = {
         'appium:automationName': 'UiAutomator2',
 
         'appium:deviceName': selectedDeviceName,
-        'appium:udid': selectedUdid,
+        'appium:udid': (useEmulator && isCI) ? undefined : selectedUdid,
         'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),

@@ -50,44 +50,33 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android emulator tools
-        run: |
-          sdkmanager "platform-tools" "emulator"
-          echo "${ANDROID_SDK_ROOT}/emulator" >> $GITHUB_PATH
-          echo "${ANDROID_SDK_ROOT}/platform-tools" >> $GITHUB_PATH
-
-      - name: Install System Image
-        run: sdkmanager "system-images;android-33;google_apis;x86_64"
-
-      - name: Create AVD
-        run: |
-          echo "no" | avdmanager create avd -n ci-emulator \
-          -k "system-images;android-33;google_apis;x86_64" \
-          --device "pixel"
-
-      - name: Start Emulator
-        run: |
-          emulator -avd ci-emulator -no-window -no-audio -no-boot-anim &
-          adb wait-for-device
-          adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 5; done;'
-          adb shell input keyevent 82
-
-      - name: Install Appium & Drivers
-        working-directory: mobile-automation
-        run: |
-          npx appium driver list --installed || true
-          npx appium driver install uiautomator2
-          npx appium driver list --installed
-
-      - name: Run Mobile Tests
-        working-directory: mobile-automation
-        env:
-          DEVICE: emulator
-          CI: true
-        run: npx wdio run config/wdio.qa.conf.ts
+      - name: Run tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
+          disable-animations: true
+          script: |
+            adb devices -l
+            adb wait-for-device
+            adb shell getprop sys.boot_completed
+            cd mobile-automation
+            npx appium driver list --installed || true
+            npx appium driver install uiautomator2
+            npx appium driver list --installed
+            mkdir -p ../reports/mobile/diagnostics
+            set +e
+            DEVICE=emulator CI=true npx wdio run config/wdio.qa.conf.ts
+            TEST_EXIT_CODE=$?
+            if [ $TEST_EXIT_CODE -ne 0 ]; then
+              adb devices -l > ../reports/mobile/diagnostics/adb-devices.txt || true
+              adb shell getprop > ../reports/mobile/diagnostics/device-props.txt || true
+              adb logcat -d > ../reports/mobile/diagnostics/logcat.txt || true
+            fi
+            exit $TEST_EXIT_CODE
 
       - name: Install Allure
         run: npm install -g allure-commandline
@@ -110,4 +99,12 @@ jobs:
         with:
           name: mobile-allure-results
           path: mobile-automation/allure-results
+
+      - name: Upload mobile diagnostics (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-diagnostics
+          path: reports/mobile/diagnostics
+          if-no-files-found: ignore
 
