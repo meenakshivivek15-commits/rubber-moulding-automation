@@ -15,6 +15,10 @@ const useEmulator = process.env.DEVICE === 'emulator'
 const isCI = process.env.CI === 'true'
 const useExternalAppium = process.env.EXTERNAL_APPIUM === 'true'
 
+if (!process.env.ANDROID_HOME && process.env.ANDROID_SDK_ROOT) {
+    process.env.ANDROID_HOME = process.env.ANDROID_SDK_ROOT
+}
+
 // Real device values (from .env)
 const realDeviceUdid = process.env.ANDROID_DEVICE
 const realDeviceName = process.env.ANDROID_DEVICE_NAME
@@ -42,7 +46,7 @@ const selectedDeviceName = useEmulator
     : realDeviceName
 const detectedCiUdid = (useEmulator && isCI) ? detectConnectedEmulatorUdid() : undefined
 const resolvedUdid = (useEmulator && isCI)
-    ? undefined
+    ? (ciEmulatorUdid || detectedCiUdid || emulatorUdid)
     : selectedUdid
 
 console.log('======================================')
@@ -161,6 +165,12 @@ export const config: Options.Testrunner & { capabilities: any } = {
         console.log('CI:', isCI)
         console.log('Device:', selectedDeviceName)
         console.log('External Appium:', useExternalAppium)
+        try {
+            const adbDevices = execSync('adb devices -l', { encoding: 'utf-8' })
+            console.log('ADB Devices:\n' + adbDevices)
+        } catch (error: any) {
+            console.log('ADB Devices check failed:', error?.message || error)
+        }
     },
 
     before: async function () {

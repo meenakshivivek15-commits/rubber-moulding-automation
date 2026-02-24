@@ -84,6 +84,12 @@ jobs:
             done
             adb -s "${ANDROID_SERIAL}" get-state
             adb -s "${ANDROID_SERIAL}" shell getprop sys.boot_completed
+            export ANDROID_SDK_ROOT="$(dirname "$(dirname "$(command -v adb)")")"
+            export ANDROID_HOME="${ANDROID_SDK_ROOT}"
+            export PATH="${ANDROID_SDK_ROOT}/platform-tools:${ANDROID_SDK_ROOT}/emulator:${PATH}"
+            echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
+            which adb
+            adb version
             cd mobile-automation
             npx appium driver list --installed || true
             npx appium driver install uiautomator2
