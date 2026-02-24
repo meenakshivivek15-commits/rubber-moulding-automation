@@ -26,7 +26,7 @@ const realDeviceName = process.env.ANDROID_DEVICE_NAME
 // Emulator values
 const emulatorUdid = 'emulator-5554'
 const emulatorName = 'ci-emulator'
-const ciEmulatorUdid = process.env.ANDROID_SERIAL
+const ciEmulatorUdid = process.env.ANDROID_SERIAL?.trim()
 
 const detectConnectedEmulatorUdid = (): string | undefined => {
     try {
@@ -48,6 +48,9 @@ const detectedCiUdid = (useEmulator && isCI) ? detectConnectedEmulatorUdid() : u
 const resolvedUdid = (useEmulator && isCI)
     ? (ciEmulatorUdid || detectedCiUdid || emulatorUdid)
     : selectedUdid
+const resolvedDeviceName = useEmulator
+    ? (selectedDeviceName || 'Android Emulator')
+    : (selectedDeviceName || 'Android Device')
 
 console.log('======================================')
 console.log('Execution Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
@@ -105,7 +108,7 @@ export const config: Options.Testrunner & { capabilities: any } = {
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
 
-        'appium:deviceName': (useEmulator && isCI) ? 'Android' : selectedDeviceName,
+        'appium:deviceName': resolvedDeviceName,
         'appium:udid': resolvedUdid,
         'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
 

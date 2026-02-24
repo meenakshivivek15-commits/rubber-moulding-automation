@@ -104,7 +104,7 @@ jobs:
               sleep 2
             done
             set +e
-            DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
+            ANDROID_SERIAL="${ANDROID_SERIAL}" ANDROID_HOME="${ANDROID_HOME}" ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT}" DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
             TEST_EXIT_CODE=$?
             if [ $TEST_EXIT_CODE -ne 0 ]; then
               adb devices -l > ../reports/mobile/diagnostics/adb-devices.txt || true
