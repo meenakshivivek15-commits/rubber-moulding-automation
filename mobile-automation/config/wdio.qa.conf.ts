@@ -44,11 +44,23 @@ export const config: Options.Testrunner & { capabilities: any } = {
     // ==============================
    
 
-    // Use Appium service for local runs; CI is expected to start Appium externally
+    // Use Appium service for both local and CI runs
     hostname: '127.0.0.1',
     port: 4723,
     path: '/',
-    services: isCI ? [] : [['appium', { args: { relaxedSecurity: true }, command: 'appium' }]],
+    services: [[
+        'appium',
+        {
+            command: 'appium',
+            args: {
+                address: '127.0.0.1',
+                port: 4723,
+                basePath: '/',
+                relaxedSecurity: true,
+                logLevel: 'debug'
+            }
+        }
+    ]],
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],
