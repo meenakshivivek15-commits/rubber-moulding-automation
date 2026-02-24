@@ -1,3 +1,4 @@
+# CI Trigger: 2026-02-24T$(date +%s)
 name: Mobile Automation CI
 
 on:
