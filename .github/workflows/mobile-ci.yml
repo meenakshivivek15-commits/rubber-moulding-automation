@@ -82,8 +82,11 @@ jobs:
           npx appium driver install uiautomator2
           npx appium driver list --installed
 
-      - name: Start Appium (background) and wait
+      - name: Start Appium and Run Mobile Tests
         working-directory: mobile-automation
+        env:
+          DEVICE: emulator
+          CI: true
         run: |
           # start Appium in background and capture logs
           nohup npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security --log-level debug > appium.log 2>&1 &
@@ -105,7 +108,9 @@ jobs:
             exit 1
           fi
 
-      - name: Diagnose Appium before tests (logs & ports)
+          npx wdio run config/wdio.qa.conf.ts
+
+      - name: Diagnose Appium after tests (logs & ports)
         if: always()
         run: |
           echo "== Appium /status (verbose) =="
@@ -116,13 +121,6 @@ jobs:
           ps aux | grep appium || true
           echo "\n== Head of appium.log =="
           head -n 200 mobile-automation/appium.log || true
-
-      - name: Run Mobile Tests
-        working-directory: mobile-automation
-        env:
-          DEVICE: emulator
-          CI: true
-        run: npx wdio run config/wdio.qa.conf.ts
 
       - name: Install Allure
         run: npm install -g allure-commandline
