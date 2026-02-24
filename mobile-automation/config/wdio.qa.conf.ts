@@ -108,8 +108,8 @@ export const config: Options.Testrunner & { capabilities: any } = {
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
 
-        'appium:deviceName': resolvedDeviceName,
-        'appium:udid': resolvedUdid,
+        'appium:deviceName': resolvedDeviceName || 'Android',
+        'appium:udid': resolvedUdid || emulatorUdid,
         'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
@@ -164,17 +164,29 @@ export const config: Options.Testrunner & { capabilities: any } = {
     // HOOKS
     // ==============================
 
-    beforeSession: function (_config, capabilities: any) {
+    onPrepare: function (config: any) {
+        console.log('=== onPrepare: Fixing capabilities before session ===')
+        if (useEmulator && config.capabilities && config.capabilities[0]) {
+            const currentAdbUdid = detectConnectedEmulatorUdid()
+            const sessionUdid = currentAdbUdid || resolvedUdid || emulatorUdid
+            config.capabilities[0]['appium:udid'] = sessionUdid
+            config.capabilities[0]['appium:deviceName'] = resolvedDeviceName
+            console.log(`Set appium:udid to: ${sessionUdid}`)
+            console.log(`Set appium:deviceName to: ${resolvedDeviceName}`)
+        }
+        try {
+            const adbDevices = execSync('adb devices -l', { encoding: 'utf-8' })
+            console.log('ADB Devices at onPrepare:\n' + adbDevices)
+        } catch (error: any) {
+            console.log('ADB Devices check failed:', error?.message || error)
+        }
+    },
+
+    beforeSession: function (_config: any) {
+        console.log('=== beforeSession ===')
         console.log('CI:', isCI)
         console.log('Device:', selectedDeviceName)
         console.log('External Appium:', useExternalAppium)
-        const currentAdbUdid = detectConnectedEmulatorUdid()
-        if (useEmulator) {
-            const sessionUdid = currentAdbUdid || resolvedUdid
-            capabilities['appium:udid'] = sessionUdid
-            capabilities['appium:deviceName'] = capabilities['appium:deviceName'] || resolvedDeviceName
-            console.log('Resolved session UDID:', sessionUdid)
-        }
         try {
             const adbDevices = execSync('adb devices -l', { encoding: 'utf-8' })
             console.log('ADB Devices:\n' + adbDevices)
