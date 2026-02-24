@@ -1,4 +1,4 @@
-# CI Trigger: Testing POSIX shell syntax fix
+# CI Trigger: Testing defensive device detection
 name: Mobile Automation CI
 
 on:
