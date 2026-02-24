@@ -80,7 +80,7 @@ export const config: Options.Testrunner & { capabilities: any } = {
 
         'appium:deviceName': selectedDeviceName,
         'appium:udid': selectedUdid,
-        'appium:avd': useEmulator ? emulatorName : undefined,
+        'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
 
