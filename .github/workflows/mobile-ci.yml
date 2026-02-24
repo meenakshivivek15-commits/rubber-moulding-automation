@@ -1,4 +1,4 @@
-# CI Trigger: Back to x86 API 30 - proven stable
+# CI Trigger: FINAL COMPREHENSIVE FIX - Multi-layer device detection
 name: Mobile Automation CI
 
 on:
