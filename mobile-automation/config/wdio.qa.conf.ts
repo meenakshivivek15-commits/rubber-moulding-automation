@@ -13,6 +13,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 const useEmulator = process.env.DEVICE === 'emulator'
 const isCI = process.env.CI === 'true'
+const useExternalAppium = process.env.EXTERNAL_APPIUM === 'true'
 
 // Real device values (from .env)
 const realDeviceUdid = process.env.ANDROID_DEVICE
@@ -60,23 +61,25 @@ export const config: Options.Testrunner & { capabilities: any } = {
     // ==============================
    
 
-    // Use Appium service for both local and CI runs
+    // Use WDIO Appium service locally, external Appium in CI when requested
     hostname: '127.0.0.1',
     port: 4723,
     path: '/',
-    services: [[
-        'appium',
-        {
-            command: 'appium',
-            args: {
-                address: '127.0.0.1',
-                port: 4723,
-                basePath: '/',
-                relaxedSecurity: true,
-                logLevel: 'debug'
+    services: useExternalAppium
+        ? []
+        : [[
+            'appium',
+            {
+                command: 'appium',
+                args: {
+                    address: '127.0.0.1',
+                    port: 4723,
+                    basePath: '/',
+                    relaxedSecurity: true,
+                    logLevel: 'debug'
+                }
             }
-        }
-    ]],
+        ]],
     specs: [
         '../test/specs/**/*.e2e.ts'
     ],
@@ -153,6 +156,7 @@ export const config: Options.Testrunner & { capabilities: any } = {
     beforeSession: function () {
         console.log('CI:', isCI)
         console.log('Device:', selectedDeviceName)
+        console.log('External Appium:', useExternalAppium)
     },
 
     before: async function () {
