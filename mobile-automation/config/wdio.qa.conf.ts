@@ -53,13 +53,19 @@ const resolvedDeviceName = useEmulator
     : (selectedDeviceName || 'Android Device')
 
 console.log('======================================')
+console.log('🚀 WDIO Config Initialization')
+console.log('======================================')
 console.log('Execution Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
 console.log('Running on:', useEmulator ? 'EMULATOR' : 'REAL DEVICE')
 console.log('Device Name:', selectedDeviceName)
 console.log('Detected CI UDID:', detectedCiUdid)
-console.log('UDID:', resolvedUdid)
+console.log('Resolved UDID:', resolvedUdid)
+console.log('Resolved Device Name:', resolvedDeviceName)
+console.log('ENV ANDROID_SERIAL:', process.env.ANDROID_SERIAL)
+console.log('ENV DEVICE:', process.env.DEVICE)
+console.log('ENV CI:', process.env.CI)
 console.log('======================================')
-
+console.log()
 // =====================================================
 // WDIO CONFIG
 // =====================================================
@@ -165,21 +171,39 @@ export const config: Options.Testrunner & { capabilities: any } = {
     // ==============================
 
     onPrepare: function (config: any) {
-        console.log('=== onPrepare: Fixing capabilities before session ===')
+        console.log('\n\n===========================================')
+        console.log('🔧 onPrepare HOOK EXECUTING')
+        console.log('===========================================')
+        console.log('ENV ANDROID_SERIAL:', process.env.ANDROID_SERIAL)
+        console.log('ENV ANDROID_HOME:', process.env.ANDROID_HOME)
+        console.log('ENV DEVICE:', process.env.DEVICE)
+        console.log('ENV CI:', process.env.CI)
+        console.log('useEmulator variable:', useEmulator)
+        console.log('isCI variable:', isCI)
+        console.log('resolvedUdid variable:', resolvedUdid)
+        console.log('emulatorUdid variable:', emulatorUdid)
+        console.log('Current config.capabilities:', JSON.stringify(config.capabilities, null, 2))
+        
         if (useEmulator && config.capabilities && config.capabilities[0]) {
             const currentAdbUdid = detectConnectedEmulatorUdid()
-            const sessionUdid = currentAdbUdid || resolvedUdid || emulatorUdid
+            const sessionUdid = currentAdbUdid || process.env.ANDROID_SERIAL?.trim() || resolvedUdid || emulatorUdid
+            console.log('🎯 Detected ADB UDID:', currentAdbUdid)
+            console.log('🎯 Final session UDID will be:', sessionUdid)
+            
             config.capabilities[0]['appium:udid'] = sessionUdid
-            config.capabilities[0]['appium:deviceName'] = resolvedDeviceName
-            console.log(`Set appium:udid to: ${sessionUdid}`)
-            console.log(`Set appium:deviceName to: ${resolvedDeviceName}`)
+            config.capabilities[0]['appium:deviceName'] = 'Android'
+            
+            console.log('✅ Set appium:udid to:', config.capabilities[0]['appium:udid'])
+            console.log('✅ Set appium:deviceName to:', config.capabilities[0]['appium:deviceName'])
+            console.log('Updated capabilities:', JSON.stringify(config.capabilities[0], null, 2))
         }
         try {
             const adbDevices = execSync('adb devices -l', { encoding: 'utf-8' })
-            console.log('ADB Devices at onPrepare:\n' + adbDevices)
+            console.log('📱 ADB Devices at onPrepare:\n' + adbDevices)
         } catch (error: any) {
-            console.log('ADB Devices check failed:', error?.message || error)
+            console.log('❌ ADB Devices check failed:', error?.message || error)
         }
+        console.log('===========================================\n')
     },
 
     beforeSession: function (_config: any) {
