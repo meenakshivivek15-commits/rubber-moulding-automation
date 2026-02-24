@@ -23,6 +23,7 @@ const realDeviceName = process.env.ANDROID_DEVICE_NAME
 const emulatorUdid = 'emulator-5554'
 const emulatorName = 'ci-emulator'
 const ciEmulatorUdid = process.env.ANDROID_SERIAL
+const forcedAppiumUdid = process.env.APPIUM_UDID
 
 const detectConnectedEmulatorUdid = (): string | undefined => {
     try {
@@ -40,13 +41,14 @@ const selectedUdid = useEmulator ? emulatorUdid : realDeviceUdid
 const selectedDeviceName = useEmulator ? emulatorName : realDeviceName
 const detectedCiUdid = (useEmulator && isCI) ? detectConnectedEmulatorUdid() : undefined
 const resolvedUdid = (useEmulator && isCI)
-    ? (ciEmulatorUdid || detectedCiUdid)
+    ? (forcedAppiumUdid || ciEmulatorUdid || detectedCiUdid)
     : selectedUdid
 
 console.log('======================================')
 console.log('Execution Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
 console.log('Running on:', useEmulator ? 'EMULATOR' : 'REAL DEVICE')
 console.log('Device Name:', selectedDeviceName)
+console.log('Forced Appium UDID:', forcedAppiumUdid)
 console.log('Detected CI UDID:', detectedCiUdid)
 console.log('UDID:', resolvedUdid)
 console.log('======================================')

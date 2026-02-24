@@ -81,19 +81,16 @@ jobs:
             npx appium driver install uiautomator2
             npx appium driver list --installed
             mkdir -p ../reports/mobile/diagnostics
-            adb kill-server
-            adb start-server
-            adb wait-for-device
-            until adb devices | grep -E '^emulator-[0-9]+\s+device$' >/dev/null; do
+            until [ "$(adb -s "${ANDROID_SERIAL}" get-state 2>/dev/null | tr -d '\r')" = "device" ]; do
               sleep 2
             done
-            npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > ../reports/mobile/diagnostics/appium.log 2>&1 &
+            APPIUM_UDID="${ANDROID_SERIAL}" npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > ../reports/mobile/diagnostics/appium.log 2>&1 &
             APPIUM_PID=$!
             until curl -s http://127.0.0.1:4723/status >/dev/null; do
               sleep 2
             done
             set +e
-            DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
+            APPIUM_UDID="${ANDROID_SERIAL}" DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
             TEST_EXIT_CODE=$?
             if [ $TEST_EXIT_CODE -ne 0 ]; then
               adb devices -l > ../reports/mobile/diagnostics/adb-devices.txt || true
