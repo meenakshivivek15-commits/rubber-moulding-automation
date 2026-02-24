@@ -67,13 +67,15 @@ jobs:
               sleep 5
             done
             adb shell input keyevent 82 || true
-            ANDROID_SERIAL=$(adb devices | awk '/emulator-/{print $1; exit}')
+            export ANDROID_SERIAL="$(adb devices | awk '/emulator-/{print $1; exit}' | tr -d '\r')"
             echo "Detected emulator serial: ${ANDROID_SERIAL}"
             if [ -z "${ANDROID_SERIAL}" ]; then
               echo "No emulator serial detected from adb devices"
               adb devices -l
               exit 1
             fi
+            adb -s "${ANDROID_SERIAL}" get-state
+            adb -s "${ANDROID_SERIAL}" shell getprop sys.boot_completed
             cd mobile-automation
             npx appium driver list --installed || true
             npx appium driver install uiautomator2
@@ -91,7 +93,7 @@ jobs:
               sleep 2
             done
             set +e
-            ANDROID_SERIAL=${ANDROID_SERIAL} DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
+            DEVICE=emulator CI=true EXTERNAL_APPIUM=true npx wdio run config/wdio.qa.conf.ts
             TEST_EXIT_CODE=$?
             if [ $TEST_EXIT_CODE -ne 0 ]; then
               adb devices -l > ../reports/mobile/diagnostics/adb-devices.txt || true

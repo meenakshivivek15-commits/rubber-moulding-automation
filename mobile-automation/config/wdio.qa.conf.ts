@@ -39,7 +39,9 @@ const detectConnectedEmulatorUdid = (): string | undefined => {
 const selectedUdid = useEmulator ? emulatorUdid : realDeviceUdid
 const selectedDeviceName = useEmulator ? emulatorName : realDeviceName
 const detectedCiUdid = (useEmulator && isCI) ? detectConnectedEmulatorUdid() : undefined
-const resolvedUdid = (useEmulator && isCI) ? (ciEmulatorUdid || detectedCiUdid || selectedUdid) : selectedUdid
+const resolvedUdid = (useEmulator && isCI)
+    ? (ciEmulatorUdid || detectedCiUdid)
+    : selectedUdid
 
 console.log('======================================')
 console.log('Execution Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
