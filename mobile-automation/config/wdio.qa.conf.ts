@@ -20,16 +20,18 @@ const realDeviceName = process.env.ANDROID_DEVICE_NAME
 // Emulator values
 const emulatorUdid = 'emulator-5554'
 const emulatorName = 'ci-emulator'
+const ciEmulatorUdid = process.env.ANDROID_SERIAL
 
 // Selected values
 const selectedUdid = useEmulator ? emulatorUdid : realDeviceUdid
 const selectedDeviceName = useEmulator ? emulatorName : realDeviceName
+const resolvedUdid = (useEmulator && isCI) ? (ciEmulatorUdid || selectedUdid) : selectedUdid
 
 console.log('======================================')
 console.log('Execution Mode:', isCI ? 'CI PIPELINE' : 'LOCAL')
 console.log('Running on:', useEmulator ? 'EMULATOR' : 'REAL DEVICE')
 console.log('Device Name:', selectedDeviceName)
-console.log('UDID:', selectedUdid)
+console.log('UDID:', resolvedUdid)
 console.log('======================================')
 
 // =====================================================
@@ -79,7 +81,7 @@ export const config: Options.Testrunner & { capabilities: any } = {
         'appium:automationName': 'UiAutomator2',
 
         'appium:deviceName': selectedDeviceName,
-        'appium:udid': (useEmulator && isCI) ? undefined : selectedUdid,
+        'appium:udid': resolvedUdid,
         'appium:avd': (useEmulator && !isCI) ? emulatorName : undefined,
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
