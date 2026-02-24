@@ -58,7 +58,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -memory 2048 -cores 2
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu off -no-snapshot -memory 1024 -cores 2
           disable-animations: true
           script: |
             adb start-server
