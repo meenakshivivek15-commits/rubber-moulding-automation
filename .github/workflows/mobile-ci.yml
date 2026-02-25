@@ -71,6 +71,23 @@ jobs:
             exit "$TEST_EXIT_CODE"
           fi
 
+      - name: Write CI Summary
+        if: always()
+        run: |
+          set -eu
+          RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
+          EMULATOR_OUTCOME="${{ steps.mobile_emulator.outcome }}"
+
+          echo "## Mobile CI Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Emulator step outcome: $EMULATOR_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f "$RESULT_FILE" ]; then
+            TEST_EXIT_CODE=$(cat "$RESULT_FILE")
+            echo "- Captured test exit code: $TEST_EXIT_CODE" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Captured test exit code: not recorded" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Upload Appium Log
         if: always()
         uses: actions/upload-artifact@v4
