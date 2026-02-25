@@ -30,7 +30,7 @@ echo "Using ANDROID_SERIAL=$ANDROID_SERIAL"
 
 echo "Starting Appium..."
 npm install -g appium
-appium driver install uiautomator2
+appium driver install uiautomator2@4.2.9
 
 appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > appium.log 2>&1 &
 APPIUM_PID=$!

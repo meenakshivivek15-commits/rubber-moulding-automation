@@ -27,7 +27,7 @@ echo "Using ANDROID_SERIAL=$EMULATOR_SERIAL"
 export ANDROID_SERIAL="$EMULATOR_SERIAL"
 export USE_EXTERNAL_APPIUM=true
 
-npx appium driver install uiautomator2
+npx appium driver install uiautomator2@4.2.9
 npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > appium.log 2>&1 &
 APPIUM_PID=$!
 
