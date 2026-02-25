@@ -27,6 +27,12 @@ jobs:
         with:
           node-version: 18
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
       - name: Install Root Dependencies
         run: npm ci
 
@@ -42,5 +48,57 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Full Business Flow
-        run: npm run full:e2e
+      - name: Run Full Business Flow (with Android Emulator)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu off
+          disable-animations: true
+          script: |
+            set -euo pipefail
+
+            echo "===== ADB DEVICES ====="
+            adb devices
+
+            adb wait-for-device
+
+            for i in {1..60}; do
+              BOOT_COMPLETED=$(adb shell getprop sys.boot_completed | tr -d '\r')
+              if [ "$BOOT_COMPLETED" = "1" ]; then
+                echo "Emulator boot completed ✅"
+                break
+              fi
+              sleep 2
+            done
+
+            EMULATOR_SERIAL=$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')
+            if [ -z "$EMULATOR_SERIAL" ]; then
+              echo "No online emulator found ❌"
+              adb devices
+              exit 1
+            fi
+
+            echo "Using ANDROID_SERIAL=$EMULATOR_SERIAL"
+            export ANDROID_SERIAL="$EMULATOR_SERIAL"
+            export USE_EXTERNAL_APPIUM=true
+
+            npx appium driver install uiautomator2
+            npx appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > appium.log 2>&1 &
+            APPIUM_PID=$!
+
+            for i in {1..45}; do
+              if curl -fsS http://127.0.0.1:4723/status >/dev/null; then
+                echo "Appium is ready ✅"
+                break
+              fi
+              sleep 2
+            done
+
+            npm run full:e2e
+            TEST_EXIT_CODE=$?
+
+            kill $APPIUM_PID || true
+            exit $TEST_EXIT_CODE
