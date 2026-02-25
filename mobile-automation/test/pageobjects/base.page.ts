@@ -11,15 +11,34 @@ export default class BasePage {
             timeoutMsg: `WEBVIEW context not available within ${timeoutMs}ms`
         });
 
-        const contexts = await driver.getContexts();
-        const webview = contexts.find(c => String(c).includes('WEBVIEW'));
+        let lastError: unknown;
 
-        if (!webview) {
-            throw new Error("No WEBVIEW found after wait");
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                const contexts = await driver.getContexts();
+                const webview = contexts.find(c => String(c).includes('WEBVIEW'));
+
+                if (!webview) {
+                    throw new Error('No WEBVIEW found after wait');
+                }
+
+                await driver.switchContext(webview);
+                await driver.pause(1200);
+
+                await driver.execute(() => document.readyState);
+
+                console.log('Switched to:', await driver.getContext());
+                return;
+            } catch (error) {
+                lastError = error;
+                console.log(`WebView attach attempt ${attempt} failed, retrying...`);
+                await driver.pause(1500);
+            }
         }
 
-        await driver.switchContext(webview);
-        console.log("Switched to:", await driver.getContext());
+        throw lastError instanceof Error
+            ? lastError
+            : new Error('Unable to attach stable WEBVIEW context');
     }
 
     async switchToNative() {
