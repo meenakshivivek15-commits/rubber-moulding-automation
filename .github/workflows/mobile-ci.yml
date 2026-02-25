@@ -71,8 +71,8 @@ jobs:
             exit "$TEST_EXIT_CODE"
           fi
 
-      - name: Upload Appium Log (if failure)
-        if: failure()
+      - name: Upload Appium Log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: appium-log
@@ -80,22 +80,35 @@ jobs:
           if-no-files-found: ignore
 
       - name: Install Allure
+        if: always()
         run: npm install -g allure-commandline
 
       - name: Generate Allure Report
+        if: always()
         run: |
-          allure generate mobile-automation/allure-results \
-          --clean \
-          -o reports/mobile/allure-report
+          set -eu
+          RESULTS_DIR="mobile-automation/allure-results"
+
+          if [ -d "$RESULTS_DIR" ] && [ "$(ls -A "$RESULTS_DIR")" ]; then
+            allure generate "$RESULTS_DIR" \
+            --clean \
+            -o reports/mobile/allure-report
+          else
+            echo "No Allure results found, skipping report generation."
+          fi
 
       - name: Upload Allure Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mobile-allure-report
           path: reports/mobile/allure-report
+          if-no-files-found: ignore
 
       - name: Upload Raw Allure Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mobile-allure-results
           path: mobile-automation/allure-results
+          if-no-files-found: ignore
