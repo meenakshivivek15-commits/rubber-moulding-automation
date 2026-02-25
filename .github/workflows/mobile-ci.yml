@@ -49,14 +49,7 @@ jobs:
             adb wait-for-device
 
             echo "Waiting for Android boot completion..."
-            for i in $(seq 1 60); do
-              BOOT_COMPLETED=$(adb shell getprop sys.boot_completed | tr -d '\r')
-              if [ "$BOOT_COMPLETED" = "1" ]; then
-                echo "Emulator boot completed ✅"
-                break
-              fi
-              sleep 2
-            done
+            i=1; while [ "$i" -le 60 ]; do BOOT_COMPLETED=$(adb shell getprop sys.boot_completed | tr -d '\r'); if [ "$BOOT_COMPLETED" = "1" ]; then echo "Emulator boot completed ✅"; break; fi; sleep 2; i=$((i+1)); done
 
             EMULATOR_SERIAL=$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')
             if [ -z "$EMULATOR_SERIAL" ]; then
@@ -83,20 +76,7 @@ jobs:
 
             echo "Waiting for Appium to be ready..."
             APP_READY=0
-            for i in $(seq 1 45); do
-              if ! kill -0 "$APPIUM_PID" 2>/dev/null; then
-                echo "Appium exited before becoming ready ❌"
-                tail -n 200 appium.log || true
-                exit 1
-              fi
-
-              if curl -fsS http://127.0.0.1:4723/status >/dev/null; then
-                APP_READY=1
-                break
-              fi
-
-              sleep 2
-            done
+            i=1; while [ "$i" -le 45 ]; do if ! kill -0 "$APPIUM_PID" 2>/dev/null; then echo "Appium exited before becoming ready ❌"; tail -n 200 appium.log || true; exit 1; fi; if curl -fsS http://127.0.0.1:4723/status >/dev/null; then APP_READY=1; break; fi; sleep 2; i=$((i+1)); done
 
             if [ "$APP_READY" -ne 1 ]; then
               echo "Appium did not become ready within timeout ❌"
