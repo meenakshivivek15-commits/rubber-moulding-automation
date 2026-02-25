@@ -1,6 +1,10 @@
-name: Mobile Automation CI (Legacy)
+name: Mobile Automation CI v2
 
 on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:

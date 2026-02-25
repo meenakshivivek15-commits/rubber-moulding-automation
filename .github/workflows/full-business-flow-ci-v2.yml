@@ -1,6 +1,10 @@
-name: Full Business Flow CI (Legacy)
+name: Full Business Flow CI v2
 
 on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -29,6 +33,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Enable KVM Permissions
+        run: |
+          set -eu
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Install Root Dependencies
         run: npm ci
 
@@ -36,6 +47,7 @@ jobs:
         run: |
           cd web-app-automation
           npm ci
+
       - name: Install Mobile Dependencies
         run: |
           cd mobile-automation
@@ -83,3 +95,11 @@ jobs:
           if [ "$TEST_EXIT_CODE" -ne 0 ]; then
             exit "$TEST_EXIT_CODE"
           fi
+
+      - name: Upload Appium Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-flow-appium-log
+          path: appium.log
+          if-no-files-found: ignore
