@@ -2,6 +2,55 @@ import BasePage from '../base.page';
 
 class OperatorHomePage extends BasePage {
 
+     private readonly nativeGoodsReceiptSelectors = [
+        '//*[@text="Goods Receipt"]',
+        '//*[contains(@text,"Goods Receipt")]',
+        '//*[@content-desc="Goods Receipt"]',
+        '//*[contains(@content-desc,"receipt")]'
+     ];
+
+     private readonly webGoodsReceiptSelectors = [
+        '//ion-img[contains(@ng-reflect-src,"receipt")]',
+        '//*[contains(text(),"Goods Receipt")]',
+        '//ion-label[contains(normalize-space(),"Goods Receipt")]'
+     ];
+
+     private async clickGoodsReceiptFromNativeHome(): Promise<boolean> {
+        await this.switchToNative().catch(() => undefined);
+
+        for (const selector of this.nativeGoodsReceiptSelectors) {
+            const element = await $(selector);
+            if (await element.isDisplayed().catch(() => false)) {
+                await element.click();
+                console.log(`Goods Receipt icon clicked in native context using: ${selector}`);
+                return true;
+            }
+        }
+
+        return false;
+     }
+
+     private async clickGoodsReceiptFromWebHome(): Promise<boolean> {
+        await this.ensureWebView(90000);
+
+        for (const selector of this.webGoodsReceiptSelectors) {
+            const element = await $(selector);
+            if (await element.isDisplayed().catch(() => false)) {
+                await element.click();
+                console.log(`Goods Receipt icon clicked in web context using: ${selector}`);
+                return true;
+            }
+        }
+
+        return false;
+     }
+
+     private async waitForGoodsReceiptListLoaded(): Promise<void> {
+        await this.ensureWebView(90000);
+        const grid = await $('#grid');
+        await grid.waitForDisplayed({ timeout: 30000 });
+     }
+
      private isRecoverableWebviewError(error: unknown): boolean {
         const message = error instanceof Error ? error.message : String(error);
         return /Session ID is not set|NoSuchContextError|chromedriver|disconnected|no such window/i.test(message);
@@ -15,14 +64,15 @@ class OperatorHomePage extends BasePage {
 
         for (let attempt = 1; attempt <= 3; attempt++) {
             try {
-                await this.ensureWebView(90000);
+                const clickedFromNative = await this.clickGoodsReceiptFromNativeHome();
+                if (!clickedFromNative) {
+                    const clickedFromWeb = await this.clickGoodsReceiptFromWebHome();
+                    if (!clickedFromWeb) {
+                        throw new Error('Goods Receipt icon not found on Operator home screen');
+                    }
+                }
 
-                const receiptTile = await $('//ion-img[contains(@ng-reflect-src,"receipt")]');
-                await receiptTile.waitForDisplayed({ timeout: 30000 });
-                await receiptTile.click();
-
-                const grid = await $('#grid');
-                await grid.waitForDisplayed({ timeout: 30000 });
+                await this.waitForGoodsReceiptListLoaded();
 
                 console.log("Goods Receipt list page loaded successfully");
                 return;
