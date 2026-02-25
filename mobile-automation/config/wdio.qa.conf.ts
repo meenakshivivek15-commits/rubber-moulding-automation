@@ -2,21 +2,37 @@
 import type { Options } from '@wdio/types'
 import path from 'path'
 import dotenv from 'dotenv'
+import { execSync } from 'child_process'
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 const CI = process.env.CI === 'true'
 const USE_EXTERNAL_APPIUM = process.env.USE_EXTERNAL_APPIUM === 'true'
 
-// In CI emulator is always emulator-5554
-// Locally you can still override via ANDROID_SERIAL
-const UDID = process.env.ANDROID_SERIAL || 'emulator-5554'
+function getConnectedAndroidSerial(): string | undefined {
+    try {
+        const output = execSync('adb devices', { stdio: 'pipe' }).toString()
+        const lines = output
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter((line) => line && !line.startsWith('List of devices attached'))
+
+        const onlineDevice = lines.find((line) => /\sdevice$/.test(line))
+        return onlineDevice ? onlineDevice.split(/\s+/)[0] : undefined
+    } catch {
+        return undefined
+    }
+}
+
+// Priority: explicit env serial -> connected adb device -> local default
+const UDID = process.env.ANDROID_SERIAL || getConnectedAndroidSerial() || (CI ? undefined : 'emulator-5554')
 
 console.log('\n════════════════════════════════════════')
 console.log('📱 DEVICE CONFIGURATION')
 console.log('════════════════════════════════════════')
 console.log('CI Mode:', CI)
 console.log('Using UDID:', UDID)
+console.log('Use external Appium:', USE_EXTERNAL_APPIUM)
 console.log('════════════════════════════════════════\n')
 
 export const config: Options.Testrunner = {
@@ -53,9 +69,8 @@ export const config: Options.Testrunner = {
 
         'appium:automationName': 'UiAutomator2',
 
-        // IMPORTANT: must match CI emulator
-        'appium:deviceName': UDID,
-        'appium:udid': UDID,
+        'appium:deviceName': UDID || 'Android',
+        ...(UDID ? { 'appium:udid': UDID } : {}),
 
         // Only used locally if you start AVD manually
         'appium:avd': CI ? undefined : 'ci-emulator',
@@ -109,11 +124,18 @@ export const config: Options.Testrunner = {
     // ======================
 
     onPrepare: function () {
+        const detectedDevice = getConnectedAndroidSerial()
+
         console.log('\n===========================================')
         console.log('🚀 Preparing Test Execution')
         console.log('UDID:', UDID)
         console.log('Use external Appium:', USE_EXTERNAL_APPIUM)
+        console.log('ADB detected device:', detectedDevice || 'none')
         console.log('===========================================\n')
+
+        if (CI && !detectedDevice && !process.env.ANDROID_SERIAL) {
+            throw new Error('No connected Android device found in CI (adb devices returned none).')
+        }
     },
 
     beforeSession: function () {

@@ -108,6 +108,8 @@ jobs:
             adb devices
 
             cd mobile-automation
+            export USE_EXTERNAL_APPIUM=true
+            export ANDROID_SERIAL="$EMULATOR_SERIAL"
             npx wdio run config/wdio.qa.conf.ts
             TEST_EXIT_CODE=$?
 
