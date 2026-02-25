@@ -24,15 +24,42 @@ export class POApprovalPage {
   async openPO(poId: string) {
 
     const searchInput = this.page.locator('input[placeholder="Search"]');
+    const escapedPoId = poId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const poLink = this.page.getByText(new RegExp(`\\b${escapedPoId}\\b`)).first();
+    const timeoutMs = 25000;
+    const pollIntervalMs = 2000;
+    const endTime = Date.now() + timeoutMs;
 
     await expect(searchInput).toBeVisible({ timeout: 15000 });
-    await searchInput.fill(poId);
 
     console.log(`Searching PO: ${poId}`);
 
-    const poLink = this.page.getByText(poId, { exact: true });
+    while (Date.now() < endTime) {
+      await searchInput.fill('');
+      await searchInput.fill(poId);
+      await searchInput.press('Enter').catch(() => undefined);
 
-    await expect(poLink).toBeVisible({ timeout: 20000 });
+      await this.page.waitForTimeout(pollIntervalMs);
+
+      if (await poLink.isVisible().catch(() => false)) {
+        break;
+      }
+    }
+
+    if (!(await poLink.isVisible().catch(() => false))) {
+      const visiblePoIds = (await this.page
+        .locator('ion-col')
+        .filter({ hasText: /\b\d{2}[A-Z]{2}\d{4}\b/ })
+        .allTextContents())
+        .map((text) => text.trim())
+        .slice(0, 10)
+        .join(', ');
+
+      throw new Error(
+        `PO ${poId} not visible in Approval list after ${timeoutMs / 1000}s. Visible PO samples: ${visiblePoIds || 'none'}`
+      );
+    }
+
     await poLink.click();
 
     console.log(`Opened PO: ${poId}`);

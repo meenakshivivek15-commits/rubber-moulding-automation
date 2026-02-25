@@ -22,9 +22,19 @@ export class ApprovalBasePage extends BasePage {
     // Ensure menu overlay is fully closed
     await this.closeSideMenuIfOpen();
 
-    await expect(
-      this.page.getByRole('heading', { name: /approvals/i })
-    ).toBeVisible({ timeout: 15000 });
+    const approvalHeading = this.page.getByRole('heading', {
+      name: /approval(s)?/i,
+    });
+
+    const approvalCard = this.page
+      .locator('ion-card', { hasText: /purchase order|approval/i })
+      .first();
+
+    try {
+      await expect(approvalHeading).toBeVisible({ timeout: 10000 });
+    } catch {
+      await expect(approvalCard).toBeVisible({ timeout: 10000 });
+    }
 
     console.log('Approval page opened');
   }

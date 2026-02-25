@@ -34,9 +34,9 @@ export class PurchaseOrderPage extends BasePage {
   // ================= FILTER MATERIAL =================
  async filterMaterial(material: string) {
 
-  const searchInput = this.page.locator(
-    'ion-input input[placeholder="Search"]'
-  );
+  const searchInput = this.page
+    .locator('input[placeholder="Search"]:visible')
+    .first();
 
   await searchInput.waitFor({ state: 'visible', timeout: 20000 });
 
