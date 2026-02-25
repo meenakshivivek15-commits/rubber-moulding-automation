@@ -49,6 +49,8 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run Full Business Flow (with Android Emulator)
+        id: full_flow_emulator
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -60,3 +62,20 @@ jobs:
           disable-animations: true
           script: |
             bash .github/scripts/run-full-flow-emulator.sh
+
+      - name: Validate Full Business Flow Result
+        run: |
+          set -eu
+          RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
+
+          if [ ! -f "$RESULT_FILE" ]; then
+            echo "Result file not found. Emulator/script failed before test result was recorded."
+            exit 1
+          fi
+
+          TEST_EXIT_CODE=$(cat "$RESULT_FILE")
+          echo "Captured full flow exit code: $TEST_EXIT_CODE"
+
+          if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+            exit "$TEST_EXIT_CODE"
+          fi

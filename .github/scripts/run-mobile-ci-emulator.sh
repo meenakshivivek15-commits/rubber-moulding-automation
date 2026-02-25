@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
+mkdir -p .github/tmp
+trap 'code=$?; echo "$code" > "$RESULT_FILE"' EXIT
+
 echo "Commit: $(git rev-parse --short HEAD)"
 echo "===== ADB DEVICES ====="
 adb devices

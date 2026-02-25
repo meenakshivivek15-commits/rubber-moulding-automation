@@ -30,6 +30,8 @@ jobs:
           java-version: 17
 
       - name: Run tests on Android emulator
+        id: mobile_emulator
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -41,6 +43,23 @@ jobs:
           disable-animations: true
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
+
+      - name: Validate Mobile Test Result
+        run: |
+          set -eu
+          RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
+
+          if [ ! -f "$RESULT_FILE" ]; then
+            echo "Result file not found. Emulator/script failed before test result was recorded."
+            exit 1
+          fi
+
+          TEST_EXIT_CODE=$(cat "$RESULT_FILE")
+          echo "Captured mobile test exit code: $TEST_EXIT_CODE"
+
+          if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+            exit "$TEST_EXIT_CODE"
+          fi
 
       - name: Upload Appium Log (if failure)
         if: failure()
