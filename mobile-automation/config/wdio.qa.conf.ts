@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 const CI = process.env.CI === 'true'
+const USE_EXTERNAL_APPIUM = process.env.USE_EXTERNAL_APPIUM === 'true'
 
 // In CI emulator is always emulator-5554
 // Locally you can still override via ANDROID_SERIAL
@@ -26,7 +27,20 @@ export const config: Options.Testrunner = {
     port: 4723,
     path: '/',
 
-    services: [],
+    services: USE_EXTERNAL_APPIUM
+        ? []
+        : [[
+            'appium',
+            {
+                command: 'appium',
+                args: {
+                    address: '127.0.0.1',
+                    port: 4723,
+                    basePath: '/'
+                },
+                logPath: './appium-logs'
+            }
+        ]],
 
     specs: [
         '../test/specs/**/*.e2e.ts'
@@ -98,6 +112,7 @@ export const config: Options.Testrunner = {
         console.log('\n===========================================')
         console.log('🚀 Preparing Test Execution')
         console.log('UDID:', UDID)
+        console.log('Use external Appium:', USE_EXTERNAL_APPIUM)
         console.log('===========================================\n')
     },
 
