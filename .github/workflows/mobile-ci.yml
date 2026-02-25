@@ -39,7 +39,7 @@ jobs:
           emulator-options: -no-window -no-audio -no-boot-anim -gpu off
           disable-animations: true
           script: |
-            set -euo pipefail
+            set -eu
 
             echo "Commit: $(git rev-parse --short HEAD)"
             echo "===== ADB DEVICES ====="
@@ -49,7 +49,7 @@ jobs:
             adb wait-for-device
 
             echo "Waiting for Android boot completion..."
-            for i in {1..60}; do
+            for i in $(seq 1 60); do
               BOOT_COMPLETED=$(adb shell getprop sys.boot_completed | tr -d '\r')
               if [ "$BOOT_COMPLETED" = "1" ]; then
                 echo "Emulator boot completed ✅"
@@ -83,7 +83,7 @@ jobs:
 
             echo "Waiting for Appium to be ready..."
             APP_READY=0
-            for i in {1..45}; do
+            for i in $(seq 1 45); do
               if ! kill -0 "$APPIUM_PID" 2>/dev/null; then
                 echo "Appium exited before becoming ready ❌"
                 tail -n 200 appium.log || true
