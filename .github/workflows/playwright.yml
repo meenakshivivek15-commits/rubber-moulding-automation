@@ -64,16 +64,26 @@ jobs:
             bash .github/scripts/run-full-flow-emulator.sh
 
       - name: Validate Full Business Flow Result
-  if: always()
-  run: |
-    if [ "$TEST_EXIT_CODE" -ne 0 ]; then
-      echo "Tests failed earlier. Skipping result validation."
-      exit 1
-    fi
+        run: |
+          set -eu
+          RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
+          EMULATOR_OUTCOME="${{ steps.full_flow_emulator.outcome }}"
 
-    if [ ! -f result.txt ]; then
-      echo "Result file not found."
-      exit 1
-    fi
+          echo "Emulator step outcome: $EMULATOR_OUTCOME"
 
-    echo "Result file found."
+          if [ ! -f "$RESULT_FILE" ]; then
+            if [ "$EMULATOR_OUTCOME" != "success" ]; then
+              echo "Emulator action failed before test result could be recorded."
+              exit 1
+            fi
+
+            echo "Result file not found despite successful emulator step."
+            exit 1
+          fi
+
+          TEST_EXIT_CODE=$(cat "$RESULT_FILE")
+          echo "Captured full flow test exit code: $TEST_EXIT_CODE"
+
+          if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+            exit "$TEST_EXIT_CODE"
+          fi
