@@ -48,9 +48,17 @@ jobs:
         run: |
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
+          EMULATOR_OUTCOME="${{ steps.mobile_emulator.outcome }}"
+
+          echo "Emulator step outcome: $EMULATOR_OUTCOME"
 
           if [ ! -f "$RESULT_FILE" ]; then
-            echo "Result file not found. Emulator/script failed before test result was recorded."
+            if [ "$EMULATOR_OUTCOME" != "success" ]; then
+              echo "Emulator action failed before test result could be recorded."
+              exit 1
+            fi
+
+            echo "Result file not found despite successful emulator step."
             exit 1
           fi
 
