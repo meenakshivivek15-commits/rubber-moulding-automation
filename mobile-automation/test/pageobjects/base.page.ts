@@ -1,14 +1,14 @@
 export default class BasePage {
 
-    async switchToWebView() {
+    async switchToWebView(timeoutMs: number = 30000) {
 
         await driver.waitUntil(async () => {
             const contexts = await driver.getContexts();
             return contexts.some(c => String(c).includes('WEBVIEW'));
         }, {
-            timeout: 30000,
-            interval: 1000,
-            timeoutMsg: 'WEBVIEW context not available'
+            timeout: timeoutMs,
+            interval: 1500,
+            timeoutMsg: `WEBVIEW context not available within ${timeoutMs}ms`
         });
 
         const contexts = await driver.getContexts();
@@ -26,12 +26,12 @@ export default class BasePage {
         await driver.switchContext('NATIVE_APP');
     }
 
-    async ensureWebView() {
+    async ensureWebView(timeoutMs: number = 30000) {
 
        const currentContext = await driver.getContext();
 
 if (!String(currentContext).includes('WEBVIEW')) {
-    await this.switchToWebView();
+    await this.switchToWebView(timeoutMs);
 }
     }
 

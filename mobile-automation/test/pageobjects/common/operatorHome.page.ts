@@ -6,7 +6,7 @@ class OperatorHomePage extends BasePage {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
 
-    await this.switchToWebView();
+    await this.switchToWebView(90000);
 
     const receiptTile = await $('//ion-img[contains(@ng-reflect-src,"receipt")]');
     await receiptTile.waitForDisplayed({ timeout: 30000 });
