@@ -97,6 +97,18 @@ jobs:
               sleep 2
             done
 
+            adb start-server
+            adb devices
+            CURRENT_SERIAL=$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')
+            if [ -z "$CURRENT_SERIAL" ]; then
+              echo "No online emulator found right before full:e2e ❌"
+              adb devices
+              tail -n 200 appium.log || true
+              exit 1
+            fi
+            export ANDROID_SERIAL="$CURRENT_SERIAL"
+            echo "Using ANDROID_SERIAL=$ANDROID_SERIAL"
+
             npm run full:e2e
             TEST_EXIT_CODE=$?
 

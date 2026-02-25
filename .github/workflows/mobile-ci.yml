@@ -105,11 +105,21 @@ jobs:
             fi
 
             echo "Appium is ready ✅"
+            adb start-server
             adb devices
+
+            CURRENT_SERIAL=$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')
+            if [ -z "$CURRENT_SERIAL" ]; then
+              echo "No online emulator found right before WDIO run ❌"
+              adb devices
+              tail -n 200 appium.log || true
+              exit 1
+            fi
+            echo "Using ANDROID_SERIAL=$CURRENT_SERIAL"
 
             cd mobile-automation
             export USE_EXTERNAL_APPIUM=true
-            export ANDROID_SERIAL="$EMULATOR_SERIAL"
+            export ANDROID_SERIAL="$CURRENT_SERIAL"
             npx wdio run config/wdio.qa.conf.ts
             TEST_EXIT_CODE=$?
 
