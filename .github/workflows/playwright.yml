@@ -55,7 +55,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu off
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu off -no-snapshot-load -no-snapshot-save
           disable-animations: true
           script: |
             set -eu
@@ -109,8 +109,10 @@ jobs:
             export ANDROID_SERIAL="$CURRENT_SERIAL"
             echo "Using ANDROID_SERIAL=$ANDROID_SERIAL"
 
+            set +e
             npm run full:e2e
             TEST_EXIT_CODE=$?
+            set -e
 
             kill $APPIUM_PID || true
             exit $TEST_EXIT_CODE
