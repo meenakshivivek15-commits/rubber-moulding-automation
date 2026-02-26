@@ -53,7 +53,7 @@ class OperatorHomePage extends BasePage {
 
      private isRecoverableWebviewError(error: unknown): boolean {
         const message = error instanceof Error ? error.message : String(error);
-          return /Session ID is not set|NoSuchContextError|chromedriver|disconnected|no such window|No WEBVIEW found after wait|WEBVIEW context not available/i.test(message);
+          return /Session ID is not set|NoSuchContextError|chromedriver|disconnected|no such window|No WEBVIEW found after wait|WEBVIEW context not available|instrumentation process is not running/i.test(message);
      }
 
    async openGoodsReceipt(): Promise<void> {
@@ -81,6 +81,14 @@ class OperatorHomePage extends BasePage {
 
                 if (attempt < 3 && this.isRecoverableWebviewError(error)) {
                     console.log(`Recoverable WebView error while opening Goods Receipt (attempt ${attempt}), retrying...`);
+
+                    const message = error instanceof Error ? error.message : String(error);
+                    if (/instrumentation process is not running/i.test(message)) {
+                        console.log('UiAutomator2 instrumentation crashed, re-activating app before retry...');
+                        await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
+                        await driver.pause(4000);
+                    }
+
                     await this.switchToNative().catch(() => undefined);
                     await driver.pause(2000);
                     continue;

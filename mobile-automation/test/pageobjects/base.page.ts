@@ -2,9 +2,23 @@ export default class BasePage {
 
     async switchToWebView(timeoutMs: number = 30000) {
 
+        let stableWebview: string | undefined;
+
         await driver.waitUntil(async () => {
             const contexts = await driver.getContexts();
-            return contexts.some(c => String(c).includes('WEBVIEW'));
+            const webviews = contexts.filter(c => String(c).includes('WEBVIEW')).map(String);
+
+            if (webviews.length === 0) {
+                stableWebview = undefined;
+                return false;
+            }
+
+            if (stableWebview === webviews[0]) {
+                return true;
+            }
+
+            stableWebview = webviews[0];
+            return false;
         }, {
             timeout: timeoutMs,
             interval: 1500,
@@ -16,7 +30,7 @@ export default class BasePage {
         for (let attempt = 1; attempt <= 4; attempt++) {
             try {
                 const contexts = await driver.getContexts();
-                const webview = contexts.find(c => String(c).includes('WEBVIEW'));
+                const webview = stableWebview || contexts.find(c => String(c).includes('WEBVIEW'));
 
                 console.log(`Available contexts (attempt ${attempt}):`, contexts);
 

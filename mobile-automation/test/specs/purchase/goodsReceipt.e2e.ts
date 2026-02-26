@@ -8,6 +8,7 @@ import { readJson, writeJson } from '../../../../common/utils/fileHelper';
 
 // ===== Runtime Path =====
 const runtimePath = 'runtime/runtimeData.json';
+const operatorAppId = 'com.ppaoperator.app';
 
 // ===== Static mobile test data =====
 const mobileData = require('../../data/goodsReceiptData.json');
@@ -15,17 +16,40 @@ const mobileData = require('../../data/goodsReceiptData.json');
 
 
 describe('Goods Receipt Flow', () => {
+   const getCurrentPackageName = async (): Promise<string> => {
+    const packageName = await driver.execute('mobile: getCurrentPackage');
+    return String(packageName || 'unknown');
+   };
+
+   const ensureOperatorAppForeground = async (attempts: number = 4): Promise<void> => {
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+        const currentPackage = await getCurrentPackageName();
+        console.log(`Current package (attempt ${attempt}/${attempts}): ${currentPackage}`);
+
+        if (currentPackage === operatorAppId) {
+            return;
+        }
+
+        await driver.activateApp(operatorAppId);
+        await browser.pause(4000);
+    }
+
+    const finalPackage = await getCurrentPackageName();
+    throw new Error(`Operator app is not foreground after retries. Current package: ${finalPackage}`);
+   };
+
    before(async () => {
 
     console.log("========= RESTARTING OPERATOR APP =========");
 
     // 🔥 Proper clean restart (keeps settings because noReset=true)
-    await driver.terminateApp('com.ppaoperator.app');
-    await driver.activateApp('com.ppaoperator.app');
+    await driver.terminateApp(operatorAppId).catch(() => undefined);
+    await driver.activateApp(operatorAppId);
 
     await browser.pause(5000);
+    await ensureOperatorAppForeground();
 
-    const currentPackage = await driver.getCurrentPackage();
+    const currentPackage = await getCurrentPackageName();
     console.log("🔥 CURRENT PACKAGE:", currentPackage);
 
     console.log("===========================================");

@@ -111,6 +111,11 @@ export const config: Options.Testrunner = {
         'spec',
         ['allure', {
             outputDir: path.resolve(__dirname, '../../../reports/mobile/allure-results'),
+            reportedEnvironmentVars: {
+                Platform: 'Android',
+                UDID: String(UDID || 'unknown'),
+                CI: CI ? 'Yes' : 'No'
+            },
             disableWebdriverStepsReporting: false,
             disableWebdriverScreenshotsReporting: false
         }]
@@ -142,13 +147,6 @@ export const config: Options.Testrunner = {
 
     beforeSession: function () {
         console.log('Creating session...')
-    },
-
-    before: async function () {
-        const allure = require('@wdio/allure-reporter').default
-        allure.addEnvironment('Platform', 'Android')
-        allure.addEnvironment('UDID', UDID)
-        allure.addEnvironment('CI', CI ? 'Yes' : 'No')
     },
 
     afterTest: async function (_test, _context, result: any) {
