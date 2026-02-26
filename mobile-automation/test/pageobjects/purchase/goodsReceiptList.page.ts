@@ -3,6 +3,24 @@ import operatorHomePage from '../common/operatorHome.page';
 
 class GoodsReceiptListPage extends BasePage {
 
+    private getPoCellSelector(poNumber: string): string {
+        return `//*[@id="grid"]//ion-row/ion-col[4][normalize-space()="${poNumber}"]`;
+    }
+
+    private async getVisiblePoNumbers(): Promise<string[]> {
+        const poCells = await $$('#grid ion-row ion-col:nth-child(4)');
+        const values: string[] = [];
+
+        for (const cell of poCells) {
+            const text = (await cell.getText().catch(() => '')).trim();
+            if (text) {
+                values.push(text);
+            }
+        }
+
+        return values;
+    }
+
     async selectPoFromList(poNumber: string): Promise<void> {
 
         console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
@@ -22,18 +40,26 @@ class GoodsReceiptListPage extends BasePage {
         }
 
         // 2️⃣ Dynamic PO selector (4th column)
-        const poCellSelector =
-            `//*[@id="grid"]//ion-row/ion-col[4][normalize-space()="${poNumber}"]`;
+        const poCellSelector = this.getPoCellSelector(poNumber);
 
         let found = false;
 
         // 3️⃣ Retry Navigation Logic
-        for (let attempt = 1; attempt <= 5; attempt++) {
+        for (let attempt = 1; attempt <= 6; attempt++) {
 
             console.log(`\n🔄 Attempt ${attempt} to find PO...`);
 
-            const elements = await $$(poCellSelector);
-            const count = await elements.length;
+            let count = 0;
+            for (let poll = 1; poll <= 5; poll++) {
+                const elements = await $$(poCellSelector);
+                count = await elements.length;
+
+                if (count > 0) {
+                    break;
+                }
+
+                await driver.pause(2000);
+            }
 
             console.log("Matching rows found:", count);
 
@@ -41,6 +67,9 @@ class GoodsReceiptListPage extends BasePage {
                 found = true;
                 break;
             }
+
+            const visiblePoNumbers = await this.getVisiblePoNumbers();
+            console.log(`Visible PO values: ${visiblePoNumbers.join(', ') || 'none'}`);
 
             console.log("PO not found — navigating to Operator Home...");
 
@@ -57,13 +86,15 @@ class GoodsReceiptListPage extends BasePage {
         }
 
         if (!found) {
-            throw new Error(`PO ${poNumber} never appeared in Goods Receipt list`);
+            const visiblePoNumbers = await this.getVisiblePoNumbers();
+            throw new Error(`PO ${poNumber} never appeared in Goods Receipt list. Visible PO values: ${visiblePoNumbers.join(', ') || 'none'}`);
         }
 
         // 4️⃣ Click the PO safely
         const poCell = await $(poCellSelector);
 
         await poCell.scrollIntoView();
+        await poCell.waitForDisplayed({ timeout: 10000 });
         await driver.pause(500);
 
         try {
