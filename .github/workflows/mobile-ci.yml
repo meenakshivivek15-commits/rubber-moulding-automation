@@ -55,8 +55,15 @@ jobs:
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
           EMULATOR_OUTCOME="${{ steps.mobile_emulator.outcome }}"
+          TESTS_EXECUTED="no"
 
           echo "Emulator step outcome: $EMULATOR_OUTCOME"
+
+          if [ -f "$RESULT_FILE" ]; then
+            TESTS_EXECUTED="yes"
+          fi
+
+          echo "Tests executed: $TESTS_EXECUTED"
 
           if [ ! -f "$RESULT_FILE" ]; then
             if [ "$EMULATOR_OUTCOME" != "success" ]; then
@@ -81,9 +88,15 @@ jobs:
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
           EMULATOR_OUTCOME="${{ steps.mobile_emulator.outcome }}"
+          TESTS_EXECUTED="no"
+
+          if [ -f "$RESULT_FILE" ]; then
+            TESTS_EXECUTED="yes"
+          fi
 
           echo "## Mobile CI Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "- Emulator step outcome: $EMULATOR_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tests executed: $TESTS_EXECUTED" >> "$GITHUB_STEP_SUMMARY"
 
           if [ -f "$RESULT_FILE" ]; then
             TEST_EXIT_CODE=$(cat "$RESULT_FILE")
