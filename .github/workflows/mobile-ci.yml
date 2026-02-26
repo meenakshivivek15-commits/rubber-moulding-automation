@@ -1,4 +1,4 @@
-name: Mobile Automation CI (Legacy)
+name: Mobile Automation CI (Legacy - Manual Fallback)
 
 on:
   workflow_dispatch:

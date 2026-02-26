@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
-mkdir -p .github/tmp
-trap 'code=$?; echo "$code" > "$RESULT_FILE"' EXIT
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+RESULT_FILE="$REPO_ROOT/.github/tmp/mobile-ci-exit-code.txt"
+mkdir -p "$REPO_ROOT/.github/tmp"
+trap 'code=$?; mkdir -p "$(dirname "$RESULT_FILE")"; echo "$code" > "$RESULT_FILE"' EXIT
 
 echo "Commit: $(git rev-parse --short HEAD)"
 echo "===== ADB DEVICES ====="

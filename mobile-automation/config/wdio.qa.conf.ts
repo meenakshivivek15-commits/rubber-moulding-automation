@@ -94,6 +94,7 @@ export const config: Options.Testrunner = {
         // Hybrid app support
         'appium:chromedriverAutodownload': true,
         'appium:ensureWebviewsHavePages': true,
+        'appium:recreateChromeDriverSessions': true,
         'appium:webviewConnectTimeout': 180000,
         'appium:autoWebview': false
     }],
@@ -152,7 +153,15 @@ export const config: Options.Testrunner = {
 
     afterTest: async function (_test, _context, result: any) {
         if (result.error) {
-            await browser.takeScreenshot()
+            try {
+                if (browser.sessionId) {
+                    await browser.takeScreenshot()
+                } else {
+                    console.log('Skipping screenshot: no active browser session.')
+                }
+            } catch (error) {
+                console.log('Skipping screenshot due to session or transport error:', error instanceof Error ? error.message : String(error))
+            }
         }
     }
 }

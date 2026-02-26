@@ -13,10 +13,12 @@ export default class BasePage {
 
         let lastError: unknown;
 
-        for (let attempt = 1; attempt <= 3; attempt++) {
+        for (let attempt = 1; attempt <= 4; attempt++) {
             try {
                 const contexts = await driver.getContexts();
                 const webview = contexts.find(c => String(c).includes('WEBVIEW'));
+
+                console.log(`Available contexts (attempt ${attempt}):`, contexts);
 
                 if (!webview) {
                     throw new Error('No WEBVIEW found after wait');
@@ -25,12 +27,21 @@ export default class BasePage {
                 await driver.switchContext(webview);
                 await driver.pause(1200);
 
-                await driver.execute(() => document.readyState);
+                const currentContext = await driver.getContext();
+                if (!String(currentContext).includes('WEBVIEW')) {
+                    throw new Error(`Context switched but still not in WEBVIEW. Current: ${currentContext}`);
+                }
 
-                console.log('Switched to:', await driver.getContext());
+                console.log('Switched to:', currentContext);
                 return;
             } catch (error) {
                 lastError = error;
+
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                if (/Session ID is not set/i.test(errorMessage)) {
+                    throw new Error('Appium session became invalid during WEBVIEW attach.');
+                }
+
                 console.log(`WebView attach attempt ${attempt} failed, retrying...`);
                 await driver.pause(1500);
             }
@@ -47,11 +58,11 @@ export default class BasePage {
 
     async ensureWebView(timeoutMs: number = 30000) {
 
-       const currentContext = await driver.getContext();
+        const currentContext = await driver.getContext();
 
-if (!String(currentContext).includes('WEBVIEW')) {
-    await this.switchToWebView(timeoutMs);
-}
+        if (!String(currentContext).includes('WEBVIEW')) {
+            await this.switchToWebView(timeoutMs);
+        }
     }
 
     async safeClick(element: WebdriverIO.Element) {

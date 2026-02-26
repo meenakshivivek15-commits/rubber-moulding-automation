@@ -53,7 +53,7 @@ class OperatorHomePage extends BasePage {
 
      private isRecoverableWebviewError(error: unknown): boolean {
         const message = error instanceof Error ? error.message : String(error);
-        return /Session ID is not set|NoSuchContextError|chromedriver|disconnected|no such window/i.test(message);
+          return /Session ID is not set|NoSuchContextError|chromedriver|disconnected|no such window|No WEBVIEW found after wait|WEBVIEW context not available/i.test(message);
      }
 
    async openGoodsReceipt(): Promise<void> {

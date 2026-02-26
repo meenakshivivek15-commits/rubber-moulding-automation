@@ -1,4 +1,4 @@
-name: Full Business Flow CI (Legacy)
+name: Full Business Flow CI (Legacy - Manual Fallback)
 
 on:
   workflow_dispatch:
