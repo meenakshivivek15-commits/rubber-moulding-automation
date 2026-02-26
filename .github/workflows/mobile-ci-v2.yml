@@ -2,9 +2,9 @@ name: Mobile Automation CI v2
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ main ]
+    branches: [ '**' ]
   workflow_dispatch:
 
 jobs:
@@ -40,7 +40,6 @@ jobs:
 
       - name: Run tests on Android emulator
         id: mobile_emulator
-        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -55,6 +54,7 @@ jobs:
             bash .github/scripts/run-mobile-ci-emulator.sh
 
       - name: Validate Mobile Test Result
+        if: steps.mobile_emulator.outcome == 'success'
         run: |
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
@@ -100,7 +100,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: appium-log
+          name: mobile-appium-log
           path: appium.log
           if-no-files-found: ignore
 

@@ -81,5 +81,91 @@ jobs:
           echo "Captured full flow test exit code: $TEST_EXIT_CODE"
 
           if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+            STATE_FILE=".github/tmp/full-flow-state.json"
+
+            if [ -f "$STATE_FILE" ]; then
+              FAILED_STEP=$(node -e "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.step||'unknown')}catch{console.log('unknown')}" "$STATE_FILE")
+              FLOW_STATUS=$(node -e "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.status||'unknown')}catch{console.log('unknown')}" "$STATE_FILE")
+
+              echo "Last recorded business step: $FAILED_STEP"
+              echo "Flow state: $FLOW_STATUS"
+            else
+              echo "Full flow state file not found."
+            fi
+
             exit "$TEST_EXIT_CODE"
           fi
+
+      - name: Write Full Flow CI Summary
+        if: always()
+        run: |
+          set -eu
+          STATE_FILE=".github/tmp/full-flow-state.json"
+          RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
+          EMULATOR_OUTCOME="${{ steps.full_flow_emulator.outcome }}"
+
+          echo "## Full Business Flow CI Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Emulator step outcome: $EMULATOR_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f "$RESULT_FILE" ]; then
+            TEST_EXIT_CODE=$(cat "$RESULT_FILE")
+            echo "- Captured test exit code: $TEST_EXIT_CODE" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Captured test exit code: not recorded" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -f "$STATE_FILE" ]; then
+            FAILED_STEP=$(node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.step||'unknown');" "$STATE_FILE")
+            FLOW_STATUS=$(node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.status||'unknown');" "$STATE_FILE")
+
+            echo "- Last recorded business step: $FAILED_STEP" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Flow state: $FLOW_STATUS" >> "$GITHUB_STEP_SUMMARY"
+
+            if [ "$FLOW_STATUS" = "failed" ]; then
+              echo "- Failed stage: $FAILED_STEP" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            echo "- Last recorded business step: not recorded" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload Appium Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-flow-appium-log
+          path: appium.log
+          if-no-files-found: ignore
+
+      - name: Install Allure
+        if: always()
+        run: npm install -g allure-commandline
+
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          set -eu
+          RESULTS_DIR="mobile-automation/allure-results"
+
+          if [ -d "$RESULTS_DIR" ] && [ "$(ls -A "$RESULTS_DIR")" ]; then
+            allure generate "$RESULTS_DIR" \
+            --clean \
+            -o reports/mobile/allure-report
+          else
+            echo "No Allure results found, skipping report generation."
+          fi
+
+      - name: Upload Allure Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-flow-allure-report
+          path: reports/mobile/allure-report
+          if-no-files-found: ignore
+
+      - name: Upload Raw Allure Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-flow-allure-results
+          path: mobile-automation/allure-results
+          if-no-files-found: ignore
