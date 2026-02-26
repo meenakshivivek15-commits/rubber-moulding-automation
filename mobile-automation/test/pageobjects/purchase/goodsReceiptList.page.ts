@@ -21,6 +21,22 @@ class GoodsReceiptListPage extends BasePage {
         return values;
     }
 
+    private async refreshGoodsReceiptListPage(): Promise<void> {
+        console.log('Refreshing Goods Receipt list page...');
+
+        try {
+            await browser.refresh();
+        } catch {
+            await driver.execute(() => {
+                window.location.reload();
+            });
+        }
+
+        await driver.pause(3000);
+        const grid = await $('#grid');
+        await grid.waitForDisplayed({ timeout: 20000 });
+    }
+
     async selectPoFromList(poNumber: string): Promise<void> {
 
         console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
@@ -44,8 +60,8 @@ class GoodsReceiptListPage extends BasePage {
 
         let found = false;
 
-        // 3️⃣ Retry Navigation Logic
-        for (let attempt = 1; attempt <= 6; attempt++) {
+        // 3️⃣ Retry/Refresh Logic
+        for (let attempt = 1; attempt <= 10; attempt++) {
 
             console.log(`\n🔄 Attempt ${attempt} to find PO...`);
 
@@ -71,18 +87,13 @@ class GoodsReceiptListPage extends BasePage {
             const visiblePoNumbers = await this.getVisiblePoNumbers();
             console.log(`Visible PO values: ${visiblePoNumbers.join(', ') || 'none'}`);
 
-            console.log("PO not found — navigating to Operator Home...");
-
-            // Force navigate to Operator Home
-            await driver.execute(() => {
-                window.location.hash = '#/operatorhome';  // adjust if needed
-            });
-
-            await driver.pause(4000);
-
-            // Reopen Goods Receipt
-            await operatorHomePage.openGoodsReceipt();
-            await driver.pause(6000);
+            try {
+                await this.refreshGoodsReceiptListPage();
+            } catch {
+                console.log('Refresh failed — reopening Goods Receipt from home...');
+                await operatorHomePage.openGoodsReceipt();
+                await driver.pause(6000);
+            }
         }
 
         if (!found) {
