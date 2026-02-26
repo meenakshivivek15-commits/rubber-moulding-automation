@@ -19,8 +19,10 @@ class OperatorHomePage extends BasePage {
         await this.switchToNative().catch(() => undefined);
 
         for (const selector of this.nativeGoodsReceiptSelectors) {
-            const element = await $(selector);
-            if (await element.isDisplayed().catch(() => false)) {
+            const elements = await $$(selector);
+            const element = elements[0];
+
+            if (element && await element.isDisplayed().catch(() => false)) {
                 await element.click();
                 console.log(`Goods Receipt icon clicked in native context using: ${selector}`);
                 return true;
@@ -31,11 +33,13 @@ class OperatorHomePage extends BasePage {
      }
 
      private async clickGoodsReceiptFromWebHome(): Promise<boolean> {
-        await this.ensureWebView(90000);
+        await this.ensureWebView(45000);
 
         for (const selector of this.webGoodsReceiptSelectors) {
-            const element = await $(selector);
-            if (await element.isDisplayed().catch(() => false)) {
+            const elements = await $$(selector);
+            const element = elements[0];
+
+            if (element && await element.isDisplayed().catch(() => false)) {
                 await element.click();
                 console.log(`Goods Receipt icon clicked in web context using: ${selector}`);
                 return true;
@@ -46,7 +50,7 @@ class OperatorHomePage extends BasePage {
      }
 
      private async waitForGoodsReceiptListLoaded(): Promise<void> {
-        await this.ensureWebView(90000);
+          await this.ensureWebView(45000);
         const grid = await $('#grid');
         await grid.waitForDisplayed({ timeout: 30000 });
      }
@@ -60,9 +64,16 @@ class OperatorHomePage extends BasePage {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
 
+        const maxTotalMs = 150000;
+        const startedAt = Date.now();
+
         let lastError: unknown;
 
         for (let attempt = 1; attempt <= 3; attempt++) {
+            if (Date.now() - startedAt > maxTotalMs) {
+                throw new Error(`Timed out opening Goods Receipt after ${maxTotalMs}ms`);
+            }
+
             try {
                 const clickedFromNative = await this.clickGoodsReceiptFromNativeHome();
                 if (!clickedFromNative) {

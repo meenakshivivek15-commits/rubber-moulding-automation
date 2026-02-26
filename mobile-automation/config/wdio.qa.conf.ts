@@ -103,7 +103,7 @@ export const config: Options.Testrunner = {
 
     waitforTimeout: 60000,
     connectionRetryTimeout: 600000,  // Increased for Appium device discovery
-    connectionRetryCount: 8,  // Retry more times
+    connectionRetryCount: 2,
 
     framework: 'mocha',
 

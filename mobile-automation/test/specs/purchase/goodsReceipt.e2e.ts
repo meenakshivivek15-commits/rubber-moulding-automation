@@ -55,7 +55,8 @@ describe('Goods Receipt Flow', () => {
     console.log("===========================================");
 });
 
-    it(`should submit goods receipt for ${mobileData.location}`, async () => {
+    it(`should submit goods receipt for ${mobileData.location}`, async function () {
+        this.timeout(600000);
 
         // ===== Allure Metadata =====
         allure.addFeature('Purchase Process');
