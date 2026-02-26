@@ -67,14 +67,53 @@ jobs:
           script: |
             bash .github/scripts/run-full-flow-emulator.sh
 
+      - name: Decide Emulator Retry
+        id: decide_emulator_retry
+        if: always()
+        run: |
+          set -eu
+          RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
+          FIRST_OUTCOME="${{ steps.full_flow_emulator.outcome }}"
+          RETRY_NEEDED="false"
+
+          if [ "$FIRST_OUTCOME" = "failure" ] && [ ! -f "$RESULT_FILE" ]; then
+            RETRY_NEEDED="true"
+          fi
+
+          echo "retry_needed=$RETRY_NEEDED" >> "$GITHUB_OUTPUT"
+          echo "Emulator retry needed: $RETRY_NEEDED"
+
+      - name: Retry Full Business Flow (with Android Emulator)
+        id: full_flow_emulator_retry
+        if: always() && steps.decide_emulator_retry.outputs.retry_needed == 'true'
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          disable-linux-hw-accel: true
+          profile: pixel
+          emulator-boot-timeout: 1800
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot-load -no-snapshot-save
+          disable-animations: true
+          script: |
+            bash .github/scripts/run-full-flow-emulator.sh
+
       - name: Validate Full Business Flow Result
         if: always()
         run: |
           set -eu
           RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
           STATE_FILE=".github/tmp/full-flow-state.json"
-          EMULATOR_OUTCOME="${{ steps.full_flow_emulator.outcome }}"
+          FIRST_EMULATOR_OUTCOME="${{ steps.full_flow_emulator.outcome }}"
+          RETRY_EMULATOR_OUTCOME="${{ steps.full_flow_emulator_retry.outcome }}"
+          EMULATOR_OUTCOME="$FIRST_EMULATOR_OUTCOME"
           TESTS_EXECUTED="no"
+
+          if [ -n "$RETRY_EMULATOR_OUTCOME" ] && [ "$RETRY_EMULATOR_OUTCOME" != "skipped" ]; then
+            EMULATOR_OUTCOME="$RETRY_EMULATOR_OUTCOME"
+          fi
 
           echo "Emulator step outcome: $EMULATOR_OUTCOME"
 
@@ -133,8 +172,14 @@ jobs:
           set -eu
           STATE_FILE=".github/tmp/full-flow-state.json"
           RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
-          EMULATOR_OUTCOME="${{ steps.full_flow_emulator.outcome }}"
+          FIRST_EMULATOR_OUTCOME="${{ steps.full_flow_emulator.outcome }}"
+          RETRY_EMULATOR_OUTCOME="${{ steps.full_flow_emulator_retry.outcome }}"
+          EMULATOR_OUTCOME="$FIRST_EMULATOR_OUTCOME"
           TESTS_EXECUTED="no"
+
+          if [ -n "$RETRY_EMULATOR_OUTCOME" ] && [ "$RETRY_EMULATOR_OUTCOME" != "skipped" ]; then
+            EMULATOR_OUTCOME="$RETRY_EMULATOR_OUTCOME"
+          fi
 
           if [ -f "$RESULT_FILE" ]; then
             TESTS_EXECUTED="yes"
@@ -147,6 +192,8 @@ jobs:
 
           echo "## Full Business Flow CI Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "- Emulator step outcome: $EMULATOR_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "- First emulator attempt: $FIRST_EMULATOR_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Retry emulator attempt: ${RETRY_EMULATOR_OUTCOME:-not-run}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Tests executed: $TESTS_EXECUTED" >> "$GITHUB_STEP_SUMMARY"
 
           if [ -f "$RESULT_FILE" ]; then
