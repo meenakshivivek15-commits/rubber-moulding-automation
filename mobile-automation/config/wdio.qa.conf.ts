@@ -86,6 +86,7 @@ export const config: Options.Testrunner = {
         // Stability timeouts (important for CI - be generous)
         'appium:adbExecTimeout': 300000,
         'appium:androidDeviceReadyTimeout': 120,
+        'appium:ignoreHiddenApiPolicyError': true,
         'appium:androidInstallTimeout': 300000,
         'appium:uiautomator2ServerLaunchTimeout': 300000,
         'appium:uiautomator2ServerInstallTimeout': 300000,

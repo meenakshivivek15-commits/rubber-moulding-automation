@@ -99,6 +99,14 @@ jobs:
           path: appium.log
           if-no-files-found: ignore
 
+      - name: Upload ADB Logcat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-adb-logcat
+          path: .github/tmp/mobile-logcat.txt
+          if-no-files-found: ignore
+
       - name: Install Allure
         if: always()
         run: npm install -g allure-commandline
