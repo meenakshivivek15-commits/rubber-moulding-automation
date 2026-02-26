@@ -40,6 +40,7 @@ jobs:
 
       - name: Run tests on Android emulator
         id: mobile_emulator
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -54,7 +55,7 @@ jobs:
             bash .github/scripts/run-mobile-ci-emulator.sh
 
       - name: Validate Mobile Test Result
-        if: steps.mobile_emulator.outcome == 'success'
+        if: always()
         run: |
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"

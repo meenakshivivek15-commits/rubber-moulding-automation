@@ -50,6 +50,7 @@ jobs:
             bash .github/scripts/run-mobile-ci-emulator.sh
 
       - name: Validate Mobile Test Result
+        if: always()
         run: |
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"

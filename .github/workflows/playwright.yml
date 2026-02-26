@@ -60,6 +60,7 @@ jobs:
             bash .github/scripts/run-full-flow-emulator.sh
 
       - name: Validate Full Business Flow Result
+        if: always()
         run: |
           set -eu
           RESULT_FILE=".github/tmp/full-flow-exit-code.txt"

@@ -58,6 +58,7 @@ jobs:
 
       - name: Run Full Business Flow (with Android Emulator)
         id: full_flow_emulator
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -72,7 +73,7 @@ jobs:
             bash .github/scripts/run-full-flow-emulator.sh
 
       - name: Validate Full Business Flow Result
-        if: steps.full_flow_emulator.outcome == 'success'
+        if: always()
         run: |
           set -eu
           RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
