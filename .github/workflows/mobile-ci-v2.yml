@@ -84,6 +84,12 @@ jobs:
           echo "Captured mobile test exit code: $TEST_EXIT_CODE"
 
           if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+            FAILED_CASE=$(node -e "const fs=require('fs');const dir='mobile-automation/allure-results';if(!fs.existsSync(dir)){process.exit(0)};const files=fs.readdirSync(dir).filter(f=>f.endsWith('-result.json'));const bad=[];for(const f of files){try{const j=JSON.parse(fs.readFileSync(dir+'/'+f,'utf8'));if(['failed','broken'].includes(j.status)){bad.push({start:j.start||0,name:j.name||'unknown',message:(j.statusDetails&&j.statusDetails.message)||''});}}catch{}}bad.sort((a,b)=>b.start-a.start);if(bad.length){console.log(bad[0].name+' :: '+bad[0].message.replace(/\s+/g,' ').trim());}")
+
+            if [ -n "$FAILED_CASE" ]; then
+              echo "Latest failed test: $FAILED_CASE"
+            fi
+
             exit "$TEST_EXIT_CODE"
           fi
 
@@ -106,6 +112,14 @@ jobs:
           if [ -f "$RESULT_FILE" ]; then
             TEST_EXIT_CODE=$(cat "$RESULT_FILE")
             echo "- Captured test exit code: $TEST_EXIT_CODE" >> "$GITHUB_STEP_SUMMARY"
+
+            if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+              FAILED_CASE=$(node -e "const fs=require('fs');const dir='mobile-automation/allure-results';if(!fs.existsSync(dir)){process.exit(0)};const files=fs.readdirSync(dir).filter(f=>f.endsWith('-result.json'));const bad=[];for(const f of files){try{const j=JSON.parse(fs.readFileSync(dir+'/'+f,'utf8'));if(['failed','broken'].includes(j.status)){bad.push({start:j.start||0,name:j.name||'unknown',message:(j.statusDetails&&j.statusDetails.message)||''});}}catch{}}bad.sort((a,b)=>b.start-a.start);if(bad.length){console.log(bad[0].name+' :: '+bad[0].message.replace(/\s+/g,' ').trim());}")
+
+              if [ -n "$FAILED_CASE" ]; then
+                echo "- Latest failed test: $FAILED_CASE" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            fi
           else
             echo "- Captured test exit code: not recorded" >> "$GITHUB_STEP_SUMMARY"
           fi
