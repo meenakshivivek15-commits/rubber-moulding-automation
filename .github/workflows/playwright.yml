@@ -49,6 +49,7 @@ jobs:
           npm ci
 
       - name: Install Playwright Browsers
+        working-directory: web-app-automation
         run: npx playwright install --with-deps
 
       - name: Run Full Business Flow (with Android Emulator)
