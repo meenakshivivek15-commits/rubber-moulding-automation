@@ -2,74 +2,73 @@ import BasePage from '../base.page';
 
 class OperatorHomePage extends BasePage {
 
-    private readonly goodsReceiptTileSelector =
-        '//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img';
+    // ===============================
+    // 🔎 Locator
+    // ===============================
+    /*get goodsReceiptIcon() {
+        // More stable than absolute XPath
+        return $('//ion-img[contains(@ng-reflect-src,"receipt")]');
+    }*/
 
-    private async clickGoodsReceiptFromNativeHome(): Promise<void> {
-        const receiptTile = await $(this.goodsReceiptTileSelector);
 
-        await receiptTile.waitForDisplayed({ timeout: 45000 });
+    // ===============================
+    // 🚀 Action
+    // ===============================
+ async openGoodsReceipt(): Promise<void> {
 
-        try {
-            await receiptTile.scrollIntoView();
-        } catch {
-        }
+    console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
 
-        await receiptTile.click();
+    // 1️⃣ Wait for WEBVIEW
+    await driver.waitUntil(async () => {
+        const contexts = await driver.getContexts();
+        return contexts.some((ctx: any) =>
+            ctx.toString().includes('WEBVIEW')
+        );
+    }, { timeout: 30000 });
 
-        console.log('✅ Goods Receipt icon clicked successfully');
+    const contexts = await driver.getContexts();
+    const webview = contexts.find((ctx: any) =>
+        ctx.toString().includes('WEBVIEW')
+    );
+
+    if (!webview) {
+        throw new Error("WEBVIEW context not found");
     }
 
-    private async waitForGoodsReceiptListLoaded(): Promise<void> {
-        const grid = await $('#grid');
-        await grid.waitForDisplayed({ timeout: 45000 });
+    await driver.switchContext(webview as string);
+    console.log("Switched to:", webview);
 
-        console.log('✅ Goods Receipt list page loaded');
-    }
+    await driver.pause(3000);
 
-    async openGoodsReceipt(): Promise<void> {
+    // 2️⃣ Use your absolute XPath
+    const receiptTile = await $(
+        '//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img'
+    );
 
-        console.log('\n===== OPENING GOODS RECEIPT MENU =====\n');
+    await receiptTile.waitForDisplayed({ timeout: 30000 });
 
-        const maxTotalMs = 120000;
-        const startedAt = Date.now();
+    console.log("GoodsReceipt tile found using absolute XPath");
 
-        let lastError: unknown;
+    await receiptTile.click();
 
-        for (let attempt = 1; attempt <= 3; attempt++) {
+    console.log("Clicked GoodsReceipt tile");
 
-            if (Date.now() - startedAt > maxTotalMs) {
-                throw new Error(`Timed out opening Goods Receipt after ${maxTotalMs}ms`);
-            }
+    // 3️⃣ Wait for navigation
+    await driver.waitUntil(async () => {
+        const url = await driver.execute(() => window.location.href);
+        console.log("Current URL:", url);
+        return !url.includes('/home');
+    }, {
+        timeout: 20000,
+        interval: 1000,
+        timeoutMsg: "Navigation did not happen"
+    });
 
-            try {
-                await this.switchToNative().catch(() => undefined);
+    // 4️⃣ Confirm list page
+    const grid = await $('//*[@id="grid"]');
+    await grid.waitForDisplayed({ timeout: 30000 });
 
-                await this.clickGoodsReceiptFromNativeHome();
-                await this.waitForGoodsReceiptListLoaded();
-
-                console.log('🎉 Goods Receipt opened successfully');
-                return;
-
-            } catch (error) {
-
-                lastError = error;
-
-                if (!driver.sessionId) {
-                    throw new Error('Appium session terminated while opening Goods Receipt');
-                }
-
-                console.log(`Retrying openGoodsReceipt (attempt ${attempt})...`);
-
-                await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
-                await driver.pause(3000);
-            }
-        }
-
-        throw lastError instanceof Error
-            ? lastError
-            : new Error('Unable to open Goods Receipt after retries');
-    }
+    console.log("Goods Receipt list page loaded");
 }
-
+}
 export default new OperatorHomePage();
