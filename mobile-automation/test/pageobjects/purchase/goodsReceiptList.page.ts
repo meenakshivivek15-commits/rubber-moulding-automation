@@ -3,10 +3,6 @@ import operatorHomePage from '../common/operatorHome.page';
 
 class GoodsReceiptListPage extends BasePage {
 
-    private getPoCellSelector(poNumber: string): string {
-        return `//*[@id="grid"]//ion-row/ion-col[4][normalize-space()="${poNumber}"]`;
-    }
-
     private async getVisiblePoNumbers(): Promise<string[]> {
         const poCells = await $$('#grid ion-row ion-col:nth-child(4)');
         const values: string[] = [];
@@ -45,7 +41,7 @@ class GoodsReceiptListPage extends BasePage {
         await this.ensureWebView(60000);
 
         // 2️⃣ Dynamic PO selector (4th column)
-        const poCellSelector = this.getPoCellSelector(poNumber);
+        const poCellSelector = `//*[@id="grid"]//ion-row/ion-col[4][normalize-space()="${poNumber}"]`;
 
         let found = false;
 
@@ -53,6 +49,9 @@ class GoodsReceiptListPage extends BasePage {
         for (let attempt = 1; attempt <= 10; attempt++) {
 
             console.log(`\n🔄 Attempt ${attempt} to find PO...`);
+
+            await this.ensureWebView(60000);
+            await $('#grid').waitForDisplayed({ timeout: 30000 });
 
             let count = 0;
             for (let poll = 1; poll <= 5; poll++) {
@@ -76,11 +75,19 @@ class GoodsReceiptListPage extends BasePage {
             const visiblePoNumbers = await this.getVisiblePoNumbers();
             console.log(`Visible PO values: ${visiblePoNumbers.join(', ') || 'none'}`);
 
+            if (attempt === 10) {
+                break;
+            }
+
             try {
                 await this.refreshGoodsReceiptListPage();
+                await this.ensureWebView(60000);
+                await $('#grid').waitForDisplayed({ timeout: 30000 });
             } catch {
                 console.log('Refresh failed — reopening Goods Receipt from home...');
                 await operatorHomePage.openGoodsReceipt();
+                await this.ensureWebView(60000);
+                await $('#grid').waitForDisplayed({ timeout: 30000 });
                 await driver.pause(6000);
             }
         }

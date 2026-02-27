@@ -2,106 +2,39 @@ import BasePage from '../base.page';
 
 class OperatorHomePage extends BasePage {
 
-     private readonly nativeGoodsReceiptSelectors = [
-        '//*[@text="Goods Receipt"]',
-        '//*[contains(@text,"Goods Receipt")]',
-        '//*[@content-desc="Goods Receipt"]',
-        '//*[contains(@content-desc,"receipt")]'
-     ];
+    private readonly goodsReceiptTileSelector = '//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img';
 
-     private readonly webGoodsReceiptSelectors = [
-        '//ion-img[contains(@ng-reflect-src,"receipt")]',
-          '//*[contains(.,"Goods Receipt")]',
-          '//ion-label[contains(.,"Goods Receipt")]'
-     ];
+    private async clickGoodsReceiptFromWebHome(): Promise<void> {
+        await this.ensureWebView(90000);
 
-      private async hasVisibleElement(selector: string): Promise<boolean> {
-          try {
-                const elements = await $$(selector);
-                const element = elements[0];
-                return Boolean(element && await element.isDisplayed().catch(() => false));
-          } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-                console.log(`Skipping selector probe due to lookup error: ${selector} :: ${message}`);
-                return false;
-          }
-      }
-
-     private async clickGoodsReceiptFromNativeHome(): Promise<boolean> {
-        await this.switchToNative().catch(() => undefined);
-
-        for (const selector of this.nativeGoodsReceiptSelectors) {
-            const elements = await $$(selector);
-            const element = elements[0];
-
-            if (element && await element.isDisplayed().catch(() => false)) {
-                await element.click();
-                console.log(`Goods Receipt icon clicked in native context using: ${selector}`);
-                return true;
-            }
-        }
-
-        return false;
-     }
-
-     private async logOperatorHomeIndicators(): Promise<void> {
-        const visibleIndicators: string[] = [];
+        const receiptTile = await $(this.goodsReceiptTileSelector);
+        await receiptTile.waitForDisplayed({ timeout: 30000 });
 
         try {
-            await this.switchToNative().catch(() => undefined);
-            for (const selector of this.nativeGoodsReceiptSelectors) {
-                if (await this.hasVisibleElement(selector)) {
-                    visibleIndicators.push(`native:${selector}`);
-                    break;
-                }
-            }
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            console.log(`Native indicator check failed (non-blocking): ${message}`);
+            await receiptTile.scrollIntoView();
+        } catch {
         }
 
         try {
-            const contexts = await driver.getContexts() as string[];
-            const hasWebview = contexts.some(ctx => String(ctx).startsWith('WEBVIEW'));
-            visibleIndicators.push(`contexts:${contexts.join(', ') || 'none'}`);
-
-            if (!hasWebview) {
-                visibleIndicators.push('webview:not-available-yet');
-            }
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            console.log(`Web indicator check failed (non-blocking): ${message}`);
+            await receiptTile.click();
+        } catch {
+            await driver.execute((el) => {
+                (el as HTMLElement).click();
+            }, receiptTile);
         }
 
-        console.log(`Operator home menu indicators: ${visibleIndicators.join(' | ') || 'none found'}`);
-     }
+        console.log(`Goods Receipt icon clicked using fixed locator: ${this.goodsReceiptTileSelector}`);
+    }
 
-     private async clickGoodsReceiptFromWebHome(): Promise<boolean> {
-        await this.ensureWebView(45000);
-
-        for (const selector of this.webGoodsReceiptSelectors) {
-            const elements = await $$(selector);
-            const element = elements[0];
-
-            if (element && await element.isDisplayed().catch(() => false)) {
-                await element.click();
-                console.log(`Goods Receipt icon clicked in web context using: ${selector}`);
-                return true;
-            }
-        }
-
-        return false;
-     }
-
-     private async waitForGoodsReceiptListLoaded(): Promise<void> {
-          await this.ensureWebView(45000);
+      private async waitForGoodsReceiptListLoaded(): Promise<void> {
+             await this.ensureWebView(90000);
         const grid = await $('#grid');
-        await grid.waitForDisplayed({ timeout: 30000 });
+          await grid.waitForDisplayed({ timeout: 45000 });
      }
 
      private isRecoverableWebviewError(error: unknown): boolean {
         const message = error instanceof Error ? error.message : String(error);
-        return /Session ID is not set|NoSuchContextError|No such context found|chromedriver|disconnected|no such window|No WEBVIEW found after wait|WEBVIEW context not available|instrumentation process is not running/i.test(message);
+          return /Session ID is not set|NoSuchContextError|No such context found|chromedriver|disconnected|no such window|No WEBVIEW found after wait|WEBVIEW context not available|WEBVIEW context not stable|instrumentation process is not running/i.test(message);
      }
 
    async openGoodsReceipt(): Promise<void> {
@@ -119,15 +52,7 @@ class OperatorHomePage extends BasePage {
             }
 
             try {
-                await this.logOperatorHomeIndicators();
-
-                const clickedFromNative = await this.clickGoodsReceiptFromNativeHome();
-                if (!clickedFromNative) {
-                    const clickedFromWeb = await this.clickGoodsReceiptFromWebHome();
-                    if (!clickedFromWeb) {
-                        throw new Error('Goods Receipt icon not found on Operator home screen');
-                    }
-                }
+                await this.clickGoodsReceiptFromWebHome();
 
                 await this.waitForGoodsReceiptListLoaded();
 
