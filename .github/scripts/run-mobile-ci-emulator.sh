@@ -24,6 +24,8 @@ on_exit() {
 
 trap on_exit EXIT
 
+RUNTIME_FILE="$REPO_ROOT/common/test-data/runtime/runtimeData.json"
+
 echo "Commit: $(git rev-parse --short HEAD)"
 echo "===== ADB DEVICES ====="
 adb devices
@@ -197,14 +199,23 @@ fi
 echo "Using ANDROID_SERIAL=$CURRENT_SERIAL"
 
 echo "Running full-flow prerequisites: Create PO and Approve PO..."
+cd "$REPO_ROOT/web-app-automation"
+
+if [ ! -d "node_modules" ]; then
+  echo "web-app-automation/node_modules missing; installing web dependencies..."
+  npm ci
+fi
+
+npx playwright test tests/planner/purchase/plan/purchaseorder.spec.ts --config=config/playwright.qa.config.ts
+npx playwright test tests/planner/purchase/approval/po-approval.spec.ts --config=config/playwright.qa.config.ts
+
 cd "$REPO_ROOT"
-
-npx playwright test web-app-automation/tests/planner/purchase/plan/purchaseorder.spec.ts --config=web-app-automation/config/playwright.qa.config.ts
-npx playwright test web-app-automation/tests/planner/purchase/approval/po-approval.spec.ts --config=web-app-automation/config/playwright.qa.config.ts
-
-if [ -f "$REPO_ROOT/common/test-data/runtime/runtimeData.json" ]; then
+if [ -f "$RUNTIME_FILE" ]; then
   echo "Runtime PO after approval:"
-  node -e "const fs=require('fs');const p='common/test-data/runtime/runtimeData.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(j.poNumber||'poNumber missing');"
+  node -e "const fs=require('fs');const p=process.argv[1];const j=JSON.parse(fs.readFileSync(p,'utf8'));const po=j.poNumber||'';console.log(po||'poNumber missing');if(!po){process.exit(2)}" "$RUNTIME_FILE"
+else
+  echo "Runtime file not found after PO creation/approval: $RUNTIME_FILE"
+  exit 1
 fi
 
 echo "Waiting 60 seconds for PO propagation before goods receipt..."
