@@ -21,6 +21,14 @@ jobs:
         working-directory: mobile-automation
         run: npm ci
 
+      - name: Install Web Dependencies
+        working-directory: web-app-automation
+        run: npm ci
+
+      - name: Install Playwright Browser
+        working-directory: web-app-automation
+        run: npx playwright install --with-deps chromium
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:

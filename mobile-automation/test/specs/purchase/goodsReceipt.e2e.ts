@@ -42,13 +42,6 @@ describe('Goods Receipt Flow', () => {
 
     console.log("========= FRESH START: OPERATOR APP =========");
 
-    try {
-        await driver.execute('mobile: clearApp', { appId: operatorAppId });
-        console.log('Cleared operator app state for fresh run');
-    } catch {
-        console.log('mobile: clearApp not available; continuing with clean restart');
-    }
-
     // 🔥 Proper clean restart (keeps settings because noReset=true)
     await driver.terminateApp(operatorAppId).catch(() => undefined);
     await driver.activateApp(operatorAppId);

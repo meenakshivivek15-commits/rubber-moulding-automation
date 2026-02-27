@@ -196,6 +196,20 @@ if [ -z "$CURRENT_SERIAL" ]; then
 fi
 echo "Using ANDROID_SERIAL=$CURRENT_SERIAL"
 
+echo "Running full-flow prerequisites: Create PO and Approve PO..."
+cd "$REPO_ROOT"
+
+npx playwright test web-app-automation/tests/planner/purchase/plan/purchaseorder.spec.ts --config=web-app-automation/config/playwright.qa.config.ts
+npx playwright test web-app-automation/tests/planner/purchase/approval/po-approval.spec.ts --config=web-app-automation/config/playwright.qa.config.ts
+
+if [ -f "$REPO_ROOT/common/test-data/runtime/runtimeData.json" ]; then
+  echo "Runtime PO after approval:"
+  node -e "const fs=require('fs');const p='common/test-data/runtime/runtimeData.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(j.poNumber||'poNumber missing');"
+fi
+
+echo "Waiting 60 seconds for PO propagation before goods receipt..."
+sleep 60
+
 cd mobile-automation
 export USE_EXTERNAL_APPIUM=true
 export ANDROID_SERIAL="$CURRENT_SERIAL"

@@ -98,7 +98,8 @@ export const config: Options.Testrunner = {
         'appium:ensureWebviewsHavePages': true,
         'appium:recreateChromeDriverSessions': true,
         'appium:webviewConnectTimeout': 180000,
-        'appium:autoWebview': false
+        'appium:autoWebview': CI,
+        'appium:autoWebviewTimeout': 120000
     }],
 
     logLevel: 'info',

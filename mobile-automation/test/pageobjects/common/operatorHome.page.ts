@@ -34,6 +34,8 @@ class OperatorHomePage extends BasePage {
                 const message = error instanceof Error ? error.message : String(error);
 
                 if (/Session ID is not set|disconnected|No such context found|no such window/i.test(message)) {
+                    await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
+                    await driver.pause(3000);
                     await this.switchToNative().catch(() => undefined);
                     await driver.pause(2000);
                     continue;
