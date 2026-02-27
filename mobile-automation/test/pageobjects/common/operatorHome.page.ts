@@ -11,9 +11,21 @@ class OperatorHomePage extends BasePage {
 
      private readonly webGoodsReceiptSelectors = [
         '//ion-img[contains(@ng-reflect-src,"receipt")]',
-        '//*[contains(text(),"Goods Receipt")]',
-        '//ion-label[contains(normalize-space(),"Goods Receipt")]'
+          '//*[contains(.,"Goods Receipt")]',
+          '//ion-label[contains(.,"Goods Receipt")]'
      ];
+
+      private async hasVisibleElement(selector: string): Promise<boolean> {
+          try {
+                const elements = await $$(selector);
+                const element = elements[0];
+                return Boolean(element && await element.isDisplayed().catch(() => false));
+          } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                console.log(`Skipping selector probe due to lookup error: ${selector} :: ${message}`);
+                return false;
+          }
+      }
 
      private async clickGoodsReceiptFromNativeHome(): Promise<boolean> {
         await this.switchToNative().catch(() => undefined);
@@ -35,24 +47,30 @@ class OperatorHomePage extends BasePage {
      private async logOperatorHomeIndicators(): Promise<void> {
         const visibleIndicators: string[] = [];
 
-        await this.switchToNative().catch(() => undefined);
-        for (const selector of this.nativeGoodsReceiptSelectors) {
-            const elements = await $$(selector);
-            const element = elements[0];
-            if (element && await element.isDisplayed().catch(() => false)) {
-                visibleIndicators.push(`native:${selector}`);
-                break;
+        try {
+            await this.switchToNative().catch(() => undefined);
+            for (const selector of this.nativeGoodsReceiptSelectors) {
+                if (await this.hasVisibleElement(selector)) {
+                    visibleIndicators.push(`native:${selector}`);
+                    break;
+                }
             }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.log(`Native indicator check failed (non-blocking): ${message}`);
         }
 
-        await this.ensureWebView(20000).catch(() => undefined);
-        for (const selector of this.webGoodsReceiptSelectors) {
-            const elements = await $$(selector);
-            const element = elements[0];
-            if (element && await element.isDisplayed().catch(() => false)) {
-                visibleIndicators.push(`web:${selector}`);
-                break;
+        try {
+            await this.ensureWebView(20000).catch(() => undefined);
+            for (const selector of this.webGoodsReceiptSelectors) {
+                if (await this.hasVisibleElement(selector)) {
+                    visibleIndicators.push(`web:${selector}`);
+                    break;
+                }
             }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.log(`Web indicator check failed (non-blocking): ${message}`);
         }
 
         console.log(`Operator home menu indicators: ${visibleIndicators.join(' | ') || 'none found'}`);
