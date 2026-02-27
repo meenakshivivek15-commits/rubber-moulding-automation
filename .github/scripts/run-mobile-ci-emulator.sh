@@ -130,6 +130,10 @@ cd mobile-automation
 export USE_EXTERNAL_APPIUM=true
 export ANDROID_SERIAL="$CURRENT_SERIAL"
 
+echo "Cleaning previous Allure results..."
+mkdir -p allure-results
+find allure-results -type f -delete
+
 set +e
 npx wdio run config/wdio.qa.conf.ts
 TEST_EXIT_CODE=$?
