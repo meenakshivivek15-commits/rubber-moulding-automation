@@ -43,8 +43,6 @@ export default class BasePage {
                     throw new Error(`Context switched but still not in WEBVIEW. Current: ${currentContext}`);
                 }
 
-                await driver.execute(() => document.readyState);
-
                 console.log('Switched to:', currentContext);
                 return;
             } catch (error) {
