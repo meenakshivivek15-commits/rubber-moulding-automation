@@ -8,6 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 const CI = process.env.CI === 'true'
 const USE_EXTERNAL_APPIUM = process.env.USE_EXTERNAL_APPIUM === 'true'
+const CI_USE_MANIFEST_LAUNCH_FALLBACK = CI && process.env.APPIUM_FORCE_ACTIVITY !== 'true'
 
 function getConnectedAndroidSerial(): string | undefined {
     try {
@@ -33,6 +34,7 @@ console.log('══════════════════════�
 console.log('CI Mode:', CI)
 console.log('Using UDID:', UDID)
 console.log('Use external Appium:', USE_EXTERNAL_APPIUM)
+console.log('CI launch fallback (manifest-based):', CI_USE_MANIFEST_LAUNCH_FALLBACK)
 console.log('════════════════════════════════════════\n')
 
 export const config: Options.Testrunner = {
@@ -77,7 +79,14 @@ export const config: Options.Testrunner = {
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
         'appium:appPackage': 'com.ppaoperator.app',
-        'appium:appActivity': 'com.example.app.MainActivity',
+        ...(CI_USE_MANIFEST_LAUNCH_FALLBACK
+            ? {
+                'appium:appWaitForLaunch': true,
+                'appium:appWaitActivity': '*'
+            }
+            : {
+                'appium:appActivity': 'com.example.app.MainActivity'
+            }),
 
         'appium:autoGrantPermissions': true,
         'appium:autoLaunch': true,
