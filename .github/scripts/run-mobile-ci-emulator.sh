@@ -198,6 +198,11 @@ if [ -z "$CURRENT_SERIAL" ]; then
 fi
 echo "Using ANDROID_SERIAL=$CURRENT_SERIAL"
 
+cd "$REPO_ROOT/mobile-automation"
+echo "Cleaning previous mobile Allure results..."
+mkdir -p allure-results
+find allure-results -type f -delete
+
 echo "Running full-flow prerequisites: Create PO and Approve PO..."
 cd "$REPO_ROOT/web-app-automation"
 
@@ -205,6 +210,9 @@ if [ ! -d "node_modules" ]; then
   echo "web-app-automation/node_modules missing; installing web dependencies..."
   npm ci
 fi
+
+echo "Ensuring Playwright browser binaries are installed..."
+npx playwright install chromium
 
 npx playwright test tests/planner/purchase/plan/purchaseorder.spec.ts --config=config/playwright.qa.config.ts
 npx playwright test tests/planner/purchase/approval/po-approval.spec.ts --config=config/playwright.qa.config.ts
@@ -224,10 +232,6 @@ sleep 60
 cd mobile-automation
 export USE_EXTERNAL_APPIUM=true
 export ANDROID_SERIAL="$CURRENT_SERIAL"
-
-echo "Cleaning previous Allure results..."
-mkdir -p allure-results
-find allure-results -type f -delete
 
 set +e
 npx wdio run config/wdio.qa.conf.ts
