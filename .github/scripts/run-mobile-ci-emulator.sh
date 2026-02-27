@@ -31,19 +31,10 @@ adb devices
 echo "Waiting for emulator device..."
 adb wait-for-device
 
-echo "Waiting for Android boot completion..."
-for i in {1..60}; do
-  BOOT_COMPLETED="$(adb shell getprop sys.boot_completed | tr -d '\r')"
-  if [ "$BOOT_COMPLETED" = "1" ]; then
-    echo "Emulator boot completed ✅"
-    break
-  fi
-  sleep 2
-done
-
+# Ensure shell is responsive on selected emulator serial
 EMULATOR_SERIAL="$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')"
 if [ -z "$EMULATOR_SERIAL" ]; then
-  echo "No online emulator found ❌"
+  echo "No online emulator found after adb wait-for-device ❌"
   adb devices
   exit 1
 fi
@@ -51,29 +42,108 @@ fi
 export ANDROID_SERIAL="$EMULATOR_SERIAL"
 echo "Using ANDROID_SERIAL=$ANDROID_SERIAL"
 
+wait_for_system_services() {
+  echo "Waiting for shell responsiveness..."
+  SHELL_READY=0
+  for i in {1..60}; do
+    if adb -s "$ANDROID_SERIAL" shell true >/dev/null 2>&1; then
+      SHELL_READY=1
+      break
+    fi
+    sleep 2
+  done
+
+  if [ "$SHELL_READY" -ne 1 ]; then
+    echo "ADB shell did not become responsive within timeout ❌"
+    return 1
+  fi
+
+  echo "Waiting for Android framework readiness..."
+  FRAMEWORK_READY=0
+  for i in {1..120}; do
+    BOOT_COMPLETED="$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
+    BOOTANIM="$(adb -s "$ANDROID_SERIAL" shell getprop init.svc.bootanim 2>/dev/null | tr -d '\r')"
+    if [ "$BOOT_COMPLETED" = "1" ] && [ "$BOOTANIM" = "stopped" ]; then
+      FRAMEWORK_READY=1
+      break
+    fi
+    sleep 2
+  done
+
+  if [ "$FRAMEWORK_READY" -ne 1 ]; then
+    echo "Android framework did not become ready within timeout ❌"
+    adb -s "$ANDROID_SERIAL" shell getprop | head -n 60 || true
+    return 1
+  fi
+
+  echo "Android framework is ready ✅"
+
+  echo "Waiting for Package Manager service readiness..."
+  PACKAGE_READY=0
+  PACKAGE_STREAK=0
+  for i in {1..120}; do
+    SERVICE_CHECK="$(adb -s "$ANDROID_SERIAL" shell service check package 2>/dev/null | tr -d '\r' || true)"
+
+    if echo "$SERVICE_CHECK" | grep -qi "found" && adb -s "$ANDROID_SERIAL" shell cmd package list packages android >/dev/null 2>&1; then
+      PACKAGE_STREAK=$((PACKAGE_STREAK + 1))
+    else
+      PACKAGE_STREAK=0
+    fi
+
+    if [ "$PACKAGE_STREAK" -ge 5 ]; then
+      PACKAGE_READY=1
+      break
+    fi
+
+    sleep 2
+  done
+
+  if [ "$PACKAGE_READY" -ne 1 ]; then
+    echo "Package Manager service not ready within timeout ❌"
+    adb -s "$ANDROID_SERIAL" shell service list | head -n 120 || true
+    adb -s "$ANDROID_SERIAL" shell getprop | head -n 80 || true
+    return 1
+  fi
+
+  echo "Package Manager service is ready ✅"
+
+  echo "Waiting for Android settings service readiness..."
+  SETTINGS_READY=0
+  for i in {1..60}; do
+    if adb -s "$ANDROID_SERIAL" shell settings get global device_name >/dev/null 2>&1; then
+      SETTINGS_READY=1
+      break
+    fi
+    sleep 2
+  done
+
+  if [ "$SETTINGS_READY" -ne 1 ]; then
+    echo "Android settings service not ready within timeout ❌"
+    adb -s "$ANDROID_SERIAL" shell getprop | head -n 40 || true
+    return 1
+  fi
+
+  echo "Android settings service is ready ✅"
+  adb -s "$ANDROID_SERIAL" shell input keyevent 82 >/dev/null 2>&1 || true
+  return 0
+}
+
+if ! wait_for_system_services; then
+  echo "First readiness pass failed; rebooting emulator once and retrying..."
+  adb -s "$ANDROID_SERIAL" reboot || true
+  adb -s "$ANDROID_SERIAL" wait-for-device
+
+  if ! wait_for_system_services; then
+    echo "System services are still unstable after one reboot ❌"
+    exit 1
+  fi
+fi
+
 echo "Starting adb logcat capture..."
 adb -s "$ANDROID_SERIAL" logcat -c || true
 adb -s "$ANDROID_SERIAL" logcat -v threadtime > "$LOGCAT_FILE" 2>&1 &
 LOGCAT_PID=$!
 echo "Logcat capture PID: $LOGCAT_PID"
-
-echo "Waiting for Android settings service readiness..."
-SETTINGS_READY=0
-for i in {1..60}; do
-  if adb -s "$ANDROID_SERIAL" shell settings get global device_name >/dev/null 2>&1; then
-    SETTINGS_READY=1
-    break
-  fi
-  sleep 2
-done
-
-if [ "$SETTINGS_READY" -ne 1 ]; then
-  echo "Android settings service not ready within timeout ❌"
-  adb -s "$ANDROID_SERIAL" shell getprop | head -n 40 || true
-  exit 1
-fi
-
-echo "Android settings service is ready ✅"
 
 echo "Starting Appium..."
 npm install -g appium

@@ -79,6 +79,7 @@ export const config: Options.Testrunner = {
 
         'appium:autoGrantPermissions': true,
         'appium:autoLaunch': true,
+        'appium:skipDeviceInitialization': CI,
 
         'appium:noReset': !CI,
         'appium:fullReset': false,
