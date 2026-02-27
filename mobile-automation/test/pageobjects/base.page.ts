@@ -11,8 +11,10 @@ export default class BasePage {
 
     async switchToWebView(timeoutMs: number = 30000) {
         let lastError: unknown;
+        const maxAttempts = 3;
+        const perAttemptTimeout = Math.min(25000, Math.max(8000, Math.floor(timeoutMs / maxAttempts)));
 
-        for (let attempt = 1; attempt <= 6; attempt++) {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             if (!this.hasActiveSession()) {
                 throw new Error('Appium session is terminated before WEBVIEW attach');
             }
@@ -22,7 +24,7 @@ export default class BasePage {
                     const contexts = await driver.getContexts();
                     return contexts.some((ctx) => String(ctx).includes('WEBVIEW'));
                 }, {
-                    timeout: timeoutMs,
+                    timeout: perAttemptTimeout,
                     timeoutMsg: 'WebView not available'
                 });
 
@@ -35,8 +37,9 @@ export default class BasePage {
                     throw new Error('WebView not available');
                 }
 
+                await driver.pause(2000);
                 await driver.switchContext(webview);
-                await driver.pause(1000);
+                await driver.pause(500);
 
                 const currentContext = await driver.getContext();
                 if (!String(currentContext).includes('WEBVIEW')) {
@@ -55,13 +58,15 @@ export default class BasePage {
                 }
 
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                if (/No such context found|disconnected|Inspector\.detached|Session ID is not set/i.test(errorMessage)) {
+                if (/No such context found|disconnected|Inspector\.detached|Unable to receive message from renderer|Session ID is not set/i.test(errorMessage)) {
+                    await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
+                    await driver.pause(2000);
                     await this.switchToNative().catch(() => undefined);
-                    await driver.pause(1500);
+                    await driver.pause(1200);
                 }
 
                 console.log(`WebView attach attempt ${attempt} failed, retrying...`);
-                await driver.pause(1500);
+                await driver.pause(1000);
             }
         }
 

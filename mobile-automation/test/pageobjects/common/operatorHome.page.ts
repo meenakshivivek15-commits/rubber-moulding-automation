@@ -9,7 +9,7 @@ class OperatorHomePage extends BasePage {
 
         for (let attempt = 1; attempt <= 3; attempt++) {
             try {
-                await this.ensureWebView(120000);
+                await this.ensureWebView(45000);
 
                 const receiptTile = await $(this.goodsReceiptTileSelector);
                 await receiptTile.waitForDisplayed({ timeout: 45000 });
@@ -53,7 +53,7 @@ class OperatorHomePage extends BasePage {
     }
 
       private async waitForGoodsReceiptListLoaded(): Promise<void> {
-             await this.ensureWebView(90000);
+           await this.ensureWebView(45000);
         const grid = await $('#grid');
           await grid.waitForDisplayed({ timeout: 45000 });
      }
@@ -67,7 +67,7 @@ class OperatorHomePage extends BasePage {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
 
-        const maxTotalMs = 180000;
+        const maxTotalMs = 120000;
         const startedAt = Date.now();
 
         let lastError: unknown;
