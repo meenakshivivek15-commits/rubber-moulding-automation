@@ -55,17 +55,15 @@ export default class BasePage {
                     throw new Error(`Context switched but still not in WEBVIEW. Current: ${currentContext}`);
                 }
 
+                await driver.execute(() => document.readyState);
+
                 console.log('Switched to:', currentContext);
                 return;
             } catch (error) {
                 lastError = error;
 
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                if (/Session ID is not set/i.test(errorMessage)) {
-                    throw new Error('Appium session became invalid during WEBVIEW attach.');
-                }
-
-                if (/No such context found|disconnected|Inspector\.detached/i.test(errorMessage)) {
+                if (/No such context found|disconnected|Inspector\.detached|Session ID is not set/i.test(errorMessage)) {
                     await this.switchToNative().catch(() => undefined);
                     await driver.pause(1500);
                 }

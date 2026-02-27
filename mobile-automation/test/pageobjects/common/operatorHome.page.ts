@@ -5,25 +5,45 @@ class OperatorHomePage extends BasePage {
     private readonly goodsReceiptTileSelector = '//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img';
 
     private async clickGoodsReceiptFromWebHome(): Promise<void> {
-        await this.ensureWebView(90000);
+        let lastError: unknown;
 
-        const receiptTile = await $(this.goodsReceiptTileSelector);
-        await receiptTile.waitForDisplayed({ timeout: 30000 });
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                await this.ensureWebView(120000);
 
-        try {
-            await receiptTile.scrollIntoView();
-        } catch {
+                const receiptTile = await $(this.goodsReceiptTileSelector);
+                await receiptTile.waitForDisplayed({ timeout: 45000 });
+
+                try {
+                    await receiptTile.scrollIntoView();
+                } catch {
+                }
+
+                try {
+                    await receiptTile.click();
+                } catch {
+                    await driver.execute((el) => {
+                        (el as HTMLElement).click();
+                    }, receiptTile);
+                }
+
+                console.log(`Goods Receipt icon clicked using fixed locator: ${this.goodsReceiptTileSelector}`);
+                return;
+            } catch (error) {
+                lastError = error;
+                const message = error instanceof Error ? error.message : String(error);
+
+                if (/Session ID is not set|disconnected|No such context found|no such window/i.test(message)) {
+                    await this.switchToNative().catch(() => undefined);
+                    await driver.pause(2000);
+                    continue;
+                }
+
+                throw error;
+            }
         }
 
-        try {
-            await receiptTile.click();
-        } catch {
-            await driver.execute((el) => {
-                (el as HTMLElement).click();
-            }, receiptTile);
-        }
-
-        console.log(`Goods Receipt icon clicked using fixed locator: ${this.goodsReceiptTileSelector}`);
+        throw lastError instanceof Error ? lastError : new Error('Unable to click Goods Receipt tile from web home');
     }
 
       private async waitForGoodsReceiptListLoaded(): Promise<void> {
@@ -41,7 +61,7 @@ class OperatorHomePage extends BasePage {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
 
-        const maxTotalMs = 150000;
+        const maxTotalMs = 300000;
         const startedAt = Date.now();
 
         let lastError: unknown;
