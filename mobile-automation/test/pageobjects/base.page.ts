@@ -1,45 +1,54 @@
 export default class BasePage {
 
-    async switchToWebView(timeoutMs: number = 30000) {
-
-        let stableWebview: string | undefined;
+    private async getStableWebviewContext(minConsecutiveHits: number = 2, timeoutMs: number = 30000): Promise<string> {
+        let candidate = '';
+        let streak = 0;
 
         await driver.waitUntil(async () => {
-            const contexts = await driver.getContexts();
-            const webviews = contexts.filter(c => String(c).includes('WEBVIEW')).map(String);
+            const contexts = (await driver.getContexts()).map(String);
+            const webview = contexts.find((context) => context.startsWith('WEBVIEW'));
 
-            if (webviews.length === 0) {
-                stableWebview = undefined;
+            if (!webview) {
+                candidate = '';
+                streak = 0;
                 return false;
             }
 
-            if (stableWebview === webviews[0]) {
-                return true;
+            if (webview === candidate) {
+                streak += 1;
+            } else {
+                candidate = webview;
+                streak = 1;
             }
 
-            stableWebview = webviews[0];
-            return false;
+            return streak >= minConsecutiveHits;
         }, {
             timeout: timeoutMs,
-            interval: 1500,
-            timeoutMsg: `WEBVIEW context not available within ${timeoutMs}ms`
+            interval: 1200,
+            timeoutMsg: `WEBVIEW context not stable within ${timeoutMs}ms`
         });
 
-        let lastError: unknown;
+        return candidate;
+    }
 
-        for (let attempt = 1; attempt <= 4; attempt++) {
+    async switchToWebView(timeoutMs: number = 30000) {
+        let lastError: unknown;
+        const startedAt = Date.now();
+
+        for (let attempt = 1; attempt <= 6; attempt++) {
             try {
-                const contexts = await driver.getContexts();
-                const webview = stableWebview || contexts.find(c => String(c).includes('WEBVIEW'));
+                const remainingMs = Math.max(5000, timeoutMs - (Date.now() - startedAt));
+                const webview = await this.getStableWebviewContext(2, remainingMs);
+                const contexts = (await driver.getContexts()).map(String);
 
                 console.log(`Available contexts (attempt ${attempt}):`, contexts);
 
-                if (!webview) {
-                    throw new Error('No WEBVIEW found after wait');
+                if (!contexts.includes(webview)) {
+                    throw new Error(`Stable WEBVIEW ${webview} vanished before switch`);
                 }
 
                 await driver.switchContext(webview);
-                await driver.pause(1200);
+                await driver.pause(1000);
 
                 const currentContext = await driver.getContext();
                 if (!String(currentContext).includes('WEBVIEW')) {
@@ -54,6 +63,11 @@ export default class BasePage {
                 const errorMessage = error instanceof Error ? error.message : String(error);
                 if (/Session ID is not set/i.test(errorMessage)) {
                     throw new Error('Appium session became invalid during WEBVIEW attach.');
+                }
+
+                if (/No such context found|disconnected|Inspector\.detached/i.test(errorMessage)) {
+                    await this.switchToNative().catch(() => undefined);
+                    await driver.pause(1500);
                 }
 
                 console.log(`WebView attach attempt ${attempt} failed, retrying...`);

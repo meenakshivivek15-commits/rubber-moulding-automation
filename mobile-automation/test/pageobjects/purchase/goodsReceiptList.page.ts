@@ -42,18 +42,7 @@ class GoodsReceiptListPage extends BasePage {
         console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
         // 1️⃣ Ensure WEBVIEW
-        const currentContext = String(await driver.getContext());
-
-        if (!currentContext.includes('WEBVIEW')) {
-            const contexts = await driver.getContexts() as string[];
-            const webview = contexts.find(ctx => ctx.startsWith('WEBVIEW_'));
-
-            if (!webview) {
-                throw new Error('WEBVIEW context not found');
-            }
-
-            await driver.switchContext(webview);
-        }
+        await this.ensureWebView(60000);
 
         // 2️⃣ Dynamic PO selector (4th column)
         const poCellSelector = this.getPoCellSelector(poNumber);

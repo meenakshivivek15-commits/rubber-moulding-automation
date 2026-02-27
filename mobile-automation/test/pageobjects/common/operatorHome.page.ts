@@ -61,12 +61,12 @@ class OperatorHomePage extends BasePage {
         }
 
         try {
-            await this.ensureWebView(20000).catch(() => undefined);
-            for (const selector of this.webGoodsReceiptSelectors) {
-                if (await this.hasVisibleElement(selector)) {
-                    visibleIndicators.push(`web:${selector}`);
-                    break;
-                }
+            const contexts = await driver.getContexts() as string[];
+            const hasWebview = contexts.some(ctx => String(ctx).startsWith('WEBVIEW'));
+            visibleIndicators.push(`contexts:${contexts.join(', ') || 'none'}`);
+
+            if (!hasWebview) {
+                visibleIndicators.push('webview:not-available-yet');
             }
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -101,7 +101,7 @@ class OperatorHomePage extends BasePage {
 
      private isRecoverableWebviewError(error: unknown): boolean {
         const message = error instanceof Error ? error.message : String(error);
-          return /Session ID is not set|NoSuchContextError|chromedriver|disconnected|no such window|No WEBVIEW found after wait|WEBVIEW context not available|instrumentation process is not running/i.test(message);
+        return /Session ID is not set|NoSuchContextError|No such context found|chromedriver|disconnected|no such window|No WEBVIEW found after wait|WEBVIEW context not available|instrumentation process is not running/i.test(message);
      }
 
    async openGoodsReceipt(): Promise<void> {
