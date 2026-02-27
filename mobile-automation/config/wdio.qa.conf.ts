@@ -69,7 +69,7 @@ export const config: Options.Testrunner = {
 
         'appium:automationName': 'UiAutomator2',
 
-        'appium:deviceName': UDID || 'Android',
+        'appium:deviceName': 'Android Emulator',
         ...(UDID ? { 'appium:udid': UDID } : {}),
 
         // Only used locally if you start AVD manually
@@ -77,7 +77,7 @@ export const config: Options.Testrunner = {
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
         'appium:appPackage': 'com.ppaoperator.app',
-        'appium:appActivity': 'your.activity',
+        'appium:appActivity': 'com.example.app.MainActivity',
 
         'appium:autoGrantPermissions': true,
         'appium:autoLaunch': true,
