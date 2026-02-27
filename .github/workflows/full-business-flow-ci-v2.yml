@@ -40,16 +40,15 @@ jobs:
         run: npm ci
 
       - name: Install Web App Dependencies
-        run: |
-          cd web-app-automation
-          npm ci
+        working-directory: web-app-automation
+        run: npm ci
 
       - name: Install Mobile Dependencies
-        run: |
-          cd mobile-automation
-          npm ci
+        working-directory: mobile-automation
+        run: npm ci
 
       - name: Install Playwright Browsers
+        working-directory: web-app-automation
         run: npx playwright install --with-deps
 
       - name: Run Full Business Flow (with Android Emulator)
