@@ -38,13 +38,16 @@ jobs:
         id: mobile_emulator
         continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 5
         with:
           api-level: 33
           target: google_apis
           arch: x86_64
           profile: pixel
+          force-avd-creation: true
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -wipe-data
           disable-animations: true
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
