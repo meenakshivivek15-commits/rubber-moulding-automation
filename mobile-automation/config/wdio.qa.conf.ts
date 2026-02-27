@@ -76,6 +76,8 @@ export const config: Options.Testrunner = {
         'appium:avd': CI ? undefined : 'ci-emulator',
 
         'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
+        'appium:appPackage': 'com.ppaoperator.app',
+        'appium:appActivity': 'your.activity',
 
         'appium:autoGrantPermissions': true,
         'appium:autoLaunch': true,
@@ -97,9 +99,9 @@ export const config: Options.Testrunner = {
         'appium:chromedriverAutodownload': true,
         'appium:ensureWebviewsHavePages': true,
         'appium:recreateChromeDriverSessions': true,
-        'appium:webviewConnectTimeout': 180000,
-        'appium:autoWebview': CI,
-        'appium:autoWebviewTimeout': 120000
+        'appium:webviewConnectTimeout': 20000,
+        'appium:webviewConnectRetries': 10,
+        'appium:autoWebview': false
     }],
 
     logLevel: 'info',

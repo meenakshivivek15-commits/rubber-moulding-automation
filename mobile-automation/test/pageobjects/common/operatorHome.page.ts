@@ -33,6 +33,10 @@ class OperatorHomePage extends BasePage {
                 lastError = error;
                 const message = error instanceof Error ? error.message : String(error);
 
+                if (this.isSessionTerminatedError(error) || !driver.sessionId) {
+                    throw error instanceof Error ? error : new Error('Appium session terminated while opening Goods Receipt');
+                }
+
                 if (/Session ID is not set|disconnected|No such context found|no such window/i.test(message)) {
                     await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
                     await driver.pause(3000);
@@ -63,7 +67,7 @@ class OperatorHomePage extends BasePage {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
 
-        const maxTotalMs = 300000;
+        const maxTotalMs = 180000;
         const startedAt = Date.now();
 
         let lastError: unknown;
@@ -82,6 +86,10 @@ class OperatorHomePage extends BasePage {
                 return;
             } catch (error) {
                 lastError = error;
+
+                if (this.isSessionTerminatedError(error) || !driver.sessionId) {
+                    throw error instanceof Error ? error : new Error('Appium session terminated while opening Goods Receipt');
+                }
 
                 if (attempt < 3 && this.isRecoverableWebviewError(error)) {
                     console.log(`Recoverable WebView error while opening Goods Receipt (attempt ${attempt}), retrying...`);
