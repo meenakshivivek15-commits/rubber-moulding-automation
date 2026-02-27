@@ -32,6 +32,32 @@ class OperatorHomePage extends BasePage {
         return false;
      }
 
+     private async logOperatorHomeIndicators(): Promise<void> {
+        const visibleIndicators: string[] = [];
+
+        await this.switchToNative().catch(() => undefined);
+        for (const selector of this.nativeGoodsReceiptSelectors) {
+            const elements = await $$(selector);
+            const element = elements[0];
+            if (element && await element.isDisplayed().catch(() => false)) {
+                visibleIndicators.push(`native:${selector}`);
+                break;
+            }
+        }
+
+        await this.ensureWebView(20000).catch(() => undefined);
+        for (const selector of this.webGoodsReceiptSelectors) {
+            const elements = await $$(selector);
+            const element = elements[0];
+            if (element && await element.isDisplayed().catch(() => false)) {
+                visibleIndicators.push(`web:${selector}`);
+                break;
+            }
+        }
+
+        console.log(`Operator home menu indicators: ${visibleIndicators.join(' | ') || 'none found'}`);
+     }
+
      private async clickGoodsReceiptFromWebHome(): Promise<boolean> {
         await this.ensureWebView(45000);
 
@@ -75,6 +101,8 @@ class OperatorHomePage extends BasePage {
             }
 
             try {
+                await this.logOperatorHomeIndicators();
+
                 const clickedFromNative = await this.clickGoodsReceiptFromNativeHome();
                 if (!clickedFromNative) {
                     const clickedFromWeb = await this.clickGoodsReceiptFromWebHome();

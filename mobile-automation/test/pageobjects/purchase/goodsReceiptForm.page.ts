@@ -16,8 +16,34 @@ class GoodsReceiptFormPage extends BasePage {
         return $$('input[type="number"]')[1];
     }
 
-    get submitButton() {
-        return $('ion-button[type="submit"], ion-button');
+    private readonly submitButtonSelectors = [
+        'form ion-button[type="submit"]',
+        'ion-footer ion-button[type="submit"]',
+        '//ion-button[@type="submit" and not(@disabled)]',
+        '//ion-button[contains(normalize-space(),"Submit") or contains(normalize-space(),"SUBMIT") or contains(normalize-space(),"Save")]',
+    ];
+
+    private async getSubmitButton(): Promise<WebdriverIO.Element> {
+        for (const selector of this.submitButtonSelectors) {
+            const elements = await $$(selector);
+
+            for (const element of elements) {
+                const displayed = await element.isDisplayed().catch(() => false);
+                if (!displayed) {
+                    continue;
+                }
+
+                const enabled = await element.isEnabled().catch(() => false);
+                if (!enabled) {
+                    continue;
+                }
+
+                console.log(`Submit button located using selector: ${selector}`);
+                return element;
+            }
+        }
+
+        throw new Error('Submit button not found on Goods Receipt form');
     }
 
     // ========== ACTIONS ==========
@@ -40,9 +66,21 @@ class GoodsReceiptFormPage extends BasePage {
     }
 
     async submit() {
-        await this.submitButton.waitForDisplayed({ timeout: 20000 });
-        await this.submitButton.waitForEnabled({ timeout: 20000 });
-        await this.submitButton.click();
+        const submitButton = await this.getSubmitButton();
+
+        await submitButton.scrollIntoView();
+        await submitButton.waitForDisplayed({ timeout: 20000 });
+        await submitButton.waitForEnabled({ timeout: 20000 });
+
+        try {
+            await submitButton.click();
+        } catch {
+            console.log('Normal submit click failed — using JS click fallback');
+            await driver.execute((el) => {
+                (el as HTMLElement).click();
+            }, submitButton);
+        }
+
         console.log("Submit clicked");
     }
 }
