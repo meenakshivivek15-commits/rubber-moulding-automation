@@ -76,10 +76,19 @@ jobs:
         run: |
           set -eu
           RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
+          STATE_FILE=".github/tmp/full-flow-state.json"
           FIRST_OUTCOME="${{ steps.full_flow_emulator.outcome }}"
           RETRY_NEEDED="false"
+          TESTS_STARTED="false"
 
-          if [ "$FIRST_OUTCOME" = "failure" ] && [ ! -f "$RESULT_FILE" ]; then
+          if [ -f "$STATE_FILE" ]; then
+            FLOW_STATUS=$(node -e "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.status||'unknown')}catch{console.log('unknown')}" "$STATE_FILE")
+            if [ "$FLOW_STATUS" = "running" ] || [ "$FLOW_STATUS" = "passed" ] || [ "$FLOW_STATUS" = "failed" ]; then
+              TESTS_STARTED="true"
+            fi
+          fi
+
+          if [ "$FIRST_OUTCOME" = "failure" ] && [ ! -f "$RESULT_FILE" ] && [ "$TESTS_STARTED" != "true" ]; then
             RETRY_NEEDED="true"
           fi
 

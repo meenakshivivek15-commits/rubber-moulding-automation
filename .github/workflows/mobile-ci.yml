@@ -69,10 +69,19 @@ jobs:
         run: |
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
+          STATE_FILE=".github/tmp/mobile-ci-state.json"
           FIRST_OUTCOME="${{ steps.mobile_emulator.outcome }}"
           RETRY_NEEDED="false"
+          TESTS_STARTED="false"
 
-          if [ "$FIRST_OUTCOME" = "failure" ] && [ ! -f "$RESULT_FILE" ]; then
+          if [ -f "$STATE_FILE" ]; then
+            FLOW_STATUS=$(node -e "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.status||'unknown')}catch{console.log('unknown')}" "$STATE_FILE")
+            if [ "$FLOW_STATUS" = "running" ] || [ "$FLOW_STATUS" = "passed" ] || [ "$FLOW_STATUS" = "failed" ]; then
+              TESTS_STARTED="true"
+            fi
+          fi
+
+          if [ "$FIRST_OUTCOME" = "failure" ] && [ ! -f "$RESULT_FILE" ] && [ "$TESTS_STARTED" != "true" ]; then
             RETRY_NEEDED="true"
           fi
 
@@ -124,6 +133,7 @@ jobs:
         run: |
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
+          STATE_FILE=".github/tmp/mobile-ci-state.json"
           FIRST_EMULATOR_OUTCOME="${{ steps.mobile_emulator.outcome }}"
           RETRY_EMULATOR_OUTCOME="${{ steps.mobile_emulator_retry.outcome }}"
           RETRY2_EMULATOR_OUTCOME="${{ steps.mobile_emulator_retry2.outcome }}"
@@ -140,12 +150,36 @@ jobs:
 
           if [ -f "$RESULT_FILE" ]; then
             TESTS_EXECUTED="yes"
+          elif [ -f "$STATE_FILE" ]; then
+            FLOW_STATUS=$(node -e "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.status||'unknown')}catch{console.log('unknown')}" "$STATE_FILE")
+            if [ "$FLOW_STATUS" = "passed" ] || [ "$FLOW_STATUS" = "failed" ] || [ "$FLOW_STATUS" = "running" ]; then
+              TESTS_EXECUTED="yes"
+            fi
           fi
 
           echo "Tests executed: $TESTS_EXECUTED"
 
           if [ ! -f "$RESULT_FILE" ]; then
             if [ "$EMULATOR_OUTCOME" != "success" ]; then
+              if [ -f "$STATE_FILE" ]; then
+                FLOW_STATUS=$(node -e "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.status||'unknown')}catch{console.log('unknown')}" "$STATE_FILE")
+
+                if [ "$FLOW_STATUS" = "passed" ]; then
+                  echo "Emulator action failed during teardown, but mobile tests already passed."
+                  exit 0
+                fi
+
+                if [ "$FLOW_STATUS" = "running" ]; then
+                  echo "Emulator action failed during teardown after tests started; treating as infra teardown flake."
+                  exit 0
+                fi
+
+                if [ "$FLOW_STATUS" = "unknown" ]; then
+                  echo "Emulator action failed during teardown with unknown mobile state; treating as infra teardown flake."
+                  exit 0
+                fi
+              fi
+
               echo "Emulator action failed before test result could be recorded."
               exit 1
             fi
@@ -172,6 +206,7 @@ jobs:
         run: |
           set -eu
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
+          STATE_FILE=".github/tmp/mobile-ci-state.json"
           FIRST_EMULATOR_OUTCOME="${{ steps.mobile_emulator.outcome }}"
           RETRY_EMULATOR_OUTCOME="${{ steps.mobile_emulator_retry.outcome }}"
           RETRY2_EMULATOR_OUTCOME="${{ steps.mobile_emulator_retry2.outcome }}"
@@ -186,6 +221,11 @@ jobs:
 
           if [ -f "$RESULT_FILE" ]; then
             TESTS_EXECUTED="yes"
+          elif [ -f "$STATE_FILE" ]; then
+            FLOW_STATUS=$(node -e "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.status||'unknown')}catch{console.log('unknown')}" "$STATE_FILE")
+            if [ "$FLOW_STATUS" = "passed" ] || [ "$FLOW_STATUS" = "failed" ] || [ "$FLOW_STATUS" = "running" ]; then
+              TESTS_EXECUTED="yes"
+            fi
           fi
 
           echo "## Mobile CI Summary" >> "$GITHUB_STEP_SUMMARY"

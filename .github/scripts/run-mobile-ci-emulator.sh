@@ -5,11 +5,24 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 RESULT_FILE="$REPO_ROOT/.github/tmp/mobile-ci-exit-code.txt"
 LOGCAT_FILE="$REPO_ROOT/.github/tmp/mobile-logcat.txt"
+STATE_FILE="$REPO_ROOT/.github/tmp/mobile-ci-state.json"
 RUNTIME_FILE="$REPO_ROOT/common/test-data/runtime/runtimeData.json"
 mkdir -p "$REPO_ROOT/.github/tmp"
 
 APPIUM_PID=""
 LOGCAT_PID=""
+
+write_state() {
+  local status="$1"
+  local step="$2"
+  local message="$3"
+  local ts
+  ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+  cat > "$STATE_FILE" <<EOF
+{"status":"$status","step":"$step","message":"$message","updatedAt":"$ts"}
+EOF
+}
 
 on_exit() {
   code=$?
@@ -21,9 +34,27 @@ on_exit() {
   fi
   mkdir -p "$(dirname "$RESULT_FILE")"
   echo "$code" > "$RESULT_FILE"
+
+  if [ "$code" -eq 0 ]; then
+    write_state "passed" "mobile-tests" "Mobile tests completed successfully"
+  else
+    if [ ! -f "$STATE_FILE" ]; then
+      write_state "infra_failed" "bootstrap" "Mobile test script failed before state initialization"
+    else
+      CURRENT_STATUS="$(node -e "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(s.status||'unknown')}catch{console.log('unknown')}" "$STATE_FILE")"
+
+      if [ "$CURRENT_STATUS" = "running" ]; then
+        write_state "failed" "mobile-tests" "Mobile tests failed"
+      elif [ "$CURRENT_STATUS" = "unknown" ]; then
+        write_state "infra_failed" "bootstrap" "Mobile test script failed with unknown state"
+      fi
+    fi
+  fi
 }
 
 trap on_exit EXIT
+
+write_state "running" "bootstrap" "Mobile test bootstrap started"
 
 wait_for_system_services() {
   echo "Waiting for shell responsiveness..."
@@ -266,9 +297,17 @@ cd "$REPO_ROOT/mobile-automation"
 export USE_EXTERNAL_APPIUM=true
 export ANDROID_SERIAL="$CURRENT_SERIAL"
 
+write_state "running" "mobile-tests" "WDIO execution started"
+
 set +e
 npx wdio run config/wdio.qa.conf.ts
 TEST_EXIT_CODE=$?
 set -e
+
+if [ "$TEST_EXIT_CODE" -eq 0 ]; then
+  write_state "passed" "mobile-tests" "WDIO execution completed successfully"
+else
+  write_state "failed" "mobile-tests" "WDIO execution failed"
+fi
 
 exit "$TEST_EXIT_CODE"
