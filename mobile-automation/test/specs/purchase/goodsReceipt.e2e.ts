@@ -9,6 +9,7 @@ import { readJson, writeJson } from '../../../../common/utils/fileHelper';
 // ===== Runtime Path =====
 const runtimePath = 'runtime/runtimeData.json';
 const operatorAppId = 'com.ppaoperator.app';
+const operatorAppActivity = 'com.example.app.MainActivity';
 
 // ===== Static mobile test data =====
 const mobileData = require('../../data/goodsReceiptData.json');
@@ -21,7 +22,22 @@ describe('Goods Receipt Flow', () => {
     return String(packageName || 'unknown');
    };
 
-   const ensureOperatorAppForeground = async (attempts: number = 4): Promise<void> => {
+   const launchOperatorApp = async (): Promise<void> => {
+    await driver.activateApp(operatorAppId).catch(() => undefined);
+    await browser.pause(2500);
+
+    const pkgAfterActivate = await getCurrentPackageName();
+    if (pkgAfterActivate === operatorAppId) {
+        return;
+    }
+
+    await driver.execute('mobile: startActivity', {
+        intent: `${operatorAppId}/${operatorAppActivity}`
+    }).catch(() => undefined);
+    await browser.pause(2500);
+   };
+
+   const ensureOperatorAppForeground = async (attempts: number = 6): Promise<void> => {
     for (let attempt = 1; attempt <= attempts; attempt++) {
         const currentPackage = await getCurrentPackageName();
         console.log(`Current package (attempt ${attempt}/${attempts}): ${currentPackage}`);
@@ -30,8 +46,7 @@ describe('Goods Receipt Flow', () => {
             return;
         }
 
-        await driver.activateApp(operatorAppId);
-        await browser.pause(4000);
+        await launchOperatorApp();
     }
 
     const finalPackage = await getCurrentPackageName();
@@ -44,7 +59,7 @@ describe('Goods Receipt Flow', () => {
 
     // 🔥 Proper clean restart (keeps settings because noReset=true)
     await driver.terminateApp(operatorAppId).catch(() => undefined);
-    await driver.activateApp(operatorAppId);
+    await launchOperatorApp();
 
     await browser.pause(5000);
     await ensureOperatorAppForeground();
