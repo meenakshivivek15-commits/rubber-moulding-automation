@@ -6,31 +6,28 @@ class GoodsReceiptListPage extends BasePage {
     async selectPoFromList(poNumber: string): Promise<void> {
 
         console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
+        const maxTotalMs = 150000;
+        const startedAt = Date.now();
 
-        // 1️⃣ Ensure WEBVIEW
-        const currentContext = String(await driver.getContext());
-
-        if (!currentContext.includes('WEBVIEW')) {
-            const contexts = await driver.getContexts() as string[];
-            const webview = contexts.find(ctx => ctx.startsWith('WEBVIEW_'));
-
-            if (!webview) {
-                throw new Error('WEBVIEW context not found');
-            }
-
-            await driver.switchContext(webview);
-        }
+        // 1️⃣ Ensure WEBVIEW with bounded wait
+        await this.ensureWebView(90000);
 
         // 2️⃣ Dynamic PO selector (4th column)
         const poCellSelector =
             `//*[@id="grid"]//ion-row/ion-col[4][normalize-space()="${poNumber}"]`;
 
         let found = false;
+        let lastKnownContexts: string[] = [];
 
         // 3️⃣ Retry Navigation Logic
-        for (let attempt = 1; attempt <= 5; attempt++) {
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            if (Date.now() - startedAt > maxTotalMs) {
+                throw new Error(`Timed out searching PO ${poNumber} in Goods Receipt list after ${maxTotalMs}ms`);
+            }
 
             console.log(`\n🔄 Attempt ${attempt} to find PO...`);
+
+            lastKnownContexts = await driver.getContexts() as string[];
 
             const elements = await $$(poCellSelector);
             const count = await elements.length;
@@ -53,11 +50,12 @@ class GoodsReceiptListPage extends BasePage {
 
             // Reopen Goods Receipt
             await operatorHomePage.openGoodsReceipt();
-            await driver.pause(6000);
+            await this.ensureWebView(60000);
+            await driver.pause(3000);
         }
 
         if (!found) {
-            throw new Error(`PO ${poNumber} never appeared in Goods Receipt list`);
+            throw new Error(`PO ${poNumber} never appeared in Goods Receipt list. Contexts: ${lastKnownContexts.join(', ') || 'none'}`);
         }
 
         // 4️⃣ Click the PO safely
