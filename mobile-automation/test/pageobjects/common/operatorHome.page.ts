@@ -18,57 +18,66 @@ class OperatorHomePage extends BasePage {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
 
-    // 1️⃣ Wait for WEBVIEW
-    await driver.waitUntil(async () => {
-        const contexts = await driver.getContexts();
-        return contexts.some((ctx: any) =>
-            ctx.toString().includes('WEBVIEW')
-        );
-    }, { timeout: 30000 });
+    const maxTotalMs = 240000;
+    const startedAt = Date.now();
+    let lastError: unknown;
 
-    const contexts = await driver.getContexts();
-    const webview = contexts.find((ctx: any) =>
-        ctx.toString().includes('WEBVIEW')
-    );
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        if (Date.now() - startedAt > maxTotalMs) {
+            throw new Error(`Timed out opening Goods Receipt after ${maxTotalMs}ms`);
+        }
 
-    if (!webview) {
-        throw new Error("WEBVIEW context not found");
+        try {
+            await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
+            await driver.pause(2000);
+
+            await this.switchToNative().catch(() => undefined);
+
+            const receiptTile = await $('id=com.ppaoperator.app:id/goods_receipt_icon');
+
+            const source = await driver.getPageSource();
+            console.log(source);
+
+            await receiptTile.waitForDisplayed({ timeout: 60000 });
+
+            try {
+                await receiptTile.scrollIntoView();
+            } catch {
+            }
+
+            try {
+                await receiptTile.click();
+            } catch {
+                await driver.execute((el) => {
+                    (el as HTMLElement).click();
+                }, receiptTile);
+            }
+
+            const grid = await $('//*[@id="grid"]');
+            await grid.waitForDisplayed({ timeout: 45000 });
+
+            console.log('Goods Receipt list page loaded');
+            return;
+        } catch (error) {
+            lastError = error;
+
+            if (this.isSessionTerminatedError(error) || !driver.sessionId) {
+                throw error instanceof Error ? error : new Error('Appium session terminated while opening Goods Receipt');
+            }
+
+            const message = error instanceof Error ? error.message : String(error);
+            if (/WebView not available|No such context found|disconnected|Inspector\.detached|waitUntil condition timed out/i.test(message)) {
+                console.log(`Recoverable WebView error while opening Goods Receipt (attempt ${attempt}), retrying...`);
+                await this.switchToNative().catch(() => undefined);
+                await driver.pause(1500);
+                continue;
+            }
+
+            throw error;
+        }
     }
 
-    await driver.switchContext(webview as string);
-    console.log("Switched to:", webview);
-
-    await driver.pause(3000);
-
-    // 2️⃣ Use your absolute XPath
-    const receiptTile = await $(
-        '//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img'
-    );
-
-    await receiptTile.waitForDisplayed({ timeout: 30000 });
-
-    console.log("GoodsReceipt tile found using absolute XPath");
-
-    await receiptTile.click();
-
-    console.log("Clicked GoodsReceipt tile");
-
-    // 3️⃣ Wait for navigation
-    await driver.waitUntil(async () => {
-        const url = await driver.execute(() => window.location.href);
-        console.log("Current URL:", url);
-        return !url.includes('/home');
-    }, {
-        timeout: 20000,
-        interval: 1000,
-        timeoutMsg: "Navigation did not happen"
-    });
-
-    // 4️⃣ Confirm list page
-    const grid = await $('//*[@id="grid"]');
-    await grid.waitForDisplayed({ timeout: 30000 });
-
-    console.log("Goods Receipt list page loaded");
+    throw lastError instanceof Error ? lastError : new Error('Unable to open Goods Receipt after retries');
 }
 }
 export default new OperatorHomePage();
