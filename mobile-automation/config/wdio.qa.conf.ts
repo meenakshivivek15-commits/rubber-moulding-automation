@@ -90,12 +90,12 @@ export const config: Options.Testrunner = {
         'appium:fullReset': false,
 
         // Stability timeouts (important for CI - be generous)
-        'appium:adbExecTimeout': 200000,
+        'appium:adbExecTimeout': 300000,
         'appium:androidDeviceReadyTimeout': 120,
         'appium:ignoreHiddenApiPolicyError': true,
         'appium:androidInstallTimeout': 300000,
-        'appium:uiautomator2ServerLaunchTimeout': 120000,
-        'appium:uiautomator2ServerInstallTimeout': 120000,
+        'appium:uiautomator2ServerLaunchTimeout': 300000,
+        'appium:uiautomator2ServerInstallTimeout': 300000,
         'appium:newCommandTimeout': 300,
 
         // Hybrid app support
