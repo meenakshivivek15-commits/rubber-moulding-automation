@@ -43,6 +43,8 @@ jobs:
       - name: Run tests on Android emulator
         id: mobile_emulator
         continue-on-error: true
+        env:
+          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 0
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
@@ -54,7 +56,7 @@ jobs:
           heap-size: 256
           disk-size: 2048M
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
           disable-animations: true
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
@@ -88,6 +90,8 @@ jobs:
         id: mobile_emulator_retry
         if: always() && steps.decide_emulator_retry.outputs.retry_needed == 'true'
         continue-on-error: true
+        env:
+          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 0
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
@@ -99,7 +103,7 @@ jobs:
           heap-size: 256
           disk-size: 2048M
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
           disable-animations: true
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
@@ -108,6 +112,8 @@ jobs:
         id: mobile_emulator_retry2
         if: always() && steps.decide_emulator_retry.outputs.retry_needed == 'true' && steps.mobile_emulator_retry.outcome == 'failure'
         continue-on-error: true
+        env:
+          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 0
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
@@ -119,7 +125,7 @@ jobs:
           heap-size: 256
           disk-size: 2048M
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
           disable-animations: true
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
