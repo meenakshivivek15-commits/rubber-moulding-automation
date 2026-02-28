@@ -35,6 +35,27 @@ class OperatorHomePage extends BasePage {
     }
  }
 
+ private isAccessibilityHangError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return /AccessibilityNodeInfo|active window|hogging the main UI thread|Timed out after\s*\d+ms waiting for the root/i.test(message);
+ }
+
+ private async recoverFromUiHang(attempt: number): Promise<void> {
+    console.log(`Recovering from Android UI hang (attempt ${attempt})...`);
+    await driver.execute('mobile: shell', { command: 'input', args: ['keyevent', '3'] }).catch(() => undefined);
+    await driver.pause(1500);
+    await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
+    await driver.pause(3000);
+
+    const currentPackage = await driver.execute('mobile: getCurrentPackage', {}).catch(() => 'unknown');
+    if (String(currentPackage) !== 'com.ppaoperator.app') {
+        await driver.execute('mobile: startActivity', {
+            intent: 'com.ppaoperator.app/com.example.app.MainActivity'
+        }).catch(() => undefined);
+        await driver.pause(2500);
+    }
+ }
+
  async openGoodsReceipt(): Promise<void> {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
@@ -95,6 +116,13 @@ class OperatorHomePage extends BasePage {
                 console.log(`Recoverable WebView error while opening Goods Receipt (attempt ${attempt}), retrying...`);
                 await this.switchToNative().catch(() => undefined);
                 await driver.pause(1500);
+                continue;
+            }
+
+            if (this.isAccessibilityHangError(error)) {
+                console.log(`Recoverable Android accessibility timeout while opening Goods Receipt (attempt ${attempt}), retrying...`);
+                await this.recoverFromUiHang(attempt);
+                await this.switchToNative().catch(() => undefined);
                 continue;
             }
 
