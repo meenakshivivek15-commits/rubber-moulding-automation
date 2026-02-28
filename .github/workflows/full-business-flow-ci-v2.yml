@@ -54,6 +54,8 @@ jobs:
       - name: Run Full Business Flow (with Android Emulator)
         id: full_flow_emulator
         continue-on-error: true
+        env:
+          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 0
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -64,8 +66,9 @@ jobs:
           emulator-boot-timeout: 1800
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot-load -no-snapshot-save
           disable-animations: true
+          working-directory: mobile-automation
           script: |
-            bash .github/scripts/run-full-flow-emulator.sh
+            bash ../.github/scripts/run-full-flow-emulator.sh
 
       - name: Decide Emulator Retry
         id: decide_emulator_retry
@@ -87,6 +90,8 @@ jobs:
         id: full_flow_emulator_retry
         if: always() && steps.decide_emulator_retry.outputs.retry_needed == 'true'
         continue-on-error: true
+        env:
+          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 0
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -97,8 +102,9 @@ jobs:
           emulator-boot-timeout: 1800
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot-load -no-snapshot-save
           disable-animations: true
+          working-directory: mobile-automation
           script: |
-            bash .github/scripts/run-full-flow-emulator.sh
+            bash ../.github/scripts/run-full-flow-emulator.sh
 
       - name: Validate Full Business Flow Result
         if: always()

@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RESULT_FILE=".github/tmp/full-flow-exit-code.txt"
-mkdir -p .github/tmp
-trap 'code=$?; echo "$code" > "$RESULT_FILE"' EXIT
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+RESULT_FILE="$REPO_ROOT/.github/tmp/full-flow-exit-code.txt"
+mkdir -p "$REPO_ROOT/.github/tmp"
+
+cleanup() {
+  code=$?
+  adb -s emulator-5554 emu kill || true
+  echo "$code" > "$RESULT_FILE"
+}
+
+trap cleanup EXIT
+
+cd "$REPO_ROOT"
 
 echo "===== ADB DEVICES ====="
 adb devices
