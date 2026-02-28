@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 RESULT_FILE="$REPO_ROOT/.github/tmp/mobile-ci-exit-code.txt"
 LOGCAT_FILE="$REPO_ROOT/.github/tmp/mobile-logcat.txt"
+RUNTIME_FILE="$REPO_ROOT/common/test-data/runtime/runtimeData.json"
 mkdir -p "$REPO_ROOT/.github/tmp"
 
 APPIUM_PID=""
@@ -23,26 +24,6 @@ on_exit() {
 }
 
 trap on_exit EXIT
-
-RUNTIME_FILE="$REPO_ROOT/common/test-data/runtime/runtimeData.json"
-
-echo "Commit: $(git rev-parse --short HEAD)"
-echo "===== ADB DEVICES ====="
-adb devices
-
-echo "Waiting for emulator device..."
-adb wait-for-device
-
-# Ensure shell is responsive on selected emulator serial
-EMULATOR_SERIAL="$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')"
-if [ -z "$EMULATOR_SERIAL" ]; then
-  echo "No online emulator found after adb wait-for-device ❌"
-  adb devices
-  exit 1
-fi
-
-export ANDROID_SERIAL="$EMULATOR_SERIAL"
-echo "Using ANDROID_SERIAL=$ANDROID_SERIAL"
 
 wait_for_system_services() {
   echo "Waiting for shell responsiveness..."
@@ -130,6 +111,62 @@ wait_for_system_services() {
   return 0
 }
 
+start_appium_and_wait() {
+  appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > appium.log 2>&1 &
+  APPIUM_PID=$!
+
+  if ! kill -0 "$APPIUM_PID" 2>/dev/null; then
+    echo "Appium process failed right after start ❌"
+    cat appium.log || true
+    return 1
+  fi
+
+  echo "Waiting for Appium to be ready..."
+  APP_READY=0
+  for i in {1..45}; do
+    if ! kill -0 "$APPIUM_PID" 2>/dev/null; then
+      echo "Appium exited before becoming ready ❌"
+      tail -n 200 appium.log || true
+      return 1
+    fi
+
+    if curl -fsS http://127.0.0.1:4723/status >/dev/null; then
+      APP_READY=1
+      break
+    fi
+
+    sleep 2
+  done
+
+  if [ "$APP_READY" -ne 1 ]; then
+    echo "Appium did not become ready within timeout ❌"
+    tail -n 200 appium.log || true
+    kill "$APPIUM_PID" >/dev/null 2>&1 || true
+    APPIUM_PID=""
+    return 1
+  fi
+
+  echo "Appium is ready ✅"
+  return 0
+}
+
+echo "Commit: $(git rev-parse --short HEAD)"
+echo "===== ADB DEVICES ====="
+adb devices
+
+echo "Waiting for emulator device..."
+adb wait-for-device
+
+EMULATOR_SERIAL="$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')"
+if [ -z "$EMULATOR_SERIAL" ]; then
+  echo "No online emulator found after adb wait-for-device ❌"
+  adb devices
+  exit 1
+fi
+
+export ANDROID_SERIAL="$EMULATOR_SERIAL"
+echo "Using ANDROID_SERIAL=$ANDROID_SERIAL"
+
 if ! wait_for_system_services; then
   echo "First readiness pass failed; rebooting emulator once and retrying..."
   adb -s "$ANDROID_SERIAL" reboot || true
@@ -147,55 +184,26 @@ adb -s "$ANDROID_SERIAL" logcat -v threadtime > "$LOGCAT_FILE" 2>&1 &
 LOGCAT_PID=$!
 echo "Logcat capture PID: $LOGCAT_PID"
 
-echo "Starting Appium..."
+echo "Installing Appium + uiautomator2 driver..."
 npm install -g appium
 appium driver install uiautomator2@4.2.9
 
-appium --address 127.0.0.1 --port 4723 --base-path / --relaxed-security > appium.log 2>&1 &
-APPIUM_PID=$!
-
-if ! kill -0 "$APPIUM_PID" 2>/dev/null; then
-  echo "Appium process failed right after start ❌"
-  cat appium.log || true
+echo "Starting Appium..."
+if ! start_appium_and_wait; then
   exit 1
 fi
 
-echo "Waiting for Appium to be ready..."
-APP_READY=0
-for i in {1..45}; do
-  if ! kill -0 "$APPIUM_PID" 2>/dev/null; then
-    echo "Appium exited before becoming ready ❌"
-    tail -n 200 appium.log || true
-    exit 1
-  fi
-
-  if curl -fsS http://127.0.0.1:4723/status >/dev/null; then
-    APP_READY=1
-    break
-  fi
-
-  sleep 2
-done
-
-if [ "$APP_READY" -ne 1 ]; then
-  echo "Appium did not become ready within timeout ❌"
-  tail -n 200 appium.log || true
-  kill "$APPIUM_PID" || true
-  exit 1
-fi
-
-echo "Appium is ready ✅"
 adb start-server
 adb devices
 
 CURRENT_SERIAL="$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')"
 if [ -z "$CURRENT_SERIAL" ]; then
-  echo "No online emulator found right before WDIO run ❌"
+  echo "No online emulator found right before web prerequisites ❌"
   adb devices
   tail -n 200 appium.log || true
-  kill "$APPIUM_PID" || true
   exit 1
 fi
+
 echo "Using ANDROID_SERIAL=$CURRENT_SERIAL"
 
 cd "$REPO_ROOT/mobile-automation"
@@ -229,7 +237,32 @@ fi
 echo "Waiting 60 seconds for PO propagation before goods receipt..."
 sleep 60
 
-cd mobile-automation
+export ANDROID_SERIAL="$CURRENT_SERIAL"
+
+echo "Re-validating Android services before WDIO session..."
+if ! wait_for_system_services; then
+  echo "Android services degraded before WDIO; rebooting emulator and retrying readiness..."
+  adb -s "$ANDROID_SERIAL" reboot || true
+  adb -s "$ANDROID_SERIAL" wait-for-device
+
+  if ! wait_for_system_services; then
+    echo "Android services still unstable before WDIO ❌"
+    exit 1
+  fi
+fi
+
+echo "Restarting Appium before WDIO session creation..."
+if [ -n "$APPIUM_PID" ]; then
+  kill "$APPIUM_PID" >/dev/null 2>&1 || true
+  APPIUM_PID=""
+  sleep 2
+fi
+
+if ! start_appium_and_wait; then
+  exit 1
+fi
+
+cd "$REPO_ROOT/mobile-automation"
 export USE_EXTERNAL_APPIUM=true
 export ANDROID_SERIAL="$CURRENT_SERIAL"
 
