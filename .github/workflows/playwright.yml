@@ -64,7 +64,7 @@ jobs:
           profile: pixel
           emulator-boot-timeout: 1800
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot-load -no-snapshot-save
-          disable-animations: true
+          disable-animations: false
           script: |
             bash .github/scripts/run-full-flow-emulator.sh
 
@@ -106,7 +106,7 @@ jobs:
           profile: pixel
           emulator-boot-timeout: 1800
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot-load -no-snapshot-save
-          disable-animations: true
+          disable-animations: false
           script: |
             bash .github/scripts/run-full-flow-emulator.sh
 

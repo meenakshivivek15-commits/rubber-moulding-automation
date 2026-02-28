@@ -57,7 +57,7 @@ jobs:
           disk-size: 2048M
           emulator-boot-timeout: 1800
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
-          disable-animations: true
+          disable-animations: false
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
 
@@ -104,7 +104,7 @@ jobs:
           disk-size: 2048M
           emulator-boot-timeout: 1800
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
-          disable-animations: true
+          disable-animations: false
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
 
@@ -126,7 +126,7 @@ jobs:
           disk-size: 2048M
           emulator-boot-timeout: 1800
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
-          disable-animations: true
+          disable-animations: false
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
 
