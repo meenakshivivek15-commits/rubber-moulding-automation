@@ -15,13 +15,24 @@ class OperatorHomePage extends BasePage {
     // 🚀 Action
     // ===============================
  private async handleSystemPopupIfPresent(): Promise<void> {
-     const closeApp = await $('id=android:id/aerr_close');
-     const waitBtn = await $('id=android:id/aerr_wait');
+    try {
+        const closeApp = await $('id=android:id/aerr_close');
+        const waitBtn = await $('id=android:id/aerr_wait');
 
-     if (await closeApp.isDisplayed().catch(() => false)) {
-          console.log('⚠ ANR popup detected - clicking Wait');
-          await waitBtn.click();
-     }
+        if (await closeApp.isDisplayed().catch(() => false)) {
+            console.log('⚠ ANR popup detected - clicking Wait');
+            await waitBtn.click().catch(() => undefined);
+            await driver.pause(1000);
+        }
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (/AccessibilityNodeInfo|active window|Timed out/i.test(message)) {
+            console.log('⚠ Skipping ANR popup probe due to temporary UI accessibility timeout');
+            return;
+        }
+
+        console.log(`⚠ ANR popup probe failed, continuing: ${message}`);
+    }
  }
 
  async openGoodsReceipt(): Promise<void> {
@@ -45,7 +56,7 @@ class OperatorHomePage extends BasePage {
 
             await this.switchToNative().catch(() => undefined);
 
-            await this.handleSystemPopupIfPresent();
+            await this.handleSystemPopupIfPresent().catch(() => undefined);
 
             const receiptTile = await $('id=com.ppaoperator.app:id/goods_receipt_icon');
 
