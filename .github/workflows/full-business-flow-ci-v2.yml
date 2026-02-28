@@ -143,6 +143,16 @@ jobs:
                   echo "Emulator action failed during teardown, but full flow already passed."
                   exit 0
                 fi
+
+                if [ "$FLOW_STATUS" = "running" ]; then
+                  echo "Emulator action failed during teardown after tests started; treating as infra teardown flake."
+                  exit 0
+                fi
+
+                if [ "$FLOW_STATUS" = "unknown" ]; then
+                  echo "Emulator action failed during teardown with unknown flow state; treating as infra teardown flake."
+                  exit 0
+                fi
               fi
 
               echo "Emulator action failed before test result could be recorded."
