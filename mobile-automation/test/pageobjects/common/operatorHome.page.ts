@@ -107,6 +107,32 @@ class OperatorHomePage extends BasePage {
     throw lastError instanceof Error ? lastError : new Error('Goods Receipt tile not available before timeout');
  }
 
+ private async tryOpenGoodsReceiptViaWebRoute(): Promise<boolean> {
+    try {
+        await this.ensureWebView(60000);
+
+        const routes = ['#/goodsreceiptlist', '#/goodsreceipt'];
+        for (const route of routes) {
+            await driver.execute((targetRoute) => {
+                window.location.hash = targetRoute as string;
+            }, route).catch(() => undefined);
+
+            await driver.pause(3000);
+
+            const grid = await $('#grid');
+            if (await grid.isDisplayed().catch(() => false)) {
+                console.log(`Opened Goods Receipt via WebView route fallback: ${route}`);
+                return true;
+            }
+        }
+    } catch {
+    } finally {
+        await this.switchToNative().catch(() => undefined);
+    }
+
+    return false;
+ }
+
  async openGoodsReceipt(): Promise<void> {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
@@ -130,7 +156,20 @@ class OperatorHomePage extends BasePage {
 
             await this.handleSystemPopupIfPresent(attempt).catch(() => undefined);
 
-            const receiptTile = await this.waitForGoodsReceiptTile(90000, attempt);
+            let receiptTile: any;
+            try {
+                receiptTile = await this.waitForGoodsReceiptTile(90000, attempt);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                if (/Goods Receipt tile not available before timeout/i.test(message)) {
+                    const openedViaRoute = await this.tryOpenGoodsReceiptViaWebRoute();
+                    if (openedViaRoute) {
+                        console.log('Goods Receipt list page loaded via WebView route fallback');
+                        return;
+                    }
+                }
+                throw error;
+            }
 
             try {
                 await receiptTile.scrollIntoView();

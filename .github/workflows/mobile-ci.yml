@@ -49,13 +49,16 @@ jobs:
         continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
-          target: google_apis
-          arch: x86_64
-          profile: pixel
+          api-level: 30
+          target: default
+          arch: x86
+          profile: Nexus 5
+          ram-size: 2048
+          heap-size: 256
+          disk-size: 2048M
           force-avd-creation: true
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save -wipe-data
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
           disable-animations: true
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
@@ -82,13 +85,16 @@ jobs:
         continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
-          target: google_apis
-          arch: x86_64
-          profile: pixel
+          api-level: 30
+          target: default
+          arch: x86
+          profile: Nexus 5
+          ram-size: 2048
+          heap-size: 256
+          disk-size: 2048M
           force-avd-creation: true
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save -wipe-data
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
           disable-animations: true
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
