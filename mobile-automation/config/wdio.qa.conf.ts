@@ -83,7 +83,8 @@ export const config: Options.Testrunner = {
         'appium:autoGrantPermissions': true,
         'appium:disableWindowAnimation': true,
         'appium:autoLaunch': true,
-        //'appium:skipDeviceInitialization': CI,
+        'appium:skipDeviceInitialization': false,
+        'appium:skipServerInstallation': false,
 
         'appium:noReset': false,
         'appium:fullReset': false,
@@ -93,8 +94,8 @@ export const config: Options.Testrunner = {
         'appium:androidDeviceReadyTimeout': 120,
         'appium:ignoreHiddenApiPolicyError': true,
         'appium:androidInstallTimeout': 300000,
-        'appium:uiautomator2ServerLaunchTimeout': 300000,
-        'appium:uiautomator2ServerInstallTimeout': 300000,
+        'appium:uiautomator2ServerLaunchTimeout': 120000,
+        'appium:uiautomator2ServerInstallTimeout': 120000,
         'appium:newCommandTimeout': 300,
 
         // Hybrid app support

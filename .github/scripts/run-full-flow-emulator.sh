@@ -22,14 +22,16 @@ adb devices
 adb wait-for-device
 
 echo "Waiting for Android boot completion..."
-for i in {1..60}; do
-  BOOT_COMPLETED="$(adb shell getprop sys.boot_completed | tr -d '\r')"
-  if [ "$BOOT_COMPLETED" = "1" ]; then
-    echo "Emulator boot completed ✅"
-    break
-  fi
-  sleep 2
+until adb shell getprop sys.boot_completed | grep -m 1 '1' >/dev/null 2>&1; do
+  sleep 5
 done
+
+until adb shell pm list packages >/dev/null 2>&1; do
+  sleep 5
+done
+
+sleep 40
+echo "Emulator boot completed ✅"
 
 EMULATOR_SERIAL="$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')"
 if [ -z "$EMULATOR_SERIAL" ]; then
