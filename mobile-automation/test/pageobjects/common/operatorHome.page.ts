@@ -14,12 +14,24 @@ class OperatorHomePage extends BasePage {
     // ===============================
     // 🚀 Action
     // ===============================
- private async handleSystemPopupIfPresent(): Promise<void> {
+ private async handleSystemPopupIfPresent(attempt: number): Promise<void> {
     try {
         const closeApp = await $('id=android:id/aerr_close');
         const waitBtn = await $('id=android:id/aerr_wait');
+        const alertTitle = await $('id=android:id/alertTitle');
 
         if (await closeApp.isDisplayed().catch(() => false)) {
+            const titleText = await alertTitle.getText().catch(() => '');
+            const criticalAnr = /Process system isn't responding|Appium Settings isn't responding/i.test(titleText);
+
+            if (criticalAnr) {
+                console.log(`⚠ Critical ANR detected (${titleText}) - clicking Close app and recovering`);
+                await closeApp.click().catch(() => undefined);
+                await driver.pause(1200);
+                await this.recoverFromUiHang(attempt);
+                return;
+            }
+
             console.log('⚠ ANR popup detected - clicking Wait');
             await waitBtn.click().catch(() => undefined);
             await driver.pause(1000);
@@ -63,6 +75,13 @@ class OperatorHomePage extends BasePage {
     while (Date.now() - startedAt < timeoutMs) {
         try {
             const source = await driver.getPageSource();
+
+            if (source.includes('android:id/aerr_close') || source.includes("isn't responding")) {
+                await this.handleSystemPopupIfPresent(attempt).catch(() => undefined);
+                await driver.pause(1200);
+                continue;
+            }
+
             if (!source.includes('goods_receipt_icon')) {
                 await driver.pause(1200);
                 continue;
@@ -109,7 +128,7 @@ class OperatorHomePage extends BasePage {
 
             await this.switchToNative().catch(() => undefined);
 
-            await this.handleSystemPopupIfPresent().catch(() => undefined);
+            await this.handleSystemPopupIfPresent(attempt).catch(() => undefined);
 
             const receiptTile = await this.waitForGoodsReceiptTile(90000, attempt);
 
