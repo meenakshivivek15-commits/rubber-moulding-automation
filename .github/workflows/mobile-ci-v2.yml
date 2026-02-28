@@ -95,6 +95,26 @@ jobs:
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
 
+      - name: Final retry tests on Android emulator
+        id: mobile_emulator_retry2
+        if: always() && steps.decide_emulator_retry.outputs.retry_needed == 'true' && steps.mobile_emulator_retry.outcome == 'failure'
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          disable-linux-hw-accel: true
+          profile: Nexus 5
+          ram-size: 2048
+          heap-size: 256
+          disk-size: 2048M
+          emulator-boot-timeout: 1800
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save
+          disable-animations: true
+          script: |
+            bash .github/scripts/run-mobile-ci-emulator.sh
+
       - name: Validate Mobile Test Result
         if: always()
         run: |
@@ -102,10 +122,13 @@ jobs:
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
           FIRST_EMULATOR_OUTCOME="${{ steps.mobile_emulator.outcome }}"
           RETRY_EMULATOR_OUTCOME="${{ steps.mobile_emulator_retry.outcome }}"
+          RETRY2_EMULATOR_OUTCOME="${{ steps.mobile_emulator_retry2.outcome }}"
           EMULATOR_OUTCOME="$FIRST_EMULATOR_OUTCOME"
           TESTS_EXECUTED="no"
 
-          if [ -n "$RETRY_EMULATOR_OUTCOME" ] && [ "$RETRY_EMULATOR_OUTCOME" != "skipped" ]; then
+          if [ -n "$RETRY2_EMULATOR_OUTCOME" ] && [ "$RETRY2_EMULATOR_OUTCOME" != "skipped" ]; then
+            EMULATOR_OUTCOME="$RETRY2_EMULATOR_OUTCOME"
+          elif [ -n "$RETRY_EMULATOR_OUTCOME" ] && [ "$RETRY_EMULATOR_OUTCOME" != "skipped" ]; then
             EMULATOR_OUTCOME="$RETRY_EMULATOR_OUTCOME"
           fi
 
@@ -147,10 +170,13 @@ jobs:
           RESULT_FILE=".github/tmp/mobile-ci-exit-code.txt"
           FIRST_EMULATOR_OUTCOME="${{ steps.mobile_emulator.outcome }}"
           RETRY_EMULATOR_OUTCOME="${{ steps.mobile_emulator_retry.outcome }}"
+          RETRY2_EMULATOR_OUTCOME="${{ steps.mobile_emulator_retry2.outcome }}"
           EMULATOR_OUTCOME="$FIRST_EMULATOR_OUTCOME"
           TESTS_EXECUTED="no"
 
-          if [ -n "$RETRY_EMULATOR_OUTCOME" ] && [ "$RETRY_EMULATOR_OUTCOME" != "skipped" ]; then
+          if [ -n "$RETRY2_EMULATOR_OUTCOME" ] && [ "$RETRY2_EMULATOR_OUTCOME" != "skipped" ]; then
+            EMULATOR_OUTCOME="$RETRY2_EMULATOR_OUTCOME"
+          elif [ -n "$RETRY_EMULATOR_OUTCOME" ] && [ "$RETRY_EMULATOR_OUTCOME" != "skipped" ]; then
             EMULATOR_OUTCOME="$RETRY_EMULATOR_OUTCOME"
           fi
 
@@ -162,6 +188,7 @@ jobs:
           echo "- Emulator step outcome: $EMULATOR_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
           echo "- First emulator attempt: $FIRST_EMULATOR_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
           echo "- Retry emulator attempt: ${RETRY_EMULATOR_OUTCOME:-not-run}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Final retry emulator attempt: ${RETRY2_EMULATOR_OUTCOME:-not-run}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Tests executed: $TESTS_EXECUTED" >> "$GITHUB_STEP_SUMMARY"
 
           if [ -f "$RESULT_FILE" ]; then
