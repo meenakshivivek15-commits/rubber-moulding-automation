@@ -64,7 +64,7 @@ jobs:
           disable-linux-hw-accel: true
           profile: pixel
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save
           disable-animations: true
           working-directory: mobile-automation
           script: |
@@ -100,7 +100,7 @@ jobs:
           disable-linux-hw-accel: true
           profile: pixel
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save
           disable-animations: true
           working-directory: mobile-automation
           script: |

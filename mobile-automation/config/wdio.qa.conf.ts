@@ -81,6 +81,7 @@ export const config: Options.Testrunner = {
         'appium:appWaitActivity': '*',
 
         'appium:autoGrantPermissions': true,
+        'appium:disableWindowAnimation': true,
         'appium:autoLaunch': true,
         //'appium:skipDeviceInitialization': CI,
 
@@ -88,13 +89,13 @@ export const config: Options.Testrunner = {
         'appium:fullReset': false,
 
         // Stability timeouts (important for CI - be generous)
-        'appium:adbExecTimeout': 300000,
+        'appium:adbExecTimeout': 200000,
         'appium:androidDeviceReadyTimeout': 120,
         'appium:ignoreHiddenApiPolicyError': true,
         'appium:androidInstallTimeout': 300000,
         'appium:uiautomator2ServerLaunchTimeout': 300000,
         'appium:uiautomator2ServerInstallTimeout': 300000,
-        'appium:newCommandTimeout': 600000,
+        'appium:newCommandTimeout': 300,
 
         // Hybrid app support
         'appium:chromedriverAutodownload': true,

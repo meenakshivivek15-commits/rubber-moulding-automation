@@ -53,6 +53,23 @@ describe('Goods Receipt Flow', () => {
     throw new Error(`Operator app is not foreground after retries. Current package: ${finalPackage}`);
    };
 
+   const disableAndroidAnimations = async (): Promise<void> => {
+    await driver.execute('mobile: shell', {
+        command: 'settings',
+        args: ['put', 'global', 'window_animation_scale', '0']
+    }).catch(() => undefined);
+
+    await driver.execute('mobile: shell', {
+        command: 'settings',
+        args: ['put', 'global', 'transition_animation_scale', '0']
+    }).catch(() => undefined);
+
+    await driver.execute('mobile: shell', {
+        command: 'settings',
+        args: ['put', 'global', 'animator_duration_scale', '0']
+    }).catch(() => undefined);
+   };
+
    before(async () => {
 
     console.log("========= FRESH START: OPERATOR APP =========");
@@ -60,6 +77,8 @@ describe('Goods Receipt Flow', () => {
     // 🔥 Proper clean restart (keeps settings because noReset=true)
     await driver.terminateApp(operatorAppId).catch(() => undefined);
     await launchOperatorApp();
+
+    await disableAndroidAnimations();
 
     await browser.pause(5000);
     await ensureOperatorAppForeground();

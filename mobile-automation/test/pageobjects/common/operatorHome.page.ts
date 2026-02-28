@@ -14,6 +14,16 @@ class OperatorHomePage extends BasePage {
     // ===============================
     // 🚀 Action
     // ===============================
+ private async handleSystemPopupIfPresent(): Promise<void> {
+     const closeApp = await $('id=android:id/aerr_close');
+     const waitBtn = await $('id=android:id/aerr_wait');
+
+     if (await closeApp.isDisplayed().catch(() => false)) {
+          console.log('⚠ ANR popup detected - clicking Wait');
+          await waitBtn.click();
+     }
+ }
+
  async openGoodsReceipt(): Promise<void> {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
@@ -31,7 +41,11 @@ class OperatorHomePage extends BasePage {
             await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
             await driver.pause(2000);
 
+            await driver.pause(10000);
+
             await this.switchToNative().catch(() => undefined);
+
+            await this.handleSystemPopupIfPresent();
 
             const receiptTile = await $('id=com.ppaoperator.app:id/goods_receipt_icon');
 
