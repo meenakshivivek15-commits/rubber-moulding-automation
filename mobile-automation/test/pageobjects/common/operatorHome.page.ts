@@ -56,6 +56,38 @@ class OperatorHomePage extends BasePage {
     }
  }
 
+ private async waitForGoodsReceiptTile(timeoutMs: number, attempt: number): Promise<any> {
+    const startedAt = Date.now();
+    let lastError: unknown;
+
+    while (Date.now() - startedAt < timeoutMs) {
+        try {
+            const source = await driver.getPageSource();
+            if (!source.includes('goods_receipt_icon')) {
+                await driver.pause(1200);
+                continue;
+            }
+
+            const tile = await $('id=com.ppaoperator.app:id/goods_receipt_icon');
+            await tile.waitForDisplayed({ timeout: 8000 });
+            return tile;
+        } catch (error) {
+            lastError = error;
+
+            if (this.isAccessibilityHangError(error)) {
+                console.log('Accessibility hang while probing Goods Receipt tile, recovering...');
+                await this.recoverFromUiHang(attempt);
+                await this.switchToNative().catch(() => undefined);
+                continue;
+            }
+
+            await driver.pause(1000);
+        }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error('Goods Receipt tile not available before timeout');
+ }
+
  async openGoodsReceipt(): Promise<void> {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
@@ -79,12 +111,7 @@ class OperatorHomePage extends BasePage {
 
             await this.handleSystemPopupIfPresent().catch(() => undefined);
 
-            const receiptTile = await $('id=com.ppaoperator.app:id/goods_receipt_icon');
-
-            const source = await driver.getPageSource();
-            console.log(source);
-
-            await receiptTile.waitForDisplayed({ timeout: 60000 });
+            const receiptTile = await this.waitForGoodsReceiptTile(90000, attempt);
 
             try {
                 await receiptTile.scrollIntoView();
