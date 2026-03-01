@@ -90,18 +90,27 @@ wait_for_system_services() {
 
   echo "Waiting for Android framework readiness..."
   FRAMEWORK_READY=0
+  FRAMEWORK_STREAK=0
   for i in {1..120}; do
     BOOT_COMPLETED="$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
+    DEV_BOOT_COMPLETED="$(adb -s "$ANDROID_SERIAL" shell getprop dev.bootcomplete 2>/dev/null | tr -d '\r')"
     BOOTANIM="$(adb -s "$ANDROID_SERIAL" shell getprop init.svc.bootanim 2>/dev/null | tr -d '\r')"
 
     if [ $((i % 10)) -eq 0 ]; then
-      echo "Framework readiness poll $i/120: sys.boot_completed='${BOOT_COMPLETED:-<empty>}' bootanim='${BOOTANIM:-<empty>}'"
+      echo "Framework readiness poll $i/120: sys.boot_completed='${BOOT_COMPLETED:-<empty>}' dev.bootcomplete='${DEV_BOOT_COMPLETED:-<empty>}' bootanim='${BOOTANIM:-<empty>}' streak=$FRAMEWORK_STREAK"
     fi
 
-    if [ "$BOOT_COMPLETED" = "1" ] && [ "$BOOTANIM" = "stopped" ]; then
+    if [ "$BOOT_COMPLETED" = "1" ] && [ "$DEV_BOOT_COMPLETED" = "1" ] && [ "$BOOTANIM" = "stopped" ]; then
+      FRAMEWORK_STREAK=$((FRAMEWORK_STREAK + 1))
+    else
+      FRAMEWORK_STREAK=0
+    fi
+
+    if [ "$FRAMEWORK_STREAK" -ge 5 ]; then
       FRAMEWORK_READY=1
       break
     fi
+
     sleep 2
   done
 
@@ -189,17 +198,25 @@ wait_for_system_services() {
 
   echo "Waiting for Android settings service readiness..."
   SETTINGS_READY=0
+  SETTINGS_STREAK=0
   for i in {1..60}; do
-    SETTINGS_DEVICE_NAME="$(adb -s "$ANDROID_SERIAL" shell settings get global device_name 2>/dev/null | tr -d '\r' || true)"
-
-    if [ $((i % 10)) -eq 0 ]; then
-      echo "Settings readiness poll $i/60: device_name='${SETTINGS_DEVICE_NAME:-<empty>}'"
+    if service_is_found "settings" && adb -s "$ANDROID_SERIAL" shell settings get global device_name >/dev/null 2>&1; then
+      SETTINGS_STREAK=$((SETTINGS_STREAK + 1))
+    else
+      SETTINGS_STREAK=0
     fi
 
-    if adb -s "$ANDROID_SERIAL" shell settings get global device_name >/dev/null 2>&1; then
+    if [ "$SETTINGS_STREAK" -ge 3 ]; then
       SETTINGS_READY=1
       break
     fi
+
+    if [ $((i % 10)) -eq 0 ]; then
+      SETTINGS_SERVICE_CHECK="$(adb -s "$ANDROID_SERIAL" shell service check settings 2>/dev/null | tr -d '\r' || true)"
+      SETTINGS_DEVICE_NAME="$(adb -s "$ANDROID_SERIAL" shell settings get global device_name 2>/dev/null | tr -d '\r' || true)"
+      echo "Settings readiness poll $i/60: streak=$SETTINGS_STREAK service_check='${SETTINGS_SERVICE_CHECK:-<empty>}' device_name='${SETTINGS_DEVICE_NAME:-<empty>}'"
+    fi
+
     sleep 2
   done
 
@@ -212,6 +229,61 @@ wait_for_system_services() {
   echo "Android settings service is ready ✅"
   adb -s "$ANDROID_SERIAL" shell input keyevent 82 >/dev/null 2>&1 || true
   return 0
+}
+
+wait_for_session_stability() {
+  echo "Running final Android service stability soak before WDIO session..."
+
+  STABLE_STREAK=0
+  for i in {1..45}; do
+    PACKAGE_SERVICE_CHECK="$(adb -s "$ANDROID_SERIAL" shell service check package 2>/dev/null | tr -d '\r' || true)"
+    ACTIVITY_SERVICE_CHECK="$(adb -s "$ANDROID_SERIAL" shell service check activity 2>/dev/null | tr -d '\r' || true)"
+    SETTINGS_SERVICE_CHECK="$(adb -s "$ANDROID_SERIAL" shell service check settings 2>/dev/null | tr -d '\r' || true)"
+
+    PACKAGE_OK=0
+    ACTIVITY_OK=0
+    SETTINGS_OK=0
+
+    if echo "$PACKAGE_SERVICE_CHECK" | grep -Eiq "(^|:)[[:space:]]*found([[:space:]]|$)" \
+      && ! echo "$PACKAGE_SERVICE_CHECK" | grep -Eiq "not[[:space:]]+found" \
+      && adb -s "$ANDROID_SERIAL" shell cmd package list packages android >/dev/null 2>&1; then
+      PACKAGE_OK=1
+    fi
+
+    if echo "$ACTIVITY_SERVICE_CHECK" | grep -Eiq "(^|:)[[:space:]]*found([[:space:]]|$)" \
+      && ! echo "$ACTIVITY_SERVICE_CHECK" | grep -Eiq "not[[:space:]]+found" \
+      && adb -s "$ANDROID_SERIAL" shell cmd activity get-config >/dev/null 2>&1; then
+      ACTIVITY_OK=1
+    fi
+
+    if echo "$SETTINGS_SERVICE_CHECK" | grep -Eiq "(^|:)[[:space:]]*found([[:space:]]|$)" \
+      && ! echo "$SETTINGS_SERVICE_CHECK" | grep -Eiq "not[[:space:]]+found" \
+      && adb -s "$ANDROID_SERIAL" shell settings get global device_name >/dev/null 2>&1; then
+      SETTINGS_OK=1
+    fi
+
+    if [ "$PACKAGE_OK" -eq 1 ] && [ "$ACTIVITY_OK" -eq 1 ] && [ "$SETTINGS_OK" -eq 1 ]; then
+      STABLE_STREAK=$((STABLE_STREAK + 1))
+    else
+      STABLE_STREAK=0
+    fi
+
+    if [ $((i % 5)) -eq 0 ]; then
+      echo "Session stability poll $i/45: streak=$STABLE_STREAK package='${PACKAGE_SERVICE_CHECK:-<empty>}' activity='${ACTIVITY_SERVICE_CHECK:-<empty>}' settings='${SETTINGS_SERVICE_CHECK:-<empty>}'"
+    fi
+
+    if [ "$STABLE_STREAK" -ge 8 ]; then
+      echo "Android services remained stable across consecutive polls ✅"
+      return 0
+    fi
+
+    sleep 2
+  done
+
+  echo "Android services failed final stability soak before WDIO ❌"
+  adb -s "$ANDROID_SERIAL" shell service list | head -n 120 || true
+  adb -s "$ANDROID_SERIAL" shell getprop | head -n 80 || true
+  return 1
 }
 
 start_appium_and_wait() {
@@ -363,6 +435,32 @@ fi
 
 if ! start_appium_and_wait; then
   exit 1
+fi
+
+if ! wait_for_session_stability; then
+  echo "Service stability failed after Appium restart; rebooting emulator and retrying once..."
+  adb -s "$ANDROID_SERIAL" reboot || true
+  adb -s "$ANDROID_SERIAL" wait-for-device
+
+  if ! wait_for_system_services; then
+    echo "System services failed to recover after reboot ❌"
+    exit 1
+  fi
+
+  if [ -n "$APPIUM_PID" ]; then
+    kill "$APPIUM_PID" >/dev/null 2>&1 || true
+    APPIUM_PID=""
+    sleep 2
+  fi
+
+  if ! start_appium_and_wait; then
+    exit 1
+  fi
+
+  if ! wait_for_session_stability; then
+    echo "Service stability still failed after reboot retry ❌"
+    exit 1
+  fi
 fi
 
 cd "$REPO_ROOT/mobile-automation"
