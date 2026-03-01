@@ -73,3 +73,4 @@ class GoodsReceiptListPage extends BasePage {
 
     console.log(`🔥 PO ${poNumber} clicked successfully`);
 }
+}
