@@ -40,6 +40,36 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Create and approve PO prerequisites
+        run: |
+          set -eu
+          RUNTIME_FILE="common/test-data/runtime/runtimeData.json"
+
+          cd web-app-automation
+
+          if [ ! -d "node_modules" ]; then
+            echo "web-app-automation/node_modules missing; installing web dependencies..."
+            npm ci
+          fi
+
+          echo "Ensuring Playwright browser binaries are installed..."
+          npx playwright install chromium
+
+          npx playwright test tests/planner/purchase/plan/purchaseorder.spec.ts --config=config/playwright.qa.config.ts
+          npx playwright test tests/planner/purchase/approval/po-approval.spec.ts --config=config/playwright.qa.config.ts
+
+          cd ..
+          if [ -f "$RUNTIME_FILE" ]; then
+            echo "Runtime PO after approval:"
+            node -e "const fs=require('fs');const p=process.argv[1];const j=JSON.parse(fs.readFileSync(p,'utf8'));const po=j.poNumber||'';console.log(po||'poNumber missing');if(!po){process.exit(2)}" "$RUNTIME_FILE"
+          else
+            echo "Runtime file not found after PO creation/approval: $RUNTIME_FILE"
+            exit 1
+          fi
+
+          echo "Waiting 60 seconds for PO propagation before mobile goods receipt..."
+          sleep 60
+
       - name: Run tests on Android emulator
         id: mobile_emulator
         continue-on-error: true

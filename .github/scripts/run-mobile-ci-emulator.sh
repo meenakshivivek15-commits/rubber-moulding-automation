@@ -373,7 +373,7 @@ adb devices
 
 CURRENT_SERIAL="$(adb devices | awk '/emulator-[0-9]+[[:space:]]+device/{print $1; exit}')"
 if [ -z "$CURRENT_SERIAL" ]; then
-  echo "No online emulator found right before web prerequisites ❌"
+  echo "No online emulator found right before mobile session ❌"
   adb devices
   tail -n 200 appium.log || true
   exit 1
@@ -385,32 +385,6 @@ cd "$REPO_ROOT/mobile-automation"
 echo "Cleaning previous mobile Allure results..."
 mkdir -p allure-results
 find allure-results -type f -delete
-
-echo "Running full-flow prerequisites: Create PO and Approve PO..."
-cd "$REPO_ROOT/web-app-automation"
-
-if [ ! -d "node_modules" ]; then
-  echo "web-app-automation/node_modules missing; installing web dependencies..."
-  npm ci
-fi
-
-echo "Ensuring Playwright browser binaries are installed..."
-npx playwright install chromium
-
-npx playwright test tests/planner/purchase/plan/purchaseorder.spec.ts --config=config/playwright.qa.config.ts
-npx playwright test tests/planner/purchase/approval/po-approval.spec.ts --config=config/playwright.qa.config.ts
-
-cd "$REPO_ROOT"
-if [ -f "$RUNTIME_FILE" ]; then
-  echo "Runtime PO after approval:"
-  node -e "const fs=require('fs');const p=process.argv[1];const j=JSON.parse(fs.readFileSync(p,'utf8'));const po=j.poNumber||'';console.log(po||'poNumber missing');if(!po){process.exit(2)}" "$RUNTIME_FILE"
-else
-  echo "Runtime file not found after PO creation/approval: $RUNTIME_FILE"
-  exit 1
-fi
-
-echo "Waiting 60 seconds for PO propagation before goods receipt..."
-sleep 60
 
 export ANDROID_SERIAL="$CURRENT_SERIAL"
 
