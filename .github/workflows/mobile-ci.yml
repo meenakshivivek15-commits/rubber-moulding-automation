@@ -1,4 +1,4 @@
-name: Mobile Automation CI (Legacy - Manual Fallback)
+name: Mobile Automation CI
 
 on:
   workflow_call:
@@ -23,14 +23,6 @@ jobs:
         working-directory: mobile-automation
         run: npm ci
 
-      - name: Install Web Dependencies
-        working-directory: web-app-automation
-        run: npm ci
-
-      - name: Install Playwright Browser
-        working-directory: web-app-automation
-        run: npx playwright install --with-deps chromium
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -54,13 +46,14 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
+          disable-linux-hw-accel: false
           profile: Nexus 5
           ram-size: 2048
           heap-size: 256
           disk-size: 2048M
           force-avd-creation: true
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-metrics
           disable-animations: false
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
@@ -101,13 +94,14 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
+          disable-linux-hw-accel: false
           profile: Nexus 5
           ram-size: 2048
           heap-size: 256
           disk-size: 2048M
           force-avd-creation: true
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-metrics
           disable-animations: false
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
@@ -123,13 +117,14 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
+          disable-linux-hw-accel: false
           profile: Nexus 5
           ram-size: 2048
           heap-size: 256
           disk-size: 2048M
           force-avd-creation: true
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-metrics
           disable-animations: false
           script: |
             bash .github/scripts/run-mobile-ci-emulator.sh
