@@ -57,6 +57,22 @@ trap on_exit EXIT
 write_state "running" "bootstrap" "Mobile test bootstrap started"
 
 wait_for_system_services() {
+  service_is_found() {
+    local service_name="$1"
+    local output
+    output="$(adb -s "$ANDROID_SERIAL" shell service check "$service_name" 2>/dev/null | tr -d '\r' || true)"
+
+    if echo "$output" | grep -Eiq "not[[:space:]]+found"; then
+      return 1
+    fi
+
+    if echo "$output" | grep -Eiq "(^|:)[[:space:]]*found([[:space:]]|$)"; then
+      return 0
+    fi
+
+    return 1
+  }
+
   echo "Waiting for shell responsiveness..."
   SHELL_READY=0
   for i in {1..60}; do
@@ -77,6 +93,11 @@ wait_for_system_services() {
   for i in {1..120}; do
     BOOT_COMPLETED="$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
     BOOTANIM="$(adb -s "$ANDROID_SERIAL" shell getprop init.svc.bootanim 2>/dev/null | tr -d '\r')"
+
+    if [ $((i % 10)) -eq 0 ]; then
+      echo "Framework readiness poll $i/120: sys.boot_completed='${BOOT_COMPLETED:-<empty>}' bootanim='${BOOTANIM:-<empty>}'"
+    fi
+
     if [ "$BOOT_COMPLETED" = "1" ] && [ "$BOOTANIM" = "stopped" ]; then
       FRAMEWORK_READY=1
       break
@@ -96,9 +117,7 @@ wait_for_system_services() {
   PACKAGE_READY=0
   PACKAGE_STREAK=0
   for i in {1..120}; do
-    SERVICE_CHECK="$(adb -s "$ANDROID_SERIAL" shell service check package 2>/dev/null | tr -d '\r' || true)"
-
-    if echo "$SERVICE_CHECK" | grep -qi "found" && adb -s "$ANDROID_SERIAL" shell cmd package list packages android >/dev/null 2>&1; then
+    if service_is_found "package" && adb -s "$ANDROID_SERIAL" shell cmd package list packages android >/dev/null 2>&1; then
       PACKAGE_STREAK=$((PACKAGE_STREAK + 1))
     else
       PACKAGE_STREAK=0
@@ -107,6 +126,16 @@ wait_for_system_services() {
     if [ "$PACKAGE_STREAK" -ge 5 ]; then
       PACKAGE_READY=1
       break
+    fi
+
+    if [ $((i % 10)) -eq 0 ]; then
+      PACKAGE_SERVICE_CHECK="$(adb -s "$ANDROID_SERIAL" shell service check package 2>/dev/null | tr -d '\r' || true)"
+      if adb -s "$ANDROID_SERIAL" shell cmd package list packages android >/dev/null 2>&1; then
+        PACKAGE_CMD_OK="yes"
+      else
+        PACKAGE_CMD_OK="no"
+      fi
+      echo "Package readiness poll $i/120: streak=$PACKAGE_STREAK service_check='${PACKAGE_SERVICE_CHECK:-<empty>}' cmd_package_ok=$PACKAGE_CMD_OK"
     fi
 
     sleep 2
@@ -121,9 +150,52 @@ wait_for_system_services() {
 
   echo "Package Manager service is ready ✅"
 
+  echo "Waiting for Activity Manager service readiness..."
+  ACTIVITY_READY=0
+  ACTIVITY_STREAK=0
+  for i in {1..120}; do
+    if service_is_found "activity" && adb -s "$ANDROID_SERIAL" shell cmd activity get-config >/dev/null 2>&1; then
+      ACTIVITY_STREAK=$((ACTIVITY_STREAK + 1))
+    else
+      ACTIVITY_STREAK=0
+    fi
+
+    if [ "$ACTIVITY_STREAK" -ge 5 ]; then
+      ACTIVITY_READY=1
+      break
+    fi
+
+    if [ $((i % 10)) -eq 0 ]; then
+      ACTIVITY_SERVICE_CHECK="$(adb -s "$ANDROID_SERIAL" shell service check activity 2>/dev/null | tr -d '\r' || true)"
+      if adb -s "$ANDROID_SERIAL" shell cmd activity get-config >/dev/null 2>&1; then
+        ACTIVITY_CMD_OK="yes"
+      else
+        ACTIVITY_CMD_OK="no"
+      fi
+      echo "Activity readiness poll $i/120: streak=$ACTIVITY_STREAK service_check='${ACTIVITY_SERVICE_CHECK:-<empty>}' cmd_activity_ok=$ACTIVITY_CMD_OK"
+    fi
+
+    sleep 2
+  done
+
+  if [ "$ACTIVITY_READY" -ne 1 ]; then
+    echo "Activity Manager service not ready within timeout ❌"
+    adb -s "$ANDROID_SERIAL" shell service list | head -n 120 || true
+    adb -s "$ANDROID_SERIAL" shell getprop | head -n 80 || true
+    return 1
+  fi
+
+  echo "Activity Manager service is ready ✅"
+
   echo "Waiting for Android settings service readiness..."
   SETTINGS_READY=0
   for i in {1..60}; do
+    SETTINGS_DEVICE_NAME="$(adb -s "$ANDROID_SERIAL" shell settings get global device_name 2>/dev/null | tr -d '\r' || true)"
+
+    if [ $((i % 10)) -eq 0 ]; then
+      echo "Settings readiness poll $i/60: device_name='${SETTINGS_DEVICE_NAME:-<empty>}'"
+    fi
+
     if adb -s "$ANDROID_SERIAL" shell settings get global device_name >/dev/null 2>&1; then
       SETTINGS_READY=1
       break
