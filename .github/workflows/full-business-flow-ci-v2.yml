@@ -1,6 +1,10 @@
 name: Full Business Flow CI v2
 
 on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ '**' ]
   workflow_dispatch:
 
 jobs:
@@ -61,10 +65,10 @@ jobs:
           api-level: 33
           target: google_apis
           arch: x86_64
-          disable-linux-hw-accel: true
+          disable-linux-hw-accel: false
           profile: pixel
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-snapshot-load -no-snapshot-save -no-metrics
           disable-animations: false
           working-directory: mobile-automation
           script: |
@@ -106,10 +110,10 @@ jobs:
           api-level: 33
           target: google_apis
           arch: x86_64
-          disable-linux-hw-accel: true
+          disable-linux-hw-accel: false
           profile: pixel
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel off -no-snapshot -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-snapshot-load -no-snapshot-save -no-metrics
           disable-animations: false
           working-directory: mobile-automation
           script: |

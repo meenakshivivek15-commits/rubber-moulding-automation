@@ -1,7 +1,7 @@
 name: Mobile Automation CI (Legacy - Manual Fallback)
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   mobile-tests:
