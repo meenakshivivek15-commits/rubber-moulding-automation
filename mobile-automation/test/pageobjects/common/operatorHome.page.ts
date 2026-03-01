@@ -107,11 +107,11 @@ const title = await browser.getTitle().catch(() => 'no title');
 console.log('🔵 Page title BEFORE navigation:', title);
 
     // 3️⃣ Navigate via Ionic route
-    await browser.execute((route) => {
-        window.location.hash = route;
-    }, '#/goodsreceiptlist');
+    await browser.execute(() => {
+    window.location.href = '/#/goodsreceiptlist';
+});
 
-    await browser.pause(2000);
+    await browser.pause(3000);
 
 const newHash = await browser.execute(() => window.location.hash).catch(() => 'hash error');
 console.log('🟢 Hash AFTER navigation:', newHash);
@@ -143,10 +143,21 @@ console.log('🟢 DOM PREVIEW AFTER NAVIGATION:\n', bodyPreview);
     );
 
     // 5️⃣ Wait for actual list element (NOT #grid)
-    const list = await $('ion-list, ion-grid, ion-content');
-    await list.waitForDisplayed({ timeout: 20000 });
+    await browser.waitUntil(
+    async () => {
+        const url = await browser.getUrl();
+        console.log('🟡 Current URL during wait:', url);
 
-    console.log('✅ Goods Receipt page loaded');
-}
-}
+        const rows = await $$('ion-row');
+        const count = await rows.length;
+        console.log('🟡 ion-row count:', count);
+
+        return count > 0;
+    },
+    {
+        timeout: 25000,
+        timeoutMsg: 'Goods Receipt list rows did not render'
+    }
+);
+ }}
 export default new OperatorHomePage();
