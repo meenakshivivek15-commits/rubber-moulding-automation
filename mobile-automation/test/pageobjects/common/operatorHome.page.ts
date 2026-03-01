@@ -68,93 +68,7 @@ class OperatorHomePage extends BasePage {
     }
  }
 
- private async waitForGoodsReceiptTile(timeoutMs: number, attempt: number): Promise<any> {
-    const startedAt = Date.now();
-    let lastError: unknown;
-
-    while (Date.now() - startedAt < timeoutMs) {
-        try {
-            const source = await driver.getPageSource();
-
-            if (source.includes('android:id/aerr_close') || source.includes("isn't responding")) {
-                await this.handleSystemPopupIfPresent(attempt).catch(() => undefined);
-                await driver.pause(1200);
-                continue;
-            }
-
-            if (!source.includes('goods_receipt_icon')) {
-                await driver.pause(1200);
-                continue;
-            }
-
-            const tile = await $('id=com.ppaoperator.app:id/goods_receipt_icon');
-            await tile.waitForDisplayed({ timeout: 8000 });
-            return tile;
-        } catch (error) {
-            lastError = error;
-
-            if (this.isAccessibilityHangError(error)) {
-                console.log('Accessibility hang while probing Goods Receipt tile, recovering...');
-                await this.recoverFromUiHang(attempt);
-                await this.switchToNative().catch(() => undefined);
-                continue;
-            }
-
-            await driver.pause(1000);
-        }
-    }
-
-    throw lastError instanceof Error ? lastError : new Error('Goods Receipt tile not available before timeout');
- }
-
- private async tryOpenGoodsReceiptViaWebRoute(): Promise<boolean> {
-    try {
-        const contexts = await driver.getContexts() as string[];
-        console.log('Available contexts before Goods Receipt route switch:', contexts);
-
-        const webview = contexts.find((context) => String(context).includes('WEBVIEW'));
-        if (!webview) {
-            return false;
-        }
-
-        await driver.switchContext(webview);
-
-        const routes = ['#/goodsreceiptlist', '#/goodsreceipt', '#/goods-receipt', '#/goods-receipt-list'];
-        for (let cycle = 1; cycle <= 3; cycle++) {
-            for (const route of routes) {
-                await driver.execute((targetRoute) => {
-                    window.location.hash = targetRoute as string;
-                }, route).catch(() => undefined);
-
-                await driver.pause(3000);
-
-                const grid = await $('#grid');
-                if (await grid.isDisplayed().catch(() => false)) {
-                    console.log(`Opened Goods Receipt via WebView route fallback: ${route} (cycle ${cycle})`);
-                    return true;
-                }
-
-                const poInput = await $('input[type="text"]');
-                if (await poInput.isDisplayed().catch(() => false)) {
-                    console.log(`Opened Goods Receipt form via WebView route fallback: ${route} (cycle ${cycle})`);
-                    return true;
-                }
-
-                const refreshButton = await $('button[aria-label="refresh"], ion-icon[name="refresh"], [name="refresh"], [aria-label*="refresh" i]');
-                if (await refreshButton.isDisplayed().catch(() => false)) {
-                    await refreshButton.click().catch(() => undefined);
-                    await driver.pause(1200);
-                }
-            }
-
-            await driver.pause(1500);
-        }
-    } catch {
-    }
-
-    return false;
- }
-
+ 
  private async relaunchOperatorApp(): Promise<void> {
      await driver.terminateApp('com.ppaoperator.app').catch(() => undefined);
      await driver.pause(1200);
@@ -164,112 +78,75 @@ class OperatorHomePage extends BasePage {
 
  async openGoodsReceipt(): Promise<void> {
 
-    console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
+    console.log('\n===== OPENING GOODS RECEIPT =====\n');
 
-    const maxTotalMs = 300000;
-    const startedAt = Date.now();
-    let lastError: unknown;
+    // Ensure operator app is foreground
+    await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
+    await driver.pause(4000);
 
-    for (let attempt = 1; attempt <= 3; attempt++) {
-        if (Date.now() - startedAt > maxTotalMs) {
-            throw new Error(`Timed out opening Goods Receipt after ${maxTotalMs}ms`);
-        }
+    // 1️⃣ Get contexts
+    const contexts = await driver.getContexts() as string[];
+    console.log('Available contexts:', contexts);
 
-        try {
-            await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
-            await driver.pause(2000);
-
-            await driver.pause(10000);
-
-            const contexts = await driver.getContexts() as string[];
-            console.log('Available contexts while opening Goods Receipt:', contexts);
-
-            const webview = contexts.find((context) => String(context).includes('WEBVIEW'));
-            if (webview) {
-                await driver.switchContext(webview).catch(() => undefined);
-            }
-
-            const openedViaRouteFirst = await this.tryOpenGoodsReceiptViaWebRoute();
-            if (openedViaRouteFirst) {
-                console.log('Goods Receipt page loaded via primary WebView route strategy');
-                return;
-            }
-
-            await this.switchToNative().catch(() => undefined);
-
-            await this.handleSystemPopupIfPresent(attempt).catch(() => undefined);
-
-            let receiptTile: any;
-            try {
-                receiptTile = await this.waitForGoodsReceiptTile(60000, attempt);
-            } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-                if (/Goods Receipt tile not available before timeout/i.test(message)) {
-                    const openedViaRoute = await this.tryOpenGoodsReceiptViaWebRoute();
-                    if (openedViaRoute) {
-                        console.log('Goods Receipt list page loaded via WebView route fallback');
-                        return;
-                    }
-
-                    throw new Error('Goods Receipt tile not available before timeout (route fallback unavailable)');
-                }
-                throw error;
-            }
-
-            try {
-                await receiptTile.scrollIntoView();
-            } catch {
-            }
-
-            try {
-                await receiptTile.click();
-            } catch {
-                await driver.execute((el) => {
-                    (el as HTMLElement).click();
-                }, receiptTile);
-            }
-
-            const grid = await $('//*[@id="grid"]');
-            await grid.waitForDisplayed({ timeout: 45000 });
-
-            console.log('Goods Receipt list page loaded');
-            return;
-        } catch (error) {
-            lastError = error;
-
-            if (this.isSessionTerminatedError(error) || !driver.sessionId) {
-                throw error instanceof Error ? error : new Error('Appium session terminated while opening Goods Receipt');
-            }
-
-            const message = error instanceof Error ? error.message : String(error);
-            if (/WebView not available|No such context found|disconnected|Inspector\.detached|waitUntil condition timed out/i.test(message)) {
-                console.log(`Recoverable WebView error while opening Goods Receipt (attempt ${attempt}), retrying...`);
-                await this.switchToNative().catch(() => undefined);
-                await driver.pause(1500);
-                await this.relaunchOperatorApp();
-                continue;
-            }
-
-            if (/Goods Receipt tile not available before timeout/i.test(message)) {
-                console.log(`Goods Receipt entry not available yet (attempt ${attempt}), relaunching app and retrying...`);
-                await this.switchToNative().catch(() => undefined);
-                await this.relaunchOperatorApp();
-                continue;
-            }
-
-            if (this.isAccessibilityHangError(error)) {
-                console.log(`Recoverable Android accessibility timeout while opening Goods Receipt (attempt ${attempt}), retrying...`);
-                await this.recoverFromUiHang(attempt);
-                await this.switchToNative().catch(() => undefined);
-                await this.relaunchOperatorApp();
-                continue;
-            }
-
-            throw error;
-        }
+    const webview = contexts.find(c => c.includes('WEBVIEW'));
+    if (!webview) {
+        throw new Error('WEBVIEW context not found');
     }
 
-    throw lastError instanceof Error ? lastError : new Error('Unable to open Goods Receipt after retries');
+    // 2️⃣ Switch to WebView
+    await driver.switchContext(webview);
+    console.log('🔵 Switched to WEBVIEW:', webview);
+
+const currentUrl = await browser.getUrl().catch(() => 'URL not available');
+console.log('🔵 Current URL BEFORE navigation:', currentUrl);
+
+const currentHash = await browser.execute(() => window.location.hash).catch(() => 'hash error');
+console.log('🔵 Current hash BEFORE navigation:', currentHash);
+
+const title = await browser.getTitle().catch(() => 'no title');
+console.log('🔵 Page title BEFORE navigation:', title);
+
+    // 3️⃣ Navigate via Ionic route
+    await browser.execute((route) => {
+        window.location.hash = route;
+    }, '#/goodsreceiptlist');
+
+    await browser.pause(2000);
+
+const newHash = await browser.execute(() => window.location.hash).catch(() => 'hash error');
+console.log('🟢 Hash AFTER navigation:', newHash);
+
+const newUrl = await browser.getUrl().catch(() => 'URL not available');
+console.log('🟢 URL AFTER navigation:', newUrl);
+
+const bodyPreview = await browser.execute(() => {
+    return document.body.innerHTML.slice(0, 800);
+}).catch(() => 'DOM read failed');
+
+console.log('🟢 DOM PREVIEW AFTER NAVIGATION:\n', bodyPreview);
+
+    // 4️⃣ Wait for Ionic page to fully render
+    await browser.waitUntil(
+    async () => {
+        const exists = await browser.execute(() => {
+            return document.querySelector('ion-content') !== null;
+        });
+
+        console.log('🟡 ion-content exists:', exists);
+        return Boolean(exists);
+    },
+    {
+        timeout: 20000,
+        timeoutMsg: 'Goods Receipt page did not render'
+    }
+
+    );
+
+    // 5️⃣ Wait for actual list element (NOT #grid)
+    const list = await $('ion-list, ion-grid, ion-content');
+    await list.waitForDisplayed({ timeout: 20000 });
+
+    console.log('✅ Goods Receipt page loaded');
 }
 }
 export default new OperatorHomePage();
