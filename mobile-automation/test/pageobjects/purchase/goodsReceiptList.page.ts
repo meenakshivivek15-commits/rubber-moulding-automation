@@ -7,36 +7,22 @@ class GoodsReceiptListPage extends BasePage {
 
         console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
-        // 1️⃣ Ensure WEBVIEW context
-        const currentContext = String(await driver.getContext());
+        await this.ensureWebView(90000);
 
-        if (!currentContext.includes('WEBVIEW')) {
-            const contexts = await driver.getContexts() as string[];
-            const webview = contexts.find(ctx => ctx.startsWith('WEBVIEW_'));
-
-            if (!webview) {
-                throw new Error('WEBVIEW context not found');
-            }
-
-            await driver.switchContext(webview);
-        }
-
-        // 2️⃣ Dynamic PO selector (4th column)
         const poCellSelector =
             `//*[@id="grid"]//ion-row/ion-col[4][normalize-space()="${poNumber}"]`;
 
         let found = false;
 
-        // 3️⃣ Retry logic (refresh style)
         for (let attempt = 1; attempt <= 5; attempt++) {
 
             console.log(`\n🔄 Attempt ${attempt} to find PO...`);
 
-            // horizontal scroll (column 4 visibility)
+            // Horizontal scroll (important in CI)
             await browser.execute(() => {
                 const grid = document.querySelector('#grid');
                 if (grid) {
-                    grid.scrollLeft = 1000;
+                    (grid as HTMLElement).scrollLeft = 1500;
                 }
             });
 
@@ -50,26 +36,26 @@ class GoodsReceiptListPage extends BasePage {
                 break;
             }
 
-            console.log("PO not found — refreshing Goods Receipt page...");
+            console.log("PO not found — refreshing via Operator Home...");
 
-            // Go back to Operator Home
-            await driver.execute(() => {
+            // Navigate to Operator Home
+            await browser.execute(() => {
                 window.location.hash = '#/operatorhome';
             });
 
-            await browser.pause(5000);
+            await browser.pause(4000);
 
             // Reopen Goods Receipt
             await operatorHomePage.openGoodsReceipt();
 
-            await browser.pause(8000); // give backend time in CI
+            await this.ensureWebView(60000);
+            await browser.pause(6000);
         }
 
         if (!found) {
             throw new Error(`PO ${poNumber} never appeared in Goods Receipt list`);
         }
 
-        // 4️⃣ Click safely
         const poCell = await $(poCellSelector);
 
         await poCell.scrollIntoView();
