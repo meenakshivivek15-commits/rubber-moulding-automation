@@ -109,35 +109,64 @@ class OperatorHomePage extends BasePage {
 
  private async tryOpenGoodsReceiptViaWebRoute(): Promise<boolean> {
     try {
-        await this.ensureWebView(60000);
+        const contexts = await driver.getContexts() as string[];
+        console.log('Available contexts before Goods Receipt route switch:', contexts);
 
-        const routes = ['#/goodsreceiptlist', '#/goodsreceipt'];
-        for (const route of routes) {
-            await driver.execute((targetRoute) => {
-                window.location.hash = targetRoute as string;
-            }, route).catch(() => undefined);
+        const webview = contexts.find((context) => String(context).includes('WEBVIEW'));
+        if (!webview) {
+            return false;
+        }
 
-            await driver.pause(3000);
+        await driver.switchContext(webview);
 
-            const grid = await $('#grid');
-            if (await grid.isDisplayed().catch(() => false)) {
-                console.log(`Opened Goods Receipt via WebView route fallback: ${route}`);
-                return true;
+        const routes = ['#/goodsreceiptlist', '#/goodsreceipt', '#/goods-receipt', '#/goods-receipt-list'];
+        for (let cycle = 1; cycle <= 3; cycle++) {
+            for (const route of routes) {
+                await driver.execute((targetRoute) => {
+                    window.location.hash = targetRoute as string;
+                }, route).catch(() => undefined);
+
+                await driver.pause(3000);
+
+                const grid = await $('#grid');
+                if (await grid.isDisplayed().catch(() => false)) {
+                    console.log(`Opened Goods Receipt via WebView route fallback: ${route} (cycle ${cycle})`);
+                    return true;
+                }
+
+                const poInput = await $('input[type="text"]');
+                if (await poInput.isDisplayed().catch(() => false)) {
+                    console.log(`Opened Goods Receipt form via WebView route fallback: ${route} (cycle ${cycle})`);
+                    return true;
+                }
+
+                const refreshButton = await $('button[aria-label="refresh"], ion-icon[name="refresh"], [name="refresh"], [aria-label*="refresh" i]');
+                if (await refreshButton.isDisplayed().catch(() => false)) {
+                    await refreshButton.click().catch(() => undefined);
+                    await driver.pause(1200);
+                }
             }
+
+            await driver.pause(1500);
         }
     } catch {
-    } finally {
-        await this.switchToNative().catch(() => undefined);
     }
 
     return false;
+ }
+
+ private async relaunchOperatorApp(): Promise<void> {
+     await driver.terminateApp('com.ppaoperator.app').catch(() => undefined);
+     await driver.pause(1200);
+     await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
+     await driver.pause(3500);
  }
 
  async openGoodsReceipt(): Promise<void> {
 
     console.log("\n===== OPENING GOODS RECEIPT MENU =====\n");
 
-    const maxTotalMs = 240000;
+    const maxTotalMs = 300000;
     const startedAt = Date.now();
     let lastError: unknown;
 
@@ -152,13 +181,27 @@ class OperatorHomePage extends BasePage {
 
             await driver.pause(10000);
 
+            const contexts = await driver.getContexts() as string[];
+            console.log('Available contexts while opening Goods Receipt:', contexts);
+
+            const webview = contexts.find((context) => String(context).includes('WEBVIEW'));
+            if (webview) {
+                await driver.switchContext(webview).catch(() => undefined);
+            }
+
+            const openedViaRouteFirst = await this.tryOpenGoodsReceiptViaWebRoute();
+            if (openedViaRouteFirst) {
+                console.log('Goods Receipt page loaded via primary WebView route strategy');
+                return;
+            }
+
             await this.switchToNative().catch(() => undefined);
 
             await this.handleSystemPopupIfPresent(attempt).catch(() => undefined);
 
             let receiptTile: any;
             try {
-                receiptTile = await this.waitForGoodsReceiptTile(90000, attempt);
+                receiptTile = await this.waitForGoodsReceiptTile(60000, attempt);
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
                 if (/Goods Receipt tile not available before timeout/i.test(message)) {
@@ -167,6 +210,8 @@ class OperatorHomePage extends BasePage {
                         console.log('Goods Receipt list page loaded via WebView route fallback');
                         return;
                     }
+
+                    throw new Error('Goods Receipt tile not available before timeout (route fallback unavailable)');
                 }
                 throw error;
             }
@@ -201,6 +246,14 @@ class OperatorHomePage extends BasePage {
                 console.log(`Recoverable WebView error while opening Goods Receipt (attempt ${attempt}), retrying...`);
                 await this.switchToNative().catch(() => undefined);
                 await driver.pause(1500);
+                await this.relaunchOperatorApp();
+                continue;
+            }
+
+            if (/Goods Receipt tile not available before timeout/i.test(message)) {
+                console.log(`Goods Receipt entry not available yet (attempt ${attempt}), relaunching app and retrying...`);
+                await this.switchToNative().catch(() => undefined);
+                await this.relaunchOperatorApp();
                 continue;
             }
 
@@ -208,6 +261,7 @@ class OperatorHomePage extends BasePage {
                 console.log(`Recoverable Android accessibility timeout while opening Goods Receipt (attempt ${attempt}), retrying...`);
                 await this.recoverFromUiHang(attempt);
                 await this.switchToNative().catch(() => undefined);
+                await this.relaunchOperatorApp();
                 continue;
             }
 
