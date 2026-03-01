@@ -13,39 +13,34 @@ class GoodsReceiptListPage extends BasePage {
 
         // ✅ Keep 4th column
         // ✅ But match ANY nested text inside it
-        const poCellSelector = `
-            //*[@id="grid"]//ion-row/ion-col[4]//*[contains(
-                translate(normalize-space(.),
-                'abcdefghijklmnopqrstuvwxyz',
-                'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
-                "${poUpper}"
-            )]
-        `;
+        const poCellSelector = 
+            `xpath=//*[@id="grid"]//ion-row/ion-col[4]//*[contains(translate(normalize-space(.),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'),'${poUpper}')]`;
 
-        await browser.waitUntil(
-            async () => {
+       await browser.waitUntil(
+    async () => {
 
-                // 🔁 Horizontal scroll attempt (important for CI)
-                await browser.execute(() => {
-                    const grid = document.querySelector('#grid');
-                    if (grid) {
-                        grid.scrollLeft = 1000;
-                    }
-                });
-
-                const elements = await $$(poCellSelector);
-                const count =await elements.length;
-
-                console.log('Matching rows found:', count);
-
-                return count > 0;
-            },
-            {
-                timeout: 60000,
-                interval: 3000,
-                timeoutMsg: `PO ${poNumber} did not appear in Goods Receipt list`
+        await browser.execute(() => {
+            const grid = document.querySelector('#grid');
+            if (grid) {
+                grid.scrollLeft = 1000;
             }
-        );
+        });
+
+       const elements = await $$(poCellSelector);
+        const count = await elements.length;
+
+Then:
+        console.log('Matching rows found:', count);
+
+        return count > 0;
+    },
+    {
+        timeout: 60000,
+        interval: 3000,
+        timeoutMsg: `PO ${poNumber} did not appear in Goods Receipt list`
+    }
+);
+        
 
         const poCell = await $(poCellSelector);
 
