@@ -118,7 +118,7 @@ describe('Goods Receipt Flow', () => {
         // 🔥 IMPORTANT: Backend Sync Buffer
         console.log('After clicking Goods Receipt');
         console.log('Waiting for backend sync...');
-        await browser.pause(12000);
+        await browser.pause(30000);
 
         // ===== Select PO from Native List =====
         await goodsReceiptListPage.selectPoFromList(runtime.poNumber);
