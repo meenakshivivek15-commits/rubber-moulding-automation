@@ -1,5 +1,4 @@
 import BasePage from '../base.page';
-import operatorHomePage from '../common/operatorHome.page';
 
 class GoodsReceiptListPage extends BasePage {
 
@@ -7,26 +6,32 @@ class GoodsReceiptListPage extends BasePage {
 
     console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
-    // Ensure WEBVIEW
-    const context = await driver.getContext();
-    if (!String(context).includes('WEBVIEW')) {
+    await driver.waitUntil(async () => {
         const contexts = await driver.getContexts() as string[];
         const webview = contexts.find(ctx => ctx.includes('WEBVIEW'));
-        if (!webview) throw new Error('WEBVIEW not found');
+        if (!webview) {
+            return false;
+        }
         await driver.switchContext(webview);
-    }
+        return true;
+    }, { timeout: 30000, interval: 1000, timeoutMsg: 'WEBVIEW not available in time' });
 
     const poSelector = `//ion-col[normalize-space()="${poNumber}"]`;
 
-    // Wait for grid to load
-    await $('ion-grid#grid').waitForExist({ timeout: 15000 });
+    await driver.waitUntil(async () => {
+        const ionContentExists = await $('ion-content').isExisting();
+        const ionGridExists = await $('ion-grid').isExisting();
+        const ionListExists = await $('ion-list').isExisting();
+        const poCount = await (await $$(poSelector)).length;
+
+        return ionContentExists || ionGridExists || ionListExists || poCount > 0;
+    }, { timeout: 30000, interval: 1000, timeoutMsg: 'Goods Receipt list container did not load' });
 
     let found = false;
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 25; i++) {
 
-        const elements = await $$(poSelector);
-        const count = await elements.length;
+        const count = await (await $$(poSelector)).length;
         if (count > 0) {
             found = true;
             break;
@@ -34,15 +39,17 @@ class GoodsReceiptListPage extends BasePage {
 
         console.log(`Scrolling... attempt ${i + 1}`);
 
-        // Scroll inside ion-content (IMPORTANT)
-        await driver.execute(() => {
-            const content = document.querySelector('ion-content');
-            if (content) {
-                content.scrollBy(0, 800);
+        await driver.execute(async () => {
+            const content = document.querySelector('ion-content') as any;
+            if (content && typeof content.getScrollElement === 'function') {
+                const scrollElement = await content.getScrollElement();
+                scrollElement.scrollTop += 900;
+            } else {
+                window.scrollBy(0, 900);
             }
         });
 
-        await driver.pause(700);
+        await driver.pause(500);
     }
 
     if (!found) {
@@ -55,7 +62,7 @@ class GoodsReceiptListPage extends BasePage {
     await driver.pause(500);
     await poCell.click();
 
-    console.log(`🔥 PO ${poNumber} clicked successfully`);
+    console.log(`PO ${poNumber} clicked successfully`);
 }
 }
 

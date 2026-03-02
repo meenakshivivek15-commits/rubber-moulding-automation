@@ -109,6 +109,12 @@ describe('Goods Receipt Flow', () => {
         // ===== Navigate to Goods Receipt =====
         await operatorHomePage.openGoodsReceipt();
 
+        await browser.waitUntil(async () => {
+            const rows = await $$('ion-row');
+            const rowCount = await rows.length;
+            return rowCount > 0;
+        }, { timeout: 20000 });
+
         // 🔥 IMPORTANT: Backend Sync Buffer
         console.log('After clicking Goods Receipt');
         console.log('Waiting for backend sync...');
