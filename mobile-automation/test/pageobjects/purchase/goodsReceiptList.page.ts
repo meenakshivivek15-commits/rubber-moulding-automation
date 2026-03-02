@@ -1,4 +1,5 @@
 import BasePage from '../base.page';
+import operatorHomePage from '../common/operatorHome.page';
 
 class GoodsReceiptListPage extends BasePage {
 
@@ -98,26 +99,19 @@ class GoodsReceiptListPage extends BasePage {
         let found = await deepScrollSearch(120);
 
         // -------------------------------
-        // 4️⃣ Single refresh fallback
+        // 4️⃣ Single fallback: go Home and reopen Goods Receipt
         // -------------------------------
         if (!found) {
-            console.log('PO not found after deep scroll — refreshing once and retrying');
+            console.log('PO not found after deep scroll — reopening Goods Receipt from home and retrying once');
 
-            await driver.execute(() => {
-                window.location.reload();
+            await browser.execute(() => {
+                window.location.href = '/#/home';
             });
+            await driver.pause(2500);
 
-            await browser.waitUntil(async () => {
-                const rows = await $$('ion-row');
-                const count = await rows.length;
-                return count > 0;
-            }, {
-                timeout: 30000,
-                interval: 2000,
-                timeoutMsg: 'Goods Receipt rows did not load after refresh'
-            });
+            await operatorHomePage.openGoodsReceipt();
+            await driver.pause(1500);
 
-            await driver.pause(3000);
             found = await deepScrollSearch(120);
         }
 
@@ -125,7 +119,7 @@ class GoodsReceiptListPage extends BasePage {
         // 5️⃣ Final validation
         // -------------------------------
         if (!found) {
-            throw new Error(`PO ${poNumber} not found after deep scrolling and one refresh`);
+            throw new Error(`PO ${poNumber} not found after deep scrolling and reopening Goods Receipt once`);
         }
 
         console.log(`✅ PO ${poNumber} clicked successfully`);
