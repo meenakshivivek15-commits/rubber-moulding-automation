@@ -18,11 +18,14 @@ class GoodsReceiptListPage extends BasePage {
 
         await driver.switchContext(webview);
 
-        // 2️⃣ Wait for list page
+        // 2️⃣ Wait for list to load
         await browser.waitUntil(async () => {
-    const rows = await $$('ion-row');
-    return Array.from(rows).length > 0;
-}, { timeout: 30000 });
+            const rows = await $$('ion-row').length > 0;
+            return rows;
+        }, {
+            timeout: 30000,
+            timeoutMsg: 'Goods Receipt list did not load'
+        });
 
         // 3️⃣ Use Search
         const searchInput = await $('ion-searchbar input');
@@ -34,21 +37,20 @@ class GoodsReceiptListPage extends BasePage {
 
         console.log('🔎 Searching PO via backend filter...');
 
-        await browser.pause(3000); // allow API filter
+        // Allow API filter to complete
+        await browser.pause(3000);
 
         const poSelector = `//ion-col[normalize-space()="${targetPo}"]`;
 
         await browser.waitUntil(async () => {
-    const elements = await $$(poSelector);
-    return Array.from(elements).length > 0;
-}, {
-    timeoutMsg: `PO ${poNumber} not found after search`
-});
+            const elements = await $$(poSelector).length > 0;
+            return elements;
+        }, {
+            timeout: 20000,
             timeoutMsg: `PO ${poNumber} not found after search`
         });
 
         const poCell = await $(poSelector);
-
         await poCell.scrollIntoView();
         await poCell.click();
 
