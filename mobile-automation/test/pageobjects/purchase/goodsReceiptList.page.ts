@@ -1,60 +1,81 @@
 import BasePage from '../base.page';
+import operatorHomePage from '../common/operatorHome.page';
 
 class GoodsReceiptListPage extends BasePage {
 
     async selectPoFromList(poNumber: string): Promise<void> {
 
-        console.log(`\n========== SEARCHING PO USING SEARCH BAR: ${poNumber} ==========\n`);
-
-        const targetPo = poNumber.trim();
+        console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
         // 1️⃣ Ensure WEBVIEW
-        const contexts = await driver.getContexts() as string[];
-        const webview = contexts.find(ctx => ctx.includes('WEBVIEW'));
+        const currentContext = String(await driver.getContext());
 
-        if (!webview) {
-            throw new Error('WEBVIEW not available on Goods Receipt page');
+        if (!currentContext.includes('WEBVIEW')) {
+            const contexts = await driver.getContexts() as string[];
+            const webview = contexts.find(ctx => ctx.startsWith('WEBVIEW_'));
+
+            if (!webview) {
+                throw new Error('WEBVIEW context not found');
+            }
+
+            await driver.switchContext(webview);
         }
 
-        await driver.switchContext(webview);
+        // 2️⃣ Dynamic PO selector (4th column)
+        const poCellSelector =
+            `//*[@id="grid"]//ion-row/ion-col[4][normalize-space()="${poNumber}"]`;
 
-        // 2️⃣ Wait for list to load
-        await browser.waitUntil(async () => {
-            const rows = await $$('ion-row').length > 0;
-            return rows;
-        }, {
-            timeout: 30000,
-            timeoutMsg: 'Goods Receipt list did not load'
-        });
+        let found = false;
 
-        // 3️⃣ Use Search
-        const searchInput = await $('ion-searchbar input');
+        // 3️⃣ Retry Navigation Logic
+        for (let attempt = 1; attempt <= 5; attempt++) {
 
-        await searchInput.waitForDisplayed({ timeout: 15000 });
-        await searchInput.click();
-        await searchInput.clearValue();
-        await searchInput.setValue(targetPo);
+            console.log(`\n🔄 Attempt ${attempt} to find PO...`);
 
-        console.log('🔎 Searching PO via backend filter...');
+            const elements = await $$(poCellSelector);
+            const count = await elements.length;
 
-        // Allow API filter to complete
-        await browser.pause(3000);
+            console.log("Matching rows found:", count);
 
-        const poSelector = `//ion-col[normalize-space()="${targetPo}"]`;
+            if (count > 0) {
+                found = true;
+                break;
+            }
 
-        await browser.waitUntil(async () => {
-            const elements = await $$(poSelector).length > 0;
-            return elements;
-        }, {
-            timeout: 20000,
-            timeoutMsg: `PO ${poNumber} not found after search`
-        });
+            console.log("PO not found — navigating to Operator Home...");
 
-        const poCell = await $(poSelector);
+            // Force navigate to Operator Home
+            await driver.execute(() => {
+                window.location.hash = '#/operatorhome';  // adjust if needed
+            });
+
+            await driver.pause(4000);
+
+            // Reopen Goods Receipt
+            await operatorHomePage.openGoodsReceipt();
+            await driver.pause(6000);
+        }
+
+        if (!found) {
+            throw new Error(`PO ${poNumber} never appeared in Goods Receipt list`);
+        }
+
+        // 4️⃣ Click the PO safely
+        const poCell = await $(poCellSelector);
+
         await poCell.scrollIntoView();
-        await poCell.click();
+        await driver.pause(500);
 
-        console.log(`✅ PO ${poNumber} clicked successfully`);
+        try {
+            await poCell.click();
+        } catch {
+            console.log("Normal click failed — using JS click");
+            await driver.execute((el) => {
+                (el as HTMLElement).click();
+            }, poCell);
+        }
+
+        console.log(`🔥 PO ${poNumber} clicked successfully`);
     }
 }
 
