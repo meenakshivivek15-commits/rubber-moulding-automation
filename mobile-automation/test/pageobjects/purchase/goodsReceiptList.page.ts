@@ -38,11 +38,52 @@ class GoodsReceiptListPage extends BasePage {
             timeoutMsg: 'Goods Receipt rows did not load'
         });
 
+        const seenPoNumbers = new Set<string>();
+
+        const getVisibleListStats = async (): Promise<{
+            visibleRowCount: number;
+            visiblePoCount: number;
+            firstPo: string;
+            lastPo: string;
+            visiblePoNumbers: string[];
+        }> => {
+            return driver.execute(() => {
+                const normalize = (value: string) => value.replace(/\s+/g, '').toUpperCase();
+                const rows = Array.from(document.querySelectorAll('ion-row'));
+                const poRegex = /\b\d{2}[A-Z]{2}\d{4}\b/g;
+
+                const poValues = rows
+                    .map(row => {
+                        const text = normalize((row.textContent || ''));
+                        const matches = text.match(poRegex);
+                        return matches && matches.length > 0 ? matches[0] : '';
+                    })
+                    .filter(Boolean);
+
+                return {
+                    visibleRowCount: rows.length,
+                    visiblePoCount: poValues.length,
+                    firstPo: poValues[0] || 'N/A',
+                    lastPo: poValues[poValues.length - 1] || 'N/A',
+                    visiblePoNumbers: poValues
+                };
+            });
+        };
+
+        const initialStats = await getVisibleListStats();
+        initialStats.visiblePoNumbers.forEach(po => seenPoNumbers.add(po));
+        console.log(`📊 Initial viewport rows: ${initialStats.visibleRowCount}, visible POs: ${initialStats.visiblePoCount}, unique seen so far: ${seenPoNumbers.size}`);
+        console.log(`📌 Initial range: first=${initialStats.firstPo}, last=${initialStats.lastPo}`);
+
         const deepScrollSearch = async (maxScrolls: number): Promise<boolean> => {
             let lastTail = '';
             let stagnantRounds = 0;
 
             for (let scroll = 0; scroll < maxScrolls; scroll++) {
+                const stats = await getVisibleListStats();
+                stats.visiblePoNumbers.forEach(po => seenPoNumbers.add(po));
+                console.log(`📊 Scroll ${scroll + 1}/${maxScrolls}: viewport rows=${stats.visibleRowCount}, visible POs=${stats.visiblePoCount}, unique seen=${seenPoNumbers.size}, first=${stats.firstPo}, last=${stats.lastPo}`);
+
                 const elements = await $$(poSelector);
                 const count = await elements.length;
 
@@ -122,6 +163,7 @@ class GoodsReceiptListPage extends BasePage {
             throw new Error(`PO ${poNumber} not found after deep scrolling and reopening Goods Receipt once`);
         }
 
+        console.log(`📈 Total unique PO numbers seen during search: ${seenPoNumbers.size}`);
         console.log(`✅ PO ${poNumber} clicked successfully`);
     }
 }
