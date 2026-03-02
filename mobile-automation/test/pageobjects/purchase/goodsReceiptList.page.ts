@@ -20,11 +20,11 @@ class GoodsReceiptListPage extends BasePage {
 
         // 2️⃣ Wait for list page
         await browser.waitUntil(async () => {
-            const rows = await $$('ion-row');
-            return rows.length > 0;
-        }, { timeout: 30000 });
+    const rows = await $$('ion-row');
+    return Array.from(rows).length > 0;
+}, { timeout: 30000 });
 
-        // 3️⃣ Use Search (NO SCROLLING ANYMORE)
+        // 3️⃣ Use Search
         const searchInput = await $('ion-searchbar input');
 
         await searchInput.waitForDisplayed({ timeout: 15000 });
@@ -34,15 +34,16 @@ class GoodsReceiptListPage extends BasePage {
 
         console.log('🔎 Searching PO via backend filter...');
 
-        // allow API filter
-        await browser.pause(3000);
+        await browser.pause(3000); // allow API filter
 
         const poSelector = `//ion-col[normalize-space()="${targetPo}"]`;
 
         await browser.waitUntil(async () => {
-            return (await $$(poSelector)).length > 0;
-        }, {
-            timeout: 20000,
+    const elements = await $$(poSelector);
+    return Array.from(elements).length > 0;
+}, {
+    timeoutMsg: `PO ${poNumber} not found after search`
+});
             timeoutMsg: `PO ${poNumber} not found after search`
         });
 
