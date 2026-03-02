@@ -3,36 +3,38 @@ import operatorHomePage from '../common/operatorHome.page';
 
 class GoodsReceiptListPage extends BasePage {
 
-   async selectPoFromList(poNumber: string): Promise<void> {
+  async selectPoFromList(poNumber: string): Promise<void> {
 
     console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
-    // ✅ Ensure WebView context
     await this.ensureWebView(90000);
 
-    // ✅ FORCE REFRESH (Go back and reopen Goods Receipt)
-    console.log("🔄 Refreshing Goods Receipt page...");
+    // ✅ Wait for page container first
+    await browser.waitUntil(async () => {
+        const ionContent = await $('ion-content');
+        return await ionContent.isExisting();
+    }, {
+        timeout: 20000,
+        timeoutMsg: '❌ ion-content not loaded'
+    });
 
-    try {
-        const backBtn = await $('ion-back-button');
-        if (await backBtn.isExisting()) {
-            await backBtn.click();
-            await browser.pause(2000);
-        }
-    } catch {}
+    // ✅ Wait for grid element itself
+    await browser.waitUntil(async () => {
+        const grid = await $('#grid');
+        return await grid.isExisting();
+    }, {
+        timeout: 30000,
+        timeoutMsg: '❌ Grid container not found'
+    });
 
-    // Re-open Goods Receipt from operator home
-    await operatorHomePage.openGoodsReceipt();
-    await browser.pause(4000); // wait for API load
-
-    // ✅ Wait until grid loads
+    // ✅ Wait until at least 1 row appears
     await browser.waitUntil(async () => {
         const rows = await $$('//*[@id="grid"]//ion-row');
         const count = await rows.length;
+        console.log("Current row count:", count);
         return count > 0;
-        
     }, {
-        timeout: 30000,
+        timeout: 40000,
         timeoutMsg: '❌ Goods Receipt grid did not load'
     });
 
@@ -40,33 +42,22 @@ class GoodsReceiptListPage extends BasePage {
         `//*[@id="grid"]//ion-row/ion-col[4][contains(normalize-space(.),"${poNumber}")]`;
 
     let found = false;
-    const maxScrolls = 100;
+    const maxScrolls = 50; // 100 not needed now
 
     for (let attempt = 1; attempt <= maxScrolls; attempt++) {
 
         console.log(`🔄 Scroll Attempt ${attempt}/${maxScrolls}`);
 
-        // ✅ Horizontal scroll (CI WebView fix)
-        await browser.execute(() => {
-            const grid = document.querySelector('#grid');
-            if (grid) {
-                (grid as HTMLElement).scrollLeft = 2000;
-            }
-        });
-
         const elements = await $$(poCellSelector);
         const count = await elements.length;
-
-        console.log("Matching rows found:", count);
 
         if (count > 0) {
             found = true;
             break;
         }
 
-        // ✅ Ionic vertical scroll (Shadow DOM safe)
+        // Ionic vertical scroll
         await browser.execute(() => {
-
             const ionContent = document.querySelector('ion-content');
             if (!ionContent) return;
 
@@ -81,7 +72,7 @@ class GoodsReceiptListPage extends BasePage {
             }
         });
 
-        await browser.pause(1500);
+        await browser.pause(1200);
     }
 
     if (!found) {
@@ -96,7 +87,6 @@ class GoodsReceiptListPage extends BasePage {
     try {
         await poCell.click();
     } catch {
-        console.log("⚠ Normal click failed — using JS click");
         await browser.execute((el) => {
             (el as HTMLElement).click();
         }, poCell);
