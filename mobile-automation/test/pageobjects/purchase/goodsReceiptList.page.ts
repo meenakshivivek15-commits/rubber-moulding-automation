@@ -7,19 +7,44 @@ class GoodsReceiptListPage extends BasePage {
 
     console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
+    // ✅ Ensure WebView context
     await this.ensureWebView(90000);
+
+    // ✅ FORCE REFRESH (Go back and reopen Goods Receipt)
+    console.log("🔄 Refreshing Goods Receipt page...");
+
+    try {
+        const backBtn = await $('ion-back-button');
+        if (await backBtn.isExisting()) {
+            await backBtn.click();
+            await browser.pause(2000);
+        }
+    } catch {}
+
+    // Re-open Goods Receipt from operator home
+    await operatorHomePage.openGoodsReceipt();
+    await browser.pause(4000); // wait for API load
+
+    // ✅ Wait until grid loads
+    await browser.waitUntil(async () => {
+        const rows = await $$('//*[@id="grid"]//ion-row');
+        return rows.length > 0;
+    }, {
+        timeout: 30000,
+        timeoutMsg: '❌ Goods Receipt grid did not load'
+    });
 
     const poCellSelector =
         `//*[@id="grid"]//ion-row/ion-col[4][contains(normalize-space(.),"${poNumber}")]`;
 
     let found = false;
-    const maxScrolls = 100;   // 🔥 increased to 100
+    const maxScrolls = 100;
 
     for (let attempt = 1; attempt <= maxScrolls; attempt++) {
 
-        console.log(`\n🔄 Scroll Attempt ${attempt}/${maxScrolls}`);
+        console.log(`🔄 Scroll Attempt ${attempt}/${maxScrolls}`);
 
-        // ✅ Horizontal scroll (important for CI WebView)
+        // ✅ Horizontal scroll (CI WebView fix)
         await browser.execute(() => {
             const grid = document.querySelector('#grid');
             if (grid) {
@@ -27,9 +52,8 @@ class GoodsReceiptListPage extends BasePage {
             }
         });
 
-        // ✅ Check if PO is visible
         const elements = await $$(poCellSelector);
-        const count =await elements.length;
+        const count = await elements.length;
 
         console.log("Matching rows found:", count);
 
@@ -38,7 +62,7 @@ class GoodsReceiptListPage extends BasePage {
             break;
         }
 
-        // ✅ Proper Ionic vertical scroll (Shadow DOM safe)
+        // ✅ Ionic vertical scroll (Shadow DOM safe)
         await browser.execute(() => {
 
             const ionContent = document.querySelector('ion-content');
@@ -55,11 +79,11 @@ class GoodsReceiptListPage extends BasePage {
             }
         });
 
-        await browser.pause(2000); // slightly optimized wait
+        await browser.pause(1500);
     }
 
     if (!found) {
-        throw new Error(`PO ${poNumber} never appeared in Goods Receipt list`);
+        throw new Error(`❌ PO ${poNumber} never appeared in Goods Receipt list`);
     }
 
     const poCell = await $(poCellSelector);
@@ -70,7 +94,7 @@ class GoodsReceiptListPage extends BasePage {
     try {
         await poCell.click();
     } catch {
-        console.log("Normal click failed — using JS click");
+        console.log("⚠ Normal click failed — using JS click");
         await browser.execute((el) => {
             (el as HTMLElement).click();
         }, poCell);
