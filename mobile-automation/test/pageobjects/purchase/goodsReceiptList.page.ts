@@ -28,7 +28,9 @@ class GoodsReceiptListPage extends BasePage {
     // ✅ Wait until grid loads
     await browser.waitUntil(async () => {
         const rows = await $$('//*[@id="grid"]//ion-row');
-        return rows.length > 0;
+        const count = await rows.length;
+        return count > 0;
+        
     }, {
         timeout: 30000,
         timeoutMsg: '❌ Goods Receipt grid did not load'
