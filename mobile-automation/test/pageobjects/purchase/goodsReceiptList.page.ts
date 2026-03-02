@@ -1,5 +1,4 @@
 import BasePage from '../base.page';
-import operatorHomePage from '../common/operatorHome.page';
 
 class GoodsReceiptListPage extends BasePage {
 
@@ -7,76 +6,90 @@ class GoodsReceiptListPage extends BasePage {
 
         console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
-        // Ensure WEBVIEW
-        const currentContext = String(await driver.getContext());
-        if (!currentContext.includes('WEBVIEW')) {
-            const contexts = await driver.getContexts() as string[];
-            const webview = contexts.find(ctx => ctx.startsWith('WEBVIEW_'));
+        // 1️⃣ Ensure WEBVIEW
+        const context = String(await driver.getContext());
+
+        if (!context.includes('WEBVIEW')) {
+            const contexts = (await driver.getContexts()) as string[];
+            const webview = contexts.find(c => c.includes('WEBVIEW'));
             if (!webview) throw new Error('WEBVIEW context not found');
             await driver.switchContext(webview);
         }
 
-        const poSelector = `//ion-col[normalize-space()="${poNumber}"]`;
+        console.log("Active context:", await driver.getContext());
 
-        // Wait for grid
+        // 2️⃣ Wait for grid
         await browser.waitUntil(async () => {
-            const rows = await $$('#grid ion-row').length > 0;
-            return rows;
-        }, { timeout: 30000 });
+            const grids = await $$('//ion-grid[@id="grid"]');
+            const count = await grids.length;
+            console.log("Grid count:", count);
+            return count > 0;
+        }, {
+            timeout: 40000,
+            timeoutMsg: 'Grid container not found'
+        });
 
-        const gridScrollAndFind = async (): Promise<boolean> => {
+        // 3️⃣ Wait for rows
+        await browser.waitUntil(async () => {
+            const rows = await $$('//ion-grid[@id="grid"]//ion-row');
+            const count = await rows.length;
+            console.log("Row count:", count);
+            return count > 1;
+        }, {
+            timeout: 40000,
+            timeoutMsg: 'Rows did not load'
+        });
 
-            let lastScrollTop = -1;
+        // 4️⃣ Scroll horizontally
+        await browser.execute(() => {
+            const grid = document.getElementById('grid');
+            if (grid) grid.scrollLeft = grid.scrollWidth;
+        });
 
-            for (let i = 0; i < 60; i++) {
+        await browser.pause(1000);
 
-                // 1️⃣ Horizontal scroll fully right
-                await browser.execute(() => {
-                    const grid = document.getElementById('grid');
-                    if (grid) {
-                        grid.scrollLeft = grid.scrollWidth;
-                    }
-                });
+        const poSelector =
+            `//ion-grid[@id="grid"]//ion-col[normalize-space()="${poNumber}"]`;
 
-                // 2️⃣ Check for PO
-                const elements = await $$(poSelector).length;
-                if (elements > 0) {
-                    return true;
-                }
+        let found = false;
+        let lastScrollTop = -1;
 
-                // 3️⃣ Scroll vertically inside grid
-                const currentScrollTop = await browser.execute(() => {
-                    const grid = document.getElementById('grid');
-                    if (grid) {
-                        const old = grid.scrollTop;
-                        grid.scrollTop += 800;
-                        grid.dispatchEvent(new Event('scroll'));
-                        return old;
-                    }
-                    return -1;
-                });
+        // 5️⃣ Vertical infinite scroll
+        for (let i = 0; i < 60; i++) {
 
-                // Stop if no more scrolling possible
-                if (currentScrollTop === lastScrollTop) {
-                    break;
-                }
+           const elements = await $$(poSelector);
+            const matches = await elements.length;
 
-                lastScrollTop = currentScrollTop as number;
+            console.log(`Scroll ${i} → matches:`, matches);
 
-                await browser.pause(1200); // allow infinite scroll API
+            if (matches > 0) {
+                found = true;
+                break;
             }
 
-            return false;
-        };
+            const previousScrollTop = await browser.execute(() => {
+                const grid = document.getElementById('grid');
+                if (!grid) return -1;
+                const prev = grid.scrollTop;
+                grid.scrollTop += 800;
+                grid.dispatchEvent(new Event('scroll'));
+                return prev;
+            });
 
-        const found = await gridScrollAndFind();
+            if (previousScrollTop === lastScrollTop) {
+                console.log("Reached bottom of grid");
+                break;
+            }
+
+            lastScrollTop = previousScrollTop as number;
+            await browser.pause(1200);
+        }
 
         if (!found) {
             throw new Error(`PO ${poNumber} not found after grid scrolling`);
         }
 
         const poCell = await $(poSelector);
-
         await poCell.scrollIntoView();
         await browser.pause(500);
         await poCell.click();
