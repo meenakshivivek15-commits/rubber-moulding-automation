@@ -5,12 +5,14 @@ class GoodsReceiptListPage extends BasePage {
 
     async selectPoFromList(poNumber: string): Promise<void> {
 
-        console.log(`\n========== SEARCHING PO BY SCROLL: ${poNumber} ==========\n`);
+        console.log(`\n========== SEARCHING PO BY NATIVE SWIPE: ${poNumber} ==========\n`);
+
         const targetPo = poNumber.replace(/\s+/g, '').toUpperCase();
 
         // 1️⃣ Ensure WEBVIEW
         const contexts = await driver.getContexts() as string[];
         const webview = contexts.find(ctx => ctx.includes('WEBVIEW'));
+
         if (webview) {
             await driver.switchContext(webview);
         } else {
@@ -24,13 +26,33 @@ class GoodsReceiptListPage extends BasePage {
             return count > 0;
         }, { timeout: 40000, timeoutMsg: 'Goods Receipt rows did not load' });
 
-        const poSelector = `//ion-col[contains(translate(normalize-space(.), "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"), "${targetPo}")]`;
+        const poSelector =
+            `//ion-col[contains(translate(normalize-space(.), "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"), "${targetPo}")]`;
+
+        // 🔥 Native swipe function
+        const swipeUp = async () => {
+            await driver.performActions([{
+                type: 'pointer',
+                id: 'finger1',
+                parameters: { pointerType: 'touch' },
+                actions: [
+                    { type: 'pointerMove', duration: 0, x: 250, y: 900 },
+                    { type: 'pointerDown', button: 0 },
+                    { type: 'pause', duration: 200 },
+                    { type: 'pointerMove', duration: 600, x: 250, y: 250 },
+                    { type: 'pointerUp', button: 0 }
+                ]
+            }]);
+            await driver.releaseActions();
+        };
 
         const scrollAndFind = async (maxScrolls: number): Promise<boolean> => {
+
             let stagnantRounds = 0;
-            let lastViewportSignature = '';
+            let lastSignature = '';
 
             for (let step = 1; step <= maxScrolls; step++) {
+
                 const elements = await $$(poSelector);
                 const count = await elements.length;
 
@@ -38,18 +60,12 @@ class GoodsReceiptListPage extends BasePage {
                     const poCell = elements[0];
                     await poCell.scrollIntoView();
                     await driver.pause(300);
-                    try {
-                        await poCell.click();
-                    } catch {
-                        await driver.execute((el) => {
-                            (el as HTMLElement).click();
-                        }, poCell);
-                    }
+                    await poCell.click();
                     return true;
                 }
 
                 const viewport = await driver.execute(() => {
-                    const normalize = (value: string) => value.replace(/\s+/g, '').toUpperCase();
+                    const normalize = (v: string) => v.replace(/\s+/g, '').toUpperCase();
                     const rows = Array.from(document.querySelectorAll('ion-row'));
                     const poRegex = /\d{2}[A-Z]{2}\d{4}/;
 
@@ -66,29 +82,24 @@ class GoodsReceiptListPage extends BasePage {
                 });
 
                 const signature = `${viewport.firstPo}|${viewport.lastPo}`;
-                if (signature === lastViewportSignature) {
+
+                if (signature === lastSignature) {
                     stagnantRounds++;
                 } else {
                     stagnantRounds = 0;
                 }
-                lastViewportSignature = signature;
 
-                console.log(`🔎 Scroll ${step}/${maxScrolls}: rows=${viewport.visibleRows}, first=${viewport.firstPo}, last=${viewport.lastPo}, stagnant=${stagnantRounds}`);
+                lastSignature = signature;
 
-                await driver.execute(async () => {
-                    const content = document.querySelector('ion-content') as any;
-                    if (content && typeof content.getScrollElement === 'function') {
-                        const scrollEl = await content.getScrollElement();
-                        scrollEl.scrollTop += 1100;
-                        scrollEl.dispatchEvent(new Event('scroll'));
-                    } else {
-                        window.scrollBy(0, 1100);
-                    }
-                });
+                console.log(
+                    `🔎 Swipe ${step}/${maxScrolls}: rows=${viewport.visibleRows}, first=${viewport.firstPo}, last=${viewport.lastPo}, stagnant=${stagnantRounds}`
+                );
 
-                await driver.pause(stagnantRounds >= 2 ? 1800 : 1200);
+                // 🔥 Native swipe instead of DOM scroll
+                await swipeUp();
+                await driver.pause(1500);
 
-                if (stagnantRounds >= 8) {
+                if (stagnantRounds >= 10) {
                     break;
                 }
             }
@@ -96,30 +107,33 @@ class GoodsReceiptListPage extends BasePage {
             return false;
         };
 
-        // 3️⃣ Pass 1: deep manual scroll
-        let found = await scrollAndFind(140);
+        // 3️⃣ Pass 1 – deep swipe
+        let found = await scrollAndFind(120);
 
-        // 4️⃣ Pass 2: reopen Goods Receipt once and retry manual scroll
+        // 4️⃣ Pass 2 – reopen and retry once
         if (!found) {
-            console.log('PO not found in pass 1 — reopening Goods Receipt from home and retrying');
+
+            console.log('PO not found in pass 1 — reopening Goods Receipt and retrying');
+
             await browser.execute(() => {
                 window.location.href = '/#/home';
             });
-            await driver.pause(2500);
+
+            await driver.pause(3000);
             await operatorHomePage.openGoodsReceipt();
-            await driver.pause(2000);
+            await driver.pause(3000);
 
             await browser.waitUntil(async () => {
                 const rows = await $$('ion-row');
                 const count = await rows.length;
                 return count > 0;
-            }, { timeout: 40000, timeoutMsg: 'Goods Receipt rows did not load after reopen' });
+            }, { timeout: 40000 });
 
-            found = await scrollAndFind(140);
+            found = await scrollAndFind(120);
         }
 
         if (!found) {
-            throw new Error(`PO ${poNumber} not found after manual deep scrolling and one reopen`);
+            throw new Error(`PO ${poNumber} not found after native deep swiping and reopen`);
         }
 
         console.log(`✅ PO ${poNumber} clicked successfully`);
