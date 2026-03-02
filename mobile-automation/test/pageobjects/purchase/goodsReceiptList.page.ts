@@ -13,10 +13,11 @@ class GoodsReceiptListPage extends BasePage {
         `//*[@id="grid"]//ion-row/ion-col[4][contains(normalize-space(.),"${poNumber}")]`;
 
     let found = false;
+    const maxScrolls = 100;   // 🔥 increased to 100
 
-    for (let attempt = 1; attempt <= 20; attempt++) {
+    for (let attempt = 1; attempt <= maxScrolls; attempt++) {
 
-        console.log(`\n🔄 Scroll Attempt ${attempt}/20`);
+        console.log(`\n🔄 Scroll Attempt ${attempt}/${maxScrolls}`);
 
         // ✅ Horizontal scroll (important for CI WebView)
         await browser.execute(() => {
@@ -28,7 +29,7 @@ class GoodsReceiptListPage extends BasePage {
 
         // ✅ Check if PO is visible
         const elements = await $$(poCellSelector);
-        const count = await elements.length;
+        const count =await elements.length;
 
         console.log("Matching rows found:", count);
 
@@ -54,7 +55,7 @@ class GoodsReceiptListPage extends BasePage {
             }
         });
 
-        await browser.pause(2500);
+        await browser.pause(2000); // slightly optimized wait
     }
 
     if (!found) {
