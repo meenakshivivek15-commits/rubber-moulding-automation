@@ -7,75 +7,81 @@ class GoodsReceiptListPage extends BasePage {
 
         console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
-        // 1️⃣ Ensure WEBVIEW
+        // Ensure WEBVIEW
         const currentContext = String(await driver.getContext());
-
         if (!currentContext.includes('WEBVIEW')) {
             const contexts = await driver.getContexts() as string[];
             const webview = contexts.find(ctx => ctx.startsWith('WEBVIEW_'));
-
-            if (!webview) {
-                throw new Error('WEBVIEW context not found');
-            }
-
+            if (!webview) throw new Error('WEBVIEW context not found');
             await driver.switchContext(webview);
         }
 
-        // 2️⃣ Dynamic PO selector (4th column)
-        const poCellSelector =
-            `//*[@id="grid"]//ion-row/ion-col[4][normalize-space()="${poNumber}"]`;
+        const poSelector = `//ion-col[normalize-space()="${poNumber}"]`;
 
-        let found = false;
+        // Wait for grid
+        await browser.waitUntil(async () => {
+            const rows = await $$('#grid ion-row').length > 0;
+            return rows;
+        }, { timeout: 30000 });
 
-        // 3️⃣ Retry Navigation Logic
-        for (let attempt = 1; attempt <= 5; attempt++) {
+        const gridScrollAndFind = async (): Promise<boolean> => {
 
-            console.log(`\n🔄 Attempt ${attempt} to find PO...`);
+            let lastScrollTop = -1;
 
-            const elements = await $$(poCellSelector);
-            const count = await elements.length;
+            for (let i = 0; i < 60; i++) {
 
-            console.log("Matching rows found:", count);
+                // 1️⃣ Horizontal scroll fully right
+                await browser.execute(() => {
+                    const grid = document.getElementById('grid');
+                    if (grid) {
+                        grid.scrollLeft = grid.scrollWidth;
+                    }
+                });
 
-            if (count > 0) {
-                found = true;
-                break;
+                // 2️⃣ Check for PO
+                const elements = await $$(poSelector).length;
+                if (elements > 0) {
+                    return true;
+                }
+
+                // 3️⃣ Scroll vertically inside grid
+                const currentScrollTop = await browser.execute(() => {
+                    const grid = document.getElementById('grid');
+                    if (grid) {
+                        const old = grid.scrollTop;
+                        grid.scrollTop += 800;
+                        grid.dispatchEvent(new Event('scroll'));
+                        return old;
+                    }
+                    return -1;
+                });
+
+                // Stop if no more scrolling possible
+                if (currentScrollTop === lastScrollTop) {
+                    break;
+                }
+
+                lastScrollTop = currentScrollTop as number;
+
+                await browser.pause(1200); // allow infinite scroll API
             }
 
-            console.log("PO not found — navigating to Operator Home...");
+            return false;
+        };
 
-            // Force navigate to Operator Home
-            await driver.execute(() => {
-                window.location.hash = '#/operatorhome';  // adjust if needed
-            });
-
-            await driver.pause(4000);
-
-            // Reopen Goods Receipt
-            await operatorHomePage.openGoodsReceipt();
-            await driver.pause(6000);
-        }
+        const found = await gridScrollAndFind();
 
         if (!found) {
-            throw new Error(`PO ${poNumber} never appeared in Goods Receipt list`);
+            throw new Error(`PO ${poNumber} not found after grid scrolling`);
         }
 
-        // 4️⃣ Click the PO safely
-        const poCell = await $(poCellSelector);
+        const poCell = await $(poSelector);
 
         await poCell.scrollIntoView();
-        await driver.pause(500);
+        await browser.pause(500);
+        await poCell.click();
 
-        try {
-            await poCell.click();
-        } catch {
-            console.log("Normal click failed — using JS click");
-            await driver.execute((el) => {
-                (el as HTMLElement).click();
-            }, poCell);
-        }
-
-        console.log(`🔥 PO ${poNumber} clicked successfully`);
+        console.log(`✅ PO ${poNumber} clicked successfully`);
     }
 }
 
