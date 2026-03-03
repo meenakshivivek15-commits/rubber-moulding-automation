@@ -75,7 +75,7 @@ export const config: Options.Testrunner = {
         // Only used locally if you start AVD manually
         'appium:avd': CI ? undefined : 'ci-emulator',
 
-        'appium:app': path.resolve(__dirname, '../app/2pisysPPAOperator.apk'),
+        'appium:app': path.resolve(__dirname, '../app/operatorapp.apk'),
         'appium:appPackage': 'com.ppaoperator.app',
         'appium:appActivity': 'com.example.app.MainActivity',
         'appium:appWaitActivity': '*',

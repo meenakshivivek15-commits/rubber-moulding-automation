@@ -128,7 +128,7 @@ describe('Goods Receipt Flow', () => {
 
         // ===== Fill Form =====
         await goodsReceiptFormPage.selectLocation(mobileData.location);
-        await goodsReceiptFormPage.enterPoNumber(runtime.poNumber);
+        await goodsReceiptFormPage.enterPin(runtime.poNumber);
         await goodsReceiptFormPage.enterPin(mobileData.pin);
 
         // 🔥 Save GRN timestamp BEFORE submission
