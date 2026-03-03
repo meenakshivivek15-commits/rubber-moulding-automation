@@ -1,60 +1,32 @@
 import BasePage from '../base.page';
 
+type GridProbe = {
+    clicked: boolean;
+    rowCount: number;
+    lastRowText: string;
+    didScroll: boolean;
+    poColumnIndex: number;
+    scrollTop: number;
+    scrollLeft: number;
+    sampleHeader: string;
+};
+
 class GoodsReceiptListPage extends BasePage {
 
-    async selectPoFromList(poNumber: string): Promise<void> {
-
-    console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
-
-    // 1️⃣ Ensure WEBVIEW
-    const context = String(await driver.getContext());
-    if (!context.includes('WEBVIEW')) {
-        const contexts = await driver.getContexts() as string[];
-        const webview = contexts.find(c => c.includes('WEBVIEW'));
-        if (!webview) throw new Error('WEBVIEW context not found');
-        await driver.switchContext(webview);
-    }
-
-    console.log("Active context:", await driver.getContext());
-
-    // 2️⃣ Wait for page + grid + initial rows inside ion-content shadow root
-    await browser.waitUntil(async () => {
-        const hasContent = await browser.execute(() => !!document.querySelector('ion-content'));
-        return Boolean(hasContent);
-    }, { timeout: 30000, timeoutMsg: 'Goods Receipt page did not render (ion-content missing)' });
-
-    await browser.waitUntil(async () => {
-        const rowCount = await browser.execute(() => {
-            const ionContent = document.querySelector('ion-content') as HTMLElement | null;
-            const shadowRoot = ionContent?.shadowRoot;
-            const grid = (shadowRoot?.querySelector('ion-grid#grid') || document.querySelector('ion-grid#grid')) as HTMLElement | null;
-            if (!grid) return 0;
-
-            return grid.querySelectorAll('ion-row').length;
-        });
-
-        return Number(rowCount) > 0;
-    }, { timeout: 60000, timeoutMsg: 'Goods Receipt grid rows did not load' });
-
-    // 3️⃣ Scroll until PO row appears (for virtualized/lazy-loaded grids)
-    let previousLastRowSignature = '';
-    let noChangeScrolls = 0;
-    let endReachedRetries = 0;
-    const maxEndReachedRetries = 8;
-    const retryBackoffMs = 10000;
-
-    for (let attempt = 0; attempt < 220; attempt++) {
-        const probe = await browser.execute((targetPo: string) => {
+    private async searchPoInGrid(targetPo: string): Promise<GridProbe> {
+        return browser.execute((po: string) => {
             const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
             const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const normalizedTargetPo = normalize(targetPo);
+            const normalizedTargetPo = normalize(po);
             const poTokenRegex = new RegExp(`(^|\\W)${escapeRegExp(normalizedTargetPo)}(\\W|$)`);
 
             const ionContent = document.querySelector('ion-content') as HTMLElement | null;
             const shadowRoot = ionContent?.shadowRoot;
-            const grid = (shadowRoot?.querySelector('ion-grid#grid') || document.querySelector('ion-grid#grid')) as HTMLElement | null;
+            const grid = (shadowRoot?.querySelector('ion-grid#grid, ion-grid') || document.querySelector('ion-grid#grid, ion-grid')) as HTMLElement | null;
 
-            const rows = grid ? (Array.from(grid.querySelectorAll('ion-row')) as HTMLElement[]) : [];
+            const rows = grid
+                ? (Array.from(grid.querySelectorAll('ion-row')) as HTMLElement[])
+                : (Array.from((shadowRoot?.querySelectorAll('ion-row') || document.querySelectorAll('ion-row'))) as HTMLElement[]);
 
             if (rows.length === 0) {
                 return {
@@ -155,16 +127,77 @@ class GoodsReceiptListPage extends BasePage {
                 scrollLeft,
                 sampleHeader
             };
-        }, poNumber) as {
-            clicked: boolean;
-            rowCount: number;
-            lastRowText: string;
-            didScroll: boolean;
-            poColumnIndex: number;
-            scrollTop: number;
-            scrollLeft: number;
-            sampleHeader: string;
-        };
+        }, targetPo) as unknown as GridProbe;
+    }
+
+    private async resetGridScrollPosition(): Promise<void> {
+        await browser.execute(() => {
+            const ionContent = document.querySelector('ion-content') as HTMLElement | null;
+            const shadowRoot = ionContent?.shadowRoot;
+            const grid = (shadowRoot?.querySelector('ion-grid#grid, ion-grid') || document.querySelector('ion-grid#grid, ion-grid')) as HTMLElement | null;
+            const contentScroller = shadowRoot?.querySelector('.inner-scroll, main, [part="scroll"]') as HTMLElement | null;
+            const horizontalScroller = (grid && grid.scrollWidth > grid.clientWidth ? grid : contentScroller) as HTMLElement | null;
+
+            if (contentScroller) {
+                contentScroller.scrollTop = 0;
+            } else {
+                window.scrollTo(0, 0);
+            }
+
+            if (horizontalScroller) {
+                horizontalScroller.scrollLeft = 0;
+            }
+        });
+    }
+
+    async selectPoFromList(poNumber: string): Promise<void> {
+
+    console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
+
+    // 1️⃣ Ensure WEBVIEW
+    const context = String(await driver.getContext());
+    if (!context.includes('WEBVIEW')) {
+        const contexts = await driver.getContexts() as string[];
+        const webview = contexts.find(c => c.includes('WEBVIEW'));
+        if (!webview) throw new Error('WEBVIEW context not found');
+        await driver.switchContext(webview);
+    }
+
+    console.log("Active context:", await driver.getContext());
+
+    // 2️⃣ Wait for page + grid + initial rows inside ion-content shadow root
+    await browser.waitUntil(async () => {
+        const hasContent = await browser.execute(() => !!document.querySelector('ion-content'));
+        return Boolean(hasContent);
+    }, { timeout: 30000, timeoutMsg: 'Goods Receipt page did not render (ion-content missing)' });
+
+    await browser.waitUntil(async () => {
+        const rowCount = await browser.execute(() => {
+            const ionContent = document.querySelector('ion-content') as HTMLElement | null;
+            const shadowRoot = ionContent?.shadowRoot;
+            const grid = (shadowRoot?.querySelector('ion-grid#grid, ion-grid') || document.querySelector('ion-grid#grid, ion-grid')) as HTMLElement | null;
+
+            if (grid) {
+                return grid.querySelectorAll('ion-row').length;
+            }
+
+            const shadowRows = shadowRoot ? shadowRoot.querySelectorAll('ion-row').length : 0;
+            const docRows = document.querySelectorAll('ion-row').length;
+            return Math.max(shadowRows, docRows);
+        });
+
+        return Number(rowCount) > 0;
+    }, { timeout: 60000, timeoutMsg: 'Goods Receipt grid rows did not load' });
+
+    // 3️⃣ Scroll until PO row appears (for virtualized/lazy-loaded grids)
+    let previousLastRowSignature = '';
+    let noChangeScrolls = 0;
+    let endReachedRetries = 0;
+    const maxEndReachedRetries = 8;
+    const retryBackoffMs = 10000;
+
+    for (let attempt = 0; attempt < 220; attempt++) {
+        const probe = await this.searchPoInGrid(poNumber);
 
         if (attempt % 5 === 0 || probe.clicked) {
             console.log(
@@ -201,23 +234,7 @@ class GoodsReceiptListPage extends BasePage {
 
                 console.log(`↻ Reached list end (retry ${endReachedRetries}/${maxEndReachedRetries}). Resetting to top and rescanning for PO ${poNumber}...`);
 
-                await browser.execute(() => {
-                    const ionContent = document.querySelector('ion-content') as HTMLElement | null;
-                    const shadowRoot = ionContent?.shadowRoot;
-                    const grid = (shadowRoot?.querySelector('ion-grid#grid') || document.querySelector('ion-grid#grid')) as HTMLElement | null;
-                    const contentScroller = shadowRoot?.querySelector('.inner-scroll, main, [part="scroll"]') as HTMLElement | null;
-                    const horizontalScroller = (grid && grid.scrollWidth > grid.clientWidth ? grid : contentScroller) as HTMLElement | null;
-
-                    if (contentScroller) {
-                        contentScroller.scrollTop = 0;
-                    } else {
-                        window.scrollTo(0, 0);
-                    }
-
-                    if (horizontalScroller) {
-                        horizontalScroller.scrollLeft = 0;
-                    }
-                });
+                await this.resetGridScrollPosition();
 
                 previousLastRowSignature = '';
                 noChangeScrolls = 0;
