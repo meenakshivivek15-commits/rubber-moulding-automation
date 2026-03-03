@@ -8,31 +8,56 @@ class OperatorHomePage extends BasePage {
 
     async openGoodsReceipt(): Promise<void> {
 
-        console.log('\n===== OPENING GOODS RECEIPT =====\n');
+    console.log('\n===== OPENING GOODS RECEIPT =====\n');
 
-        await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
-        await browser.pause(5000);
+    await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
+    await browser.pause(4000);
 
-        await this.switchToWebView();
+    await this.switchToWebView();
 
-        const icon = await this.goodsReceiptIcon;
+    const clicked = await browser.execute(() => {
 
-        await icon.waitForDisplayed({ timeout: 30000 });
-        await icon.scrollIntoView();
-        await icon.click();
+        const texts = Array.from(document.querySelectorAll('ion-text'));
 
-        console.log('🟢 Goods Receipt icon clicked');
+        for (const textEl of texts) {
 
-        await browser.waitUntil(async () => {
-            const rows = await $$('ion-row').length;
-            return rows > 0;
-        }, {
-            timeout: 30000,
-            timeoutMsg: 'Goods Receipt list did not load'
-        });
+            const shadow = (textEl as any).shadowRoot;
+            if (!shadow) continue;
 
-        console.log('✅ Goods Receipt List Loaded');
+            const label = shadow.textContent?.trim() || '';
+
+            if (label === 'GoodsReceipt') {
+
+                const col = textEl.closest('ion-col');
+                if (!col) return false;
+
+                const img = col.querySelector('ion-img');
+                if (!img) return false;
+
+                (img as HTMLElement).click();
+                return true;
+            }
+        }
+
+        return false;
+    });
+
+    if (!clicked) {
+        throw new Error('GoodsReceipt tile not found');
     }
+
+    console.log('🟢 GoodsReceipt icon clicked');
+
+    await browser.waitUntil(async () => {
+        const rows = await $$('ion-row').length;
+        return rows > 0;
+    }, {
+        timeout: 30000,
+        timeoutMsg: 'Goods Receipt list did not load'
+    });
+
+    console.log('✅ Goods Receipt List Loaded');
+}
 }
 
 export default new OperatorHomePage();
