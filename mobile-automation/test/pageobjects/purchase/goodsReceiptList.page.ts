@@ -25,22 +25,12 @@ class GoodsReceiptListPage extends BasePage {
 
     await browser.waitUntil(async () => {
         const rowCount = await browser.execute(() => {
-            const collect = (root: Document | ShadowRoot): Element[] => {
-                const direct = Array.from(root.querySelectorAll('ion-row'));
-                const hosts = Array.from(root.querySelectorAll('*')) as HTMLElement[];
-                for (const host of hosts) {
-                    if (host.shadowRoot) {
-                        direct.push(...collect(host.shadowRoot));
-                    }
-                }
-                return direct;
-            };
-
             const ionContent = document.querySelector('ion-content') as HTMLElement | null;
-            const fromContent = ionContent?.shadowRoot ? collect(ionContent.shadowRoot) : [];
-            const fromDocument = collect(document);
-            const uniqueRows = new Set([...fromContent, ...fromDocument]);
-            return uniqueRows.size;
+            const shadowRoot = ionContent?.shadowRoot;
+            const grid = (shadowRoot?.querySelector('ion-grid#grid') || document.querySelector('ion-grid#grid')) as HTMLElement | null;
+            if (!grid) return 0;
+
+            return grid.querySelectorAll('ion-row').length;
         });
 
         return Number(rowCount) > 0;
@@ -56,51 +46,64 @@ class GoodsReceiptListPage extends BasePage {
             const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const normalizedTargetPo = normalize(targetPo);
             const poTokenRegex = new RegExp(`(^|\\W)${escapeRegExp(normalizedTargetPo)}(\\W|$)`);
-            const collectRows = (root: Document | ShadowRoot): HTMLElement[] => {
-                const rows = Array.from(root.querySelectorAll('ion-row')) as HTMLElement[];
-                const hosts = Array.from(root.querySelectorAll('*')) as HTMLElement[];
-                for (const host of hosts) {
-                    if (host.shadowRoot) {
-                        rows.push(...collectRows(host.shadowRoot));
-                    }
-                }
-                return rows;
-            };
 
             const ionContent = document.querySelector('ion-content') as HTMLElement | null;
             const shadowRoot = ionContent?.shadowRoot;
             const grid = (shadowRoot?.querySelector('ion-grid#grid') || document.querySelector('ion-grid#grid')) as HTMLElement | null;
 
-            const rowsFromGrid = grid ? (Array.from(grid.querySelectorAll('ion-row')) as HTMLElement[]) : [];
-            const rowsFromContent = shadowRoot ? collectRows(shadowRoot) : [];
-            const rowsFromDocument = collectRows(document);
-            const rows = Array.from(new Set([...rowsFromGrid, ...rowsFromContent, ...rowsFromDocument]));
+            const rows = grid ? (Array.from(grid.querySelectorAll('ion-row')) as HTMLElement[]) : [];
 
             if (rows.length === 0) {
                 return { clicked: false, rowCount: 0, lastRowText: '', didScroll: false };
             }
 
+            const headerRow = rows[0];
+            const headerCols = headerRow ? (Array.from(headerRow.querySelectorAll('ion-col')) as HTMLElement[]) : [];
+            const headerTexts = headerCols.map(col => normalize((col.textContent || '').toUpperCase()));
+            const detectedPoIndex = headerTexts.findIndex(text => text.includes('PO'));
+            const poColumnIndex = detectedPoIndex >= 0 ? detectedPoIndex : 3;
+
             const dataRows = rows.length > 1 ? rows.slice(1) : rows;
 
-            for (const row of dataRows) {
-                const cols = Array.from(row.querySelectorAll('ion-col')) as HTMLElement[];
-                const allColTexts = cols.map(col => normalize(col.textContent || ''));
-                const poColText = allColTexts[3] || '';
-                const hasExactPo = allColTexts.some(text => text === normalizedTargetPo);
-                const hasPoToken = allColTexts.some(text => poTokenRegex.test(text));
+            const tryFindAndClick = () => {
+                for (const row of dataRows) {
+                    const cols = Array.from(row.querySelectorAll('ion-col')) as HTMLElement[];
+                    const allColTexts = cols.map(col => normalize(col.textContent || ''));
+                    const poColText = allColTexts[poColumnIndex] || '';
+                    const hasExactPo = allColTexts.some(text => text === normalizedTargetPo);
+                    const hasPoToken = allColTexts.some(text => poTokenRegex.test(text));
 
-                if (hasExactPo || hasPoToken || poColText === normalizedTargetPo) {
-                    row.scrollIntoView({ block: 'center' });
-                    row.click();
-                    return { clicked: true, rowCount: dataRows.length, lastRowText: poColText };
+                    if (hasExactPo || hasPoToken || poColText === normalizedTargetPo) {
+                        row.scrollIntoView({ block: 'center' });
+                        row.click();
+                        return { clicked: true, rowCount: dataRows.length, lastRowText: poColText };
+                    }
                 }
+
+                return null;
+            };
+
+            const firstPass = tryFindAndClick();
+            if (firstPass) {
+                return { ...firstPass, didScroll: false };
+            }
+
+            const contentScroller = shadowRoot?.querySelector('.inner-scroll, main, [part="scroll"]') as HTMLElement | null;
+            const horizontalScroller = (grid && grid.scrollWidth > grid.clientWidth ? grid : contentScroller) as HTMLElement | null;
+
+            if (horizontalScroller && horizontalScroller.scrollWidth > horizontalScroller.clientWidth) {
+                horizontalScroller.scrollLeft = horizontalScroller.scrollWidth;
+                const secondPass = tryFindAndClick();
+                if (secondPass) {
+                    return { ...secondPass, didScroll: false };
+                }
+                horizontalScroller.scrollLeft = 0;
             }
 
             const lastDataRow = dataRows[dataRows.length - 1];
             const lastCols = lastDataRow ? Array.from(lastDataRow.querySelectorAll('ion-col')) as HTMLElement[] : [];
             const lastRowSignature = normalize(lastCols.map(col => col.textContent || '').join(' | ') || lastDataRow?.textContent || '');
 
-            const contentScroller = shadowRoot?.querySelector('.inner-scroll, main, [part="scroll"]') as HTMLElement | null;
             let didScroll = false;
 
             if (contentScroller) {
