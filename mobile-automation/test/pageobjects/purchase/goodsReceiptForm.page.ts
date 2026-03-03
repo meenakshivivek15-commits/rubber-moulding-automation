@@ -4,25 +4,25 @@ class GoodsReceiptFormPage extends BasePage {
 
     // ================= SELECTORS =================
 
-    get locationDropdown() {
-        return $('//label[contains(text(),"Received For")]/following::select[1]');
-    }
+get locationDropdown() {
+    return $('select');
+}
 
-    get invoiceLabelDate() {
-        return $('//label[contains(text(),"Invoice Date")]/following::span[1]');
-    }
+get invoiceLabelDate() {
+    return $('//ion-datetime//div[@class="datetime-text"]');
+}
 
-    get dateComponent() {
-        return $('ion-datetime[formcontrolname="invdate"]');
-    }
+get dateComponent() {
+    return $('ion-datetime[formcontrolname="invdate"]');
+}
 
-    get pinInput() {
-        return $('input[type="number"]');
-    }
+get pinInput() {
+    return $('input[type="number"]');
+}
 
-    get submitButton() {
-        return $('//ion-button[.//text()[contains(.,"Submit") or contains(.,"SAVE")]]');
-    }
+get submitButton() {
+    return $('//ion-button[contains(.,"Submit") or contains(.,"SAVE")]');
+}
 
     // ================= ACTIONS =================
 
