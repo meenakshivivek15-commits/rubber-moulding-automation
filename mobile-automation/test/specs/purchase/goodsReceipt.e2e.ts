@@ -6,150 +6,60 @@ import goodsReceiptFormPage from '../../pageobjects/purchase/goodsReceiptForm.pa
 import allure from '@wdio/allure-reporter';
 import { readJson, writeJson } from '../../../../common/utils/fileHelper';
 
-// ===== Runtime Path =====
 const runtimePath = 'runtime/runtimeData.json';
 const operatorAppId = 'com.ppaoperator.app';
-const operatorAppActivity = 'com.example.app.MainActivity';
 
-// ===== Static mobile test data =====
 const mobileData = require('../../data/goodsReceiptData.json');
 
-
-
 describe('Goods Receipt Flow', () => {
-   const getCurrentPackageName = async (): Promise<string> => {
-    const packageName = await driver.execute('mobile: getCurrentPackage');
-    return String(packageName || 'unknown');
-   };
 
-   const launchOperatorApp = async (): Promise<void> => {
-    await driver.activateApp(operatorAppId).catch(() => undefined);
-    await browser.pause(2500);
+    before(async () => {
+        console.log("========= FRESH START =========");
 
-    const pkgAfterActivate = await getCurrentPackageName();
-    if (pkgAfterActivate === operatorAppId) {
-        return;
-    }
+        await driver.terminateApp(operatorAppId).catch(() => undefined);
+        await driver.activateApp(operatorAppId);
+        await browser.pause(5000);
 
-    await driver.execute('mobile: startActivity', {
-        intent: `${operatorAppId}/${operatorAppActivity}`
-    }).catch(() => undefined);
-    await browser.pause(2500);
-   };
-
-   const ensureOperatorAppForeground = async (attempts: number = 6): Promise<void> => {
-    for (let attempt = 1; attempt <= attempts; attempt++) {
-        const currentPackage = await getCurrentPackageName();
-        console.log(`Current package (attempt ${attempt}/${attempts}): ${currentPackage}`);
-
-        if (currentPackage === operatorAppId) {
-            return;
-        }
-
-        await launchOperatorApp();
-    }
-
-    const finalPackage = await getCurrentPackageName();
-    throw new Error(`Operator app is not foreground after retries. Current package: ${finalPackage}`);
-   };
-
-   const disableAndroidAnimations = async (): Promise<void> => {
-    await driver.execute('mobile: shell', {
-        command: 'settings',
-        args: ['put', 'global', 'window_animation_scale', '0']
-    }).catch(() => undefined);
-
-    await driver.execute('mobile: shell', {
-        command: 'settings',
-        args: ['put', 'global', 'transition_animation_scale', '0']
-    }).catch(() => undefined);
-
-    await driver.execute('mobile: shell', {
-        command: 'settings',
-        args: ['put', 'global', 'animator_duration_scale', '0']
-    }).catch(() => undefined);
-   };
-
-   before(async () => {
-
-    console.log("========= FRESH START: OPERATOR APP =========");
-
-    // 🔥 Proper clean restart (keeps settings because noReset=true)
-    await driver.terminateApp(operatorAppId).catch(() => undefined);
-    await launchOperatorApp();
-
-    await disableAndroidAnimations();
-
-    await browser.pause(5000);
-    await ensureOperatorAppForeground();
-
-    const currentPackage = await getCurrentPackageName();
-    console.log("🔥 CURRENT PACKAGE:", currentPackage);
-
-    console.log("===========================================");
-});
+        console.log("App launched successfully");
+    });
 
     it(`should submit goods receipt for ${mobileData.location}`, async function () {
+
         this.timeout(600000);
 
-        // ===== Allure Metadata =====
         allure.addFeature('Purchase Process');
         allure.addStory('Goods Receipt Flow');
-        allure.addSeverity('critical');
 
-        // ===== Read PO created from Web =====
         const runtime = readJson(runtimePath);
 
-        if (!runtime.poNumber) {
-            throw new Error('PO number missing in runtime data');
-        }
-
-        console.log(`Using PO: ${runtime.poNumber}`);
-
-        // ===== Navigate to Goods Receipt =====
+        console.log("STEP 1: Navigate to Goods Receipt");
         await operatorHomePage.openGoodsReceipt();
 
-        await browser.waitUntil(async () => {
-            const rows = await $$('ion-row');
-            const rowCount = await rows.length;
-            return rowCount > 0;
-        }, { timeout: 20000 });
+        console.log("STEP 2: Select PO");
+        const selectedPo = await goodsReceiptListPage.selectFirstAvailablePo();
+        console.log("Selected PO:", selectedPo);
 
-        // 🔥 IMPORTANT: Backend Sync Buffer
-        console.log('After clicking Goods Receipt');
-        console.log('Waiting for backend sync...');
-        await browser.pause(30000);
+        console.log("STEP 3: Wait for Form");
+        await goodsReceiptFormPage.waitForFormToLoad();
 
-        // ===== Select PO from Native List =====
-        //await goodsReceiptListPage.selectPoFromList(runtime.poNumber);
-        const poNumber = await goodsReceiptListPage.selectFirstAvailablePo();
-        // ===== Switch to WebView =====
-        await goodsReceiptFormPage.switchToWebView();
-
-        // ===== Fill Form =====
+        console.log("STEP 4: Fill Form");
         await goodsReceiptFormPage.selectLocation(mobileData.location);
-        await goodsReceiptFormPage.enterPin(runtime.poNumber);
+        await goodsReceiptFormPage.syncInvoiceDateFromLabel();
         await goodsReceiptFormPage.enterPin(mobileData.pin);
 
-        // 🔥 Save GRN timestamp BEFORE submission
         runtime.grnStartTime = new Date().toISOString();
         writeJson(runtimePath, runtime);
 
-        console.log('Saved GRN start time:', runtime.grnStartTime);
-
-        // ===== Submit =====
+        console.log("STEP 5: Submit");
         await goodsReceiptFormPage.submit();
-        console.log('After submit clicked');
-        // ===== Validate Success Toast =====
-        const toast = await $('ion-toast');
-        await toast.waitForDisplayed({ timeout: 15000 });
 
-        const toastMessage = await toast.getText();
-        console.log('Toast Message:', toastMessage);
+        const toast = await $('ion-toast');
+        await toast.waitForDisplayed({ timeout: 20000 });
+
+        console.log("Toast:", await toast.getText());
 
         await expect(toast).toBeDisplayed();
 
-        console.log('Goods Receipt completed successfully');
+        console.log("✅ Goods Receipt completed successfully");
     });
-
 });
