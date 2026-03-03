@@ -39,8 +39,9 @@ class GoodsReceiptListPage extends BasePage {
     // 3️⃣ Scroll until PO row appears (for virtualized/lazy-loaded grids)
     let previousLastRowSignature = '';
     let noChangeScrolls = 0;
+    let endReachedRetries = 0;
 
-    for (let attempt = 0; attempt < 140; attempt++) {
+    for (let attempt = 0; attempt < 220; attempt++) {
         const probe = await browser.execute((targetPo: string) => {
             const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
             const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -54,7 +55,16 @@ class GoodsReceiptListPage extends BasePage {
             const rows = grid ? (Array.from(grid.querySelectorAll('ion-row')) as HTMLElement[]) : [];
 
             if (rows.length === 0) {
-                return { clicked: false, rowCount: 0, lastRowText: '', didScroll: false };
+                return {
+                    clicked: false,
+                    rowCount: 0,
+                    lastRowText: '',
+                    didScroll: false,
+                    poColumnIndex: -1,
+                    scrollTop: 0,
+                    scrollLeft: 0,
+                    sampleHeader: ''
+                };
             }
 
             const headerRow = rows[0];
@@ -62,6 +72,7 @@ class GoodsReceiptListPage extends BasePage {
             const headerTexts = headerCols.map(col => normalize((col.textContent || '').toUpperCase()));
             const detectedPoIndex = headerTexts.findIndex(text => text.includes('PO'));
             const poColumnIndex = detectedPoIndex >= 0 ? detectedPoIndex : 3;
+            const sampleHeader = headerTexts.join(' | ');
 
             const dataRows = rows.length > 1 ? rows.slice(1) : rows;
 
@@ -76,7 +87,16 @@ class GoodsReceiptListPage extends BasePage {
                     if (hasExactPo || hasPoToken || poColText === normalizedTargetPo) {
                         row.scrollIntoView({ block: 'center' });
                         row.click();
-                        return { clicked: true, rowCount: dataRows.length, lastRowText: poColText };
+                        return {
+                            clicked: true,
+                            rowCount: dataRows.length,
+                            lastRowText: poColText,
+                            didScroll: false,
+                            poColumnIndex,
+                            scrollTop: 0,
+                            scrollLeft: 0,
+                            sampleHeader
+                        };
                     }
                 }
 
@@ -85,7 +105,7 @@ class GoodsReceiptListPage extends BasePage {
 
             const firstPass = tryFindAndClick();
             if (firstPass) {
-                return { ...firstPass, didScroll: false };
+                return { ...firstPass, didScroll: false, poColumnIndex, sampleHeader };
             }
 
             const contentScroller = shadowRoot?.querySelector('.inner-scroll, main, [part="scroll"]') as HTMLElement | null;
@@ -95,7 +115,7 @@ class GoodsReceiptListPage extends BasePage {
                 horizontalScroller.scrollLeft = horizontalScroller.scrollWidth;
                 const secondPass = tryFindAndClick();
                 if (secondPass) {
-                    return { ...secondPass, didScroll: false };
+                    return { ...secondPass, didScroll: false, poColumnIndex, sampleHeader };
                 }
                 horizontalScroller.scrollLeft = 0;
             }
@@ -120,8 +140,39 @@ class GoodsReceiptListPage extends BasePage {
                 didScroll = window.scrollY > before;
             }
 
-            return { clicked: false, rowCount: dataRows.length, lastRowText: lastRowSignature, didScroll };
-        }, poNumber) as { clicked: boolean; rowCount: number; lastRowText: string; didScroll: boolean };
+            const scrollTop = contentScroller?.scrollTop || 0;
+            const scrollLeft = horizontalScroller?.scrollLeft || 0;
+
+            return {
+                clicked: false,
+                rowCount: dataRows.length,
+                lastRowText: lastRowSignature,
+                didScroll,
+                poColumnIndex,
+                scrollTop,
+                scrollLeft,
+                sampleHeader
+            };
+        }, poNumber) as {
+            clicked: boolean;
+            rowCount: number;
+            lastRowText: string;
+            didScroll: boolean;
+            poColumnIndex: number;
+            scrollTop: number;
+            scrollLeft: number;
+            sampleHeader: string;
+        };
+
+        if (attempt % 5 === 0 || probe.clicked) {
+            console.log(
+                `🔎 Attempt ${attempt} | rows=${probe.rowCount} | poColIndex=${probe.poColumnIndex} | didScroll=${probe.didScroll} | top=${probe.scrollTop} | left=${probe.scrollLeft}`
+            );
+        }
+
+        if (attempt === 0 && probe.sampleHeader) {
+            console.log(`🧾 Header columns: ${probe.sampleHeader}`);
+        }
 
         if (probe.clicked) {
             console.log(`✅ PO ${poNumber} clicked successfully`);
@@ -143,6 +194,35 @@ class GoodsReceiptListPage extends BasePage {
         }
 
         if (noChangeScrolls >= 10) {
+            if (endReachedRetries < 3) {
+                endReachedRetries++;
+
+                console.log(`↻ Reached list end (retry ${endReachedRetries}/3). Resetting to top and rescanning for PO ${poNumber}...`);
+
+                await browser.execute(() => {
+                    const ionContent = document.querySelector('ion-content') as HTMLElement | null;
+                    const shadowRoot = ionContent?.shadowRoot;
+                    const grid = (shadowRoot?.querySelector('ion-grid#grid') || document.querySelector('ion-grid#grid')) as HTMLElement | null;
+                    const contentScroller = shadowRoot?.querySelector('.inner-scroll, main, [part="scroll"]') as HTMLElement | null;
+                    const horizontalScroller = (grid && grid.scrollWidth > grid.clientWidth ? grid : contentScroller) as HTMLElement | null;
+
+                    if (contentScroller) {
+                        contentScroller.scrollTop = 0;
+                    } else {
+                        window.scrollTo(0, 0);
+                    }
+
+                    if (horizontalScroller) {
+                        horizontalScroller.scrollLeft = 0;
+                    }
+                });
+
+                previousLastRowSignature = '';
+                noChangeScrolls = 0;
+                await browser.pause(5000);
+                continue;
+            }
+
             throw new Error(`PO ${poNumber} not found after reaching end of list`);
         }
 
