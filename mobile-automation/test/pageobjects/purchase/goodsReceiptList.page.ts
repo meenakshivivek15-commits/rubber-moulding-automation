@@ -1,5 +1,5 @@
 import BasePage from '../base.page';
-
+import goodsReceiptForm from './goodsReceiptForm.page';
 class GoodsReceiptListPage extends BasePage {
 
     private async getGridData(): Promise<string[]> {
@@ -99,59 +99,69 @@ class GoodsReceiptListPage extends BasePage {
 
     async selectFirstAvailablePo(): Promise<string> {
 
-        console.log('\n========== SELECTING FIRST AVAILABLE PO ==========\n');
+    console.log('\n========== SELECTING FIRST AVAILABLE PO ==========\n');
 
-        // Ensure WEBVIEW
-        const context = String(await driver.getContext());
-        if (!context.includes('WEBVIEW')) {
-            const contexts = await driver.getContexts() as string[];
-            const webview = contexts.find(c => c.includes('WEBVIEW'));
-            if (!webview) throw new Error('WEBVIEW context not found');
-            await driver.switchContext(webview);
-        }
-
-        console.log('Active context:', await driver.getContext());
-
-        // Wait for ion-content
-        await browser.waitUntil(async () => {
-            const exists = await browser.execute(() =>
-                !!document.querySelector('ion-content')
-            );
-            return Boolean(exists);
-        }, {
-            timeout: 30000,
-            timeoutMsg: 'Goods Receipt page did not render'
-        });
-
-        // Wait for data rows
-        await browser.waitUntil(async () => {
-            const poList = await this.getGridData();
-            return poList.length > 0;
-        }, {
-            timeout: 90000,
-            timeoutMsg: 'No POs available in Goods Receipt'
-        });
-
-        const poList = await this.getGridData();
-
-        if (poList.length === 0) {
-            throw new Error('No POs available in Goods Receipt');
-        }
-
-        const selectedPo = poList[0];
-
-        console.log(`Using dynamic PO: ${selectedPo}`);
-
-        const clicked = await this.clickPo(selectedPo);
-
-        if (!clicked) {
-            throw new Error(`Failed to click PO ${selectedPo}`);
-        }
-
-        console.log(`✅ PO ${selectedPo} clicked successfully`);
-
-        return selectedPo;
+    // Ensure WEBVIEW
+    const context = String(await driver.getContext());
+    if (!context.includes('WEBVIEW')) {
+        const contexts = await driver.getContexts() as string[];
+        const webview = contexts.find(c => c.includes('WEBVIEW'));
+        if (!webview) throw new Error('WEBVIEW context not found');
+        await driver.switchContext(webview);
     }
+
+    console.log('Active context:', await driver.getContext());
+
+    // Wait for ion-content
+    await browser.waitUntil(async () => {
+        const exists = await browser.execute(() =>
+            !!document.querySelector('ion-content')
+        );
+        return Boolean(exists);
+    }, {
+        timeout: 30000,
+        timeoutMsg: 'Goods Receipt page did not render'
+    });
+
+    // Wait for data rows
+    await browser.waitUntil(async () => {
+        const poList = await this.getGridData();
+        return poList.length > 0;
+    }, {
+        timeout: 90000,
+        timeoutMsg: 'No POs available in Goods Receipt'
+    });
+
+    const poList = await this.getGridData();
+
+    if (poList.length === 0) {
+        throw new Error('No POs available in Goods Receipt');
+    }
+
+    const selectedPo = poList[0];
+
+    console.log(`Using dynamic PO: ${selectedPo}`);
+
+    const clicked = await this.clickPo(selectedPo);
+
+    if (!clicked) {
+        throw new Error(`Failed to click PO ${selectedPo}`);
+    }
+
+    console.log(`✅ PO ${selectedPo} clicked successfully`);
+
+    // 🔥 WAIT FOR GOODS RECEIPT FORM PAGE TO LOAD
+    await browser.waitUntil(async () => {
+        return await goodsReceiptForm.formHeader.isExisting();
+    }, {
+        timeout: 30000,
+        timeoutMsg: 'Goods Receipt page did not load'
+    });
+
+    console.log('Goods Receipt page loaded successfully');
+
+    return selectedPo;
+}
 }
 
 export default new GoodsReceiptListPage();

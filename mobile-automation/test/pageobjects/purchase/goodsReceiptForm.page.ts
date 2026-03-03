@@ -4,6 +4,9 @@ class GoodsReceiptFormPage extends BasePage {
 
     // ================= SELECTORS =================
 
+    get formHeader() {
+    return $('//ion-card-title[normalize-space()="Goods Receipt"]');
+    }
 get locationDropdown() {
     return $('select');
 }
