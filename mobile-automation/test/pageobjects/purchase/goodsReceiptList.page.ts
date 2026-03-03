@@ -172,22 +172,28 @@ class GoodsReceiptListPage extends BasePage {
     }, { timeout: 30000, timeoutMsg: 'Goods Receipt page did not render (ion-content missing)' });
 
     await browser.waitUntil(async () => {
-        const rowCount = await browser.execute(() => {
+        const result = await browser.execute(() => {
             const ionContent = document.querySelector('ion-content') as HTMLElement | null;
             const shadowRoot = ionContent?.shadowRoot;
-            const grid = (shadowRoot?.querySelector('ion-grid#grid, ion-grid') || document.querySelector('ion-grid#grid, ion-grid')) as HTMLElement | null;
+            const grid = (shadowRoot?.querySelector('ion-grid#grid, ion-grid') ||
+                        document.querySelector('ion-grid#grid, ion-grid')) as HTMLElement | null;
 
-            if (grid) {
-                return grid.querySelectorAll('ion-row').length;
-            }
+            if (!grid) return false;
 
-            const shadowRows = shadowRoot ? shadowRoot.querySelectorAll('ion-row').length : 0;
-            const docRows = document.querySelectorAll('ion-row').length;
-            return Math.max(shadowRows, docRows);
+            const rows = Array.from(grid.querySelectorAll('ion-row'));
+            if (rows.length <= 1) return false;
+
+            const firstDataRow = rows[1] as HTMLElement;
+            const text = (firstDataRow.textContent || '').trim();
+
+            return text.length > 0;
         });
 
-        return Number(rowCount) > 0;
-    }, { timeout: 60000, timeoutMsg: 'Goods Receipt grid rows did not load' });
+        return Boolean(result);
+    }, {
+        timeout: 90000,
+        timeoutMsg: 'Goods Receipt data rows did not populate'
+    });
 
     // 3️⃣ Scroll until PO row appears (for virtualized/lazy-loaded grids)
     let previousLastRowSignature = '';
