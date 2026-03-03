@@ -122,7 +122,7 @@ describe('Goods Receipt Flow', () => {
 
         // ===== Select PO from Native List =====
         await goodsReceiptListPage.selectPoFromList(runtime.poNumber);
-
+         
         // ===== Switch to WebView =====
         await goodsReceiptFormPage.switchToWebView();
 
