@@ -27,13 +27,16 @@ get submitButton() {
     // ================= ACTIONS =================
 
     async selectLocation(location: string) {
+         // Ensure we are in WEBVIEW (critical for CI)
+    await this.ensureWebView();
+
         await this.locationDropdown.waitForDisplayed({ timeout: 20000 });
         await this.locationDropdown.selectByVisibleText(location);
         console.log(`✅ Location selected: ${location}`);
     }
 
     async syncInvoiceDateFromLabel() {
-
+        await this.ensureWebView();
         // Wait for label date
         await this.invoiceLabelDate.waitForDisplayed({ timeout: 20000 });
 
@@ -64,6 +67,8 @@ get submitButton() {
     }
 
     async enterPin(pin: string) {
+
+        await this.ensureWebView();
         await this.pinInput.waitForDisplayed({ timeout: 20000 });
         await this.pinInput.setValue(pin);
         console.log("🔐 PIN entered:", pin);
