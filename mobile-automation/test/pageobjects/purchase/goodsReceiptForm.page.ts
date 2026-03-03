@@ -27,13 +27,33 @@ get submitButton() {
     // ================= ACTIONS =================
 
     async selectLocation(location: string) {
-         // Ensure we are in WEBVIEW (critical for CI)
+
     await this.ensureWebView();
 
-        await this.locationDropdown.waitForDisplayed({ timeout: 20000 });
-        await this.locationDropdown.selectByVisibleText(location);
-        console.log(`✅ Location selected: ${location}`);
-    }
+    // 1️⃣ Wait for modal title first (important!)
+    await browser.waitUntil(async () => {
+        return await $('//*[contains(text(),"Goods Receipt")]').isExisting();
+    }, {
+        timeout: 30000,
+        timeoutMsg: 'Goods Receipt modal not visible'
+    });
+
+    // 2️⃣ Now wait for dropdown
+    await browser.waitUntil(async () => {
+        return await $('select').isExisting();
+    }, {
+        timeout: 30000,
+        timeoutMsg: 'Location dropdown not found'
+    });
+
+    const dropdown = await $('select');
+
+    await dropdown.waitForDisplayed({ timeout: 30000 });
+
+    await dropdown.selectByVisibleText(location);
+
+    console.log(`Location selected: ${location}`);
+}
 
     async syncInvoiceDateFromLabel() {
         await this.ensureWebView();
