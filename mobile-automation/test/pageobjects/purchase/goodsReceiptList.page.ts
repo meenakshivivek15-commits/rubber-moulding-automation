@@ -40,6 +40,8 @@ class GoodsReceiptListPage extends BasePage {
     let previousLastRowSignature = '';
     let noChangeScrolls = 0;
     let endReachedRetries = 0;
+    const maxEndReachedRetries = 8;
+    const retryBackoffMs = 10000;
 
     for (let attempt = 0; attempt < 220; attempt++) {
         const probe = await browser.execute((targetPo: string) => {
@@ -194,10 +196,10 @@ class GoodsReceiptListPage extends BasePage {
         }
 
         if (noChangeScrolls >= 10) {
-            if (endReachedRetries < 3) {
+            if (endReachedRetries < maxEndReachedRetries) {
                 endReachedRetries++;
 
-                console.log(`↻ Reached list end (retry ${endReachedRetries}/3). Resetting to top and rescanning for PO ${poNumber}...`);
+                console.log(`↻ Reached list end (retry ${endReachedRetries}/${maxEndReachedRetries}). Resetting to top and rescanning for PO ${poNumber}...`);
 
                 await browser.execute(() => {
                     const ionContent = document.querySelector('ion-content') as HTMLElement | null;
@@ -219,7 +221,7 @@ class GoodsReceiptListPage extends BasePage {
 
                 previousLastRowSignature = '';
                 noChangeScrolls = 0;
-                await browser.pause(5000);
+                await browser.pause(retryBackoffMs);
                 continue;
             }
 
