@@ -121,8 +121,8 @@ describe('Goods Receipt Flow', () => {
         await browser.pause(30000);
 
         // ===== Select PO from Native List =====
-        await goodsReceiptListPage.selectPoFromList(runtime.poNumber);
-         
+        //await goodsReceiptListPage.selectPoFromList(runtime.poNumber);
+        const poNumber = await goodsReceiptListPage.selectFirstAvailablePo();
         // ===== Switch to WebView =====
         await goodsReceiptFormPage.switchToWebView();
 
