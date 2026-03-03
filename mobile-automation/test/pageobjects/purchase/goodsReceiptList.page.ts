@@ -17,27 +17,22 @@ class GoodsReceiptListPage extends BasePage {
 
     console.log("Active context:", await driver.getContext());
 
-    // 2️⃣ Wait for rows to load
+    // 2️⃣ Wait for rows
     await browser.waitUntil(async () => {
-        const rows = await $$('//ion-grid[@id="grid"]//ion-row').length;
-        return rows > 1;
-    }, {
-        timeout: 40000,
-        timeoutMsg: 'Rows did not load'
-    });
+        const rows = await $$('//ion-grid[@id="grid"]//ion-row');
+        const rowCount = await rows.length;
+        return rowCount > 1;
+    }, { timeout: 40000 });
 
-    // 3️⃣ Directly locate PO (no manual scrolling needed)
-    const poSelector =
-        `//ion-grid[@id="grid"]//ion-col[normalize-space()="${poNumber}"]`;
+    // 3️⃣ Find row
+    const rowSelector =
+    `//ion-grid[@id="grid"]//ion-row[contains(., "${poNumber}")]`;
 
-    const poCell = await $(poSelector);
+    const poRow = await $(rowSelector);
 
-    await poCell.waitForExist({ timeout: 20000 });
-
-    await poCell.scrollIntoView();
-    await browser.pause(500);
-
-    await poCell.click();
+    await poRow.waitForExist({ timeout: 20000 });
+    await poRow.scrollIntoView();
+    await poRow.click();
 
     console.log(`✅ PO ${poNumber} clicked successfully`);
 }
