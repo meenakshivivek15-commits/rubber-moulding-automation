@@ -31,7 +31,7 @@ class OperatorHomePage extends BasePage {
     console.log(`Opening module: ${tileName}`);
 
     const tileSelector =
-        `//ion-text[contains(normalize-space(),"${tileName}")]/ancestor::ion-col//ion-img`;
+         await $('//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img');
 
     let found = false;
 
