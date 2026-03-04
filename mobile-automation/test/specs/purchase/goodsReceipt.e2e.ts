@@ -71,8 +71,8 @@ describe('Goods Receipt Flow', () => {
         await operatorHomePage.openModule("GoodsReceipt");
 
         console.log("STEP 2: Select PO");
-        const selectedPo = await goodsReceiptListPage.selectFirstAvailablePo();
-        console.log("Selected PO:", selectedPo);
+        const selectedPo = await goodsReceiptListPage.selectPoFromList(mobileData.poNumber);
+        console.log("Selected PO:", mobileData.poNumber);
 
         console.log("STEP 3: Wait for Form");
         await goodsReceiptFormPage.waitForFormToLoad();

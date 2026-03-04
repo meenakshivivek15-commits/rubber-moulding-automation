@@ -114,12 +114,41 @@ export default class BasePage {
 
 }
 
-    async safeClick(element: WebdriverIO.Element) {
+async scrollGrid(direction: "down" | "left"): Promise<void> {
 
-        await element.waitForDisplayed({ timeout: 15000 });
-        await element.waitForEnabled({ timeout: 15000 });
-        await element.click();
+    const rect: any = await driver.execute('mobile: viewportRect');
+
+    await driver.execute('mobile: scrollGesture', {
+        left: rect.left + 10,
+        top: rect.top + 200,
+        width: rect.width - 20,
+        height: rect.height - 250,
+        direction: direction,
+        percent: 0.85
+    });
+
+}
+
+    async safeClick(element: any): Promise<void> {
+
+    const el = await element;
+
+    await el.waitForDisplayed({ timeout: 15000 });
+    await el.waitForEnabled({ timeout: 15000 });
+
+    await el.scrollIntoView();
+
+    try {
+        await el.click();
+    } catch (err) {
+
+        console.log("Normal click failed — using JS click");
+
+        await browser.execute((e: HTMLElement) => {
+            e.click();
+        }, el);
     }
+}
 
 
     async safeType(element: WebdriverIO.Element, value: string) {

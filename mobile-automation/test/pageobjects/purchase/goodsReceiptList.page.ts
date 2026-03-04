@@ -1,4 +1,5 @@
 import BasePage from '../base.page';
+import operatorHomePage from '../common/operatorHome.page';
 
 class GoodsReceiptListPage extends BasePage {
 
@@ -41,41 +42,62 @@ class GoodsReceiptListPage extends BasePage {
         return false;
     }
 
-   async selectFirstAvailablePo(): Promise<string> {
+ async selectPoFromList(poNumber: string): Promise<void> {
 
-    console.log("\n========= SELECTING FIRST AVAILABLE PO =========\n");
+    console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
     await this.ensureWebView(90000);
 
-     // 👉 Add refresh here
-    await browser.pause(2000);
-    await driver.execute('mobile: swipe', { direction: 'down' });
+    const poSelector = `//ion-text[contains(normalize-space(),"${poNumber}")]`;
 
-    // Wait until PO list loads
-    await browser.waitUntil(async () => {
-        const pos = await $$('//ion-text[contains(text(),"FP") or contains(text(),"JP") or contains(text(),"KP")]');
-        const poscount = await pos.length;
-        console.log("PO count:", poscount);
+    let found = false;
 
-    }, {
-        timeout: 20000,
-        timeoutMsg: "PO list did not load"
-    });
+    for (let attempt = 1; attempt <= 5; attempt++) {
 
-    const poList = await $$('//ion-text[contains(text(),"FP") or contains(text(),"JP") or contains(text(),"KP")]');
+        console.log(`🔄 Attempt ${attempt} to find PO`);
 
-    console.log("PO rows detected:", poList.length);
+        // reveal Purchase ID column
+        await this.scrollGrid("left");
 
-    const firstPo = poList[0];
+        await browser.pause(1500);
 
-    const poNumber = await firstPo.getText();
+        const elements = await $$(poSelector);
+        const count = await elements.length;
 
-    console.log("Selected PO:", poNumber);
+        console.log(`Matching PO elements: ${count}`);
 
-    await firstPo.click();
+        if (count > 0) {
 
-    return poNumber;
+            const poElement = elements[0];
+
+            await poElement.waitForDisplayed({ timeout: 10000 });
+
+            console.log(`✅ PO found: ${poNumber}`);
+
+            await this.safeClick(poElement);
+
+            found = true;
+            break;
+        }
+
+        console.log("PO not found — refreshing GoodsReceipt page");
+
+        // go back to Operator Home
+        await driver.back();
+
+        await browser.pause(2000);
+
+        // reopen GoodsReceipt
+        await operatorHomePage.clickTile("GoodsReceipt");
+
+        await browser.pause(5000);
+    }
+
+    if (!found) {
+        throw new Error(`❌ PO ${poNumber} not found after refreshing GoodsReceipt`);
+    }
 }
 }
+
 
 export default new GoodsReceiptListPage();
