@@ -23,19 +23,39 @@ class OperatorHomePage extends BasePage {
 
     }
 
-   async clickTile(tileName: string): Promise<void> {
+  async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
     await this.ensureWebView(90000);
 
     console.log("Opening module:", tileName);
 
-    // locator: find module label then its tile image
-    const tile = await $(`//ion-text[contains(normalize-space(),"${tileName}")]/ancestor::ion-col//ion-img`);
+    // Wait until the module label exists
+    await browser.waitUntil(async () => {
 
-    await tile.waitForDisplayed({ timeout: 20000 });
+        const labels = await $$('ion-text');
+        const texts = [];
+
+        for (const label of labels) {
+            const text = (await label.getText()).trim();
+            texts.push(text);
+        }
+
+        console.log("Available modules:", texts.join(", "));
+
+        return texts.includes(tileName);
+
+    }, {
+        timeout: 30000,
+        interval: 2000,
+        timeoutMsg: `Module ${tileName} did not appear on dashboard`
+    });
+
+    // Now locate the tile
+    const tile = await $(`//ion-text[normalize-space()="${tileName}"]/ancestor::ion-col//ion-img`);
 
     await tile.scrollIntoView();
+    await tile.waitForDisplayed({ timeout: 20000 });
 
     console.log(`Clicking module tile: ${tileName}`);
 
