@@ -2,62 +2,86 @@ import BasePage from '../base.page';
 
 class OperatorHomePage extends BasePage {
 
-    get goodsReceiptIcon() {
-        return $('#main > app-home > ion-content:nth-child(3) > ion-grid > ion-row > div:nth-child(23) > ion-col > ion-img');
-    }
+    async ensureTilesVisible(): Promise<void> {
 
-    async openGoodsReceipt(): Promise<void> {
+        // Wait for dashboard grid
+        await $('ion-grid').waitForDisplayed({ timeout: 15000 });
 
-    console.log('\n===== OPENING GOODS RECEIPT =====\n');
+        const tileElements = await $$('ion-img');
+        const tileCount = await tileElements.length;
 
-    await driver.activateApp('com.ppaoperator.app').catch(() => undefined);
-    await browser.pause(4000);
-
-    await this.switchToWebView();
-
-    const clicked = await browser.execute(() => {
-
-        const texts = Array.from(document.querySelectorAll('ion-text'));
-
-        for (const textEl of texts) {
-
-            const shadow = (textEl as any).shadowRoot;
-            if (!shadow) continue;
-
-            const label = shadow.textContent?.trim() || '';
-
-            if (label === 'GoodsReceipt') {
-
-                const col = textEl.closest('ion-col');
-                if (!col) return false;
-
-                const img = col.querySelector('ion-img');
-                if (!img) return false;
-
-                (img as HTMLElement).click();
-                return true;
-            }
+        if (tileCount > 5) {
+            console.log(`Tiles already visible: ${tileCount}`);
+            return;
         }
 
-        return false;
-    });
+        console.log("Tiles not visible → opening settings");
 
-    if (!clicked) {
-        throw new Error('GoodsReceipt tile not found');
+        const settings = await $('ion-icon[name="settings"]');
+        await settings.waitForDisplayed({ timeout: 10000 });
+        await settings.click();
+
+        await browser.pause(2000);
+
+        const allBtn = await $('//ion-button[contains(.,"ALL")]');
+        await allBtn.waitForDisplayed({ timeout: 10000 });
+        await allBtn.click();
+
+        await browser.pause(2000);
+
+        console.log("Returning to home");
+
+        await browser.back();
+
+        // Wait until tiles appear
+        await browser.waitUntil(async () => {
+
+            const tiles = await $$('ion-img');
+            const count = await tiles.length;
+
+            console.log("Detected tiles:", count);
+
+            return count > 5;
+
+        }, {
+            timeout: 10000,
+            timeoutMsg: "Tiles did not appear after enabling ALL"
+        });
     }
 
-    console.log('🟢 GoodsReceipt icon clicked');
 
-    await browser.waitUntil(async () => {
-        const rows = await $$('ion-row').length;
-        return rows > 0;
-    }, {
-        timeout: 30000,
-        timeoutMsg: 'Goods Receipt list did not load'
-    });
+    async clickTile(tileName: string): Promise<void> {
 
-    console.log('✅ Goods Receipt List Loaded');
-}
+        await this.ensureTilesVisible();
+        await this.ensureWebView(90000);
+
+        console.log(`Searching for tile: ${tileName}`);
+
+        await browser.waitUntil(async () => {
+
+            const labels = await $$('ion-text');
+            const labelCount = await labels.length;
+
+            return labelCount > 5;
+
+        }, { timeout: 15000 });
+
+        await $('ion-content').scrollIntoView();
+
+        const tileLabel = await $(`//ion-text[contains(., "${tileName}")]`);
+        await tileLabel.waitForDisplayed({ timeout: 10000 });
+
+        const tileContainer = await tileLabel.$('ancestor::ion-col');
+        const tileImage = await tileContainer.$('ion-img');
+
+        await tileImage.click();
+    }
+
+
+    async openModule(moduleName: string): Promise<void> {
+        await this.clickTile(moduleName);
+    }
+
 }
 
 export default new OperatorHomePage();

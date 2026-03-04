@@ -18,8 +18,7 @@ describe('Goods Receipt Flow', () => {
 
         await driver.terminateApp(operatorAppId).catch(() => undefined);
         await driver.activateApp(operatorAppId);
-        await browser.pause(5000);
-
+        await $('ion-grid').waitForDisplayed({ timeout: 20000 });
         console.log("App launched successfully");
     });
 
@@ -31,9 +30,12 @@ describe('Goods Receipt Flow', () => {
         allure.addStory('Goods Receipt Flow');
 
         const runtime = readJson(runtimePath);
-
+        const tiles = await $$('ion-img');
+        console.log("Detected tiles on home:", tiles.length);
         console.log("STEP 1: Navigate to Goods Receipt");
-        await operatorHomePage.openGoodsReceipt();
+            
+
+        await operatorHomePage.openModule("GoodsReceipt");
 
         console.log("STEP 2: Select PO");
         const selectedPo = await goodsReceiptListPage.selectFirstAvailablePo();
@@ -54,11 +56,11 @@ describe('Goods Receipt Flow', () => {
         await goodsReceiptFormPage.submit();
 
         const toast = await $('ion-toast');
-        await toast.waitForDisplayed({ timeout: 20000 });
-
+        await toast.waitForExist({ timeout: 20000 });
+        await toast.waitForDisplayed({ timeout: 20000 });   
         console.log("Toast:", await toast.getText());
 
-        await expect(toast).toBeDisplayed();
+        await expect(toast).toBeDisplayed({ wait: 20000 });
 
         console.log("✅ Goods Receipt completed successfully");
     });

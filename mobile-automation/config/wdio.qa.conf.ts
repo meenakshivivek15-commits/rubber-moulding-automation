@@ -3,6 +3,7 @@ import type { Options } from '@wdio/types'
 import path from 'path'
 import dotenv from 'dotenv'
 import { execSync } from 'child_process'
+import allure from '@wdio/allure-reporter'
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
@@ -158,16 +159,29 @@ export const config: Options.Testrunner = {
     },
 
     afterTest: async function (_test, _context, result: any) {
-        if (result.error) {
-            try {
-                if (browser.sessionId) {
-                    await browser.takeScreenshot()
-                } else {
-                    console.log('Skipping screenshot: no active browser session.')
-                }
-            } catch (error) {
-                console.log('Skipping screenshot due to session or transport error:', error instanceof Error ? error.message : String(error))
+
+    if (result.error) {
+        try {
+
+            if (browser.sessionId) {
+
+                const screenshot = await browser.takeScreenshot();
+
+                const fs = require('fs');
+                const path = `./errorShots/error-${Date.now()}.png`;
+
+                fs.writeFileSync(path, screenshot, 'base64');
+
+                console.log(`Screenshot saved: ${path}`);
+
+            } else {
+                console.log('Skipping screenshot: no active browser session.');
             }
+
+        } catch (error) {
+            console.log('Skipping screenshot due to session or transport error:', error);
         }
     }
 }
+        }
+    
