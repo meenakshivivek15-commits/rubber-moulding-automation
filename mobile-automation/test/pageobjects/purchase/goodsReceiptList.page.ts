@@ -41,40 +41,44 @@ class GoodsReceiptListPage extends BasePage {
         return false;
     }
 
-    async selectFirstAvailablePo(): Promise<string> {
+   async selectFirstAvailablePo(): Promise<string> {
 
-        console.log('\n========== SELECTING FIRST AVAILABLE PO ==========\n');
+    console.log("\n========== SELECTING FIRST AVAILABLE PO ==========\n");
 
-        await this.switchToWebView();
+    // Scroll page to trigger data load
+    const content = await $('ion-content');
 
-        await browser.waitUntil(async () => {
-            const rows = await $$('ion-row').length;
-            return rows > 1;
-        }, {
-            timeout: 60000,
-            timeoutMsg: 'No POs available in Goods Receipt'
-        });
+    await browser.execute((el) => {
+        el.scrollTo(0, 0);
+    }, content);
 
-        const poList = await this.getGridData();
+    await browser.pause(2000);
 
-        if (poList.length === 0) {
-            throw new Error('No POs available in Goods Receipt');
-        }
+    // Wait until PO rows appear
+    await browser.waitUntil(async () => {
+        const rows = await $$('ion-row');
+        const rowcount = await rows.length;
+        console.log("PO row count:", rowcount);
+        return rowcount > 1;
+    }, {
+        timeout: 20000,
+        timeoutMsg: "PO list did not load"
+    });
 
-        const selectedPo = poList[0];
+    const rows = await $$('ion-row');
 
-        console.log(`Using dynamic PO: ${selectedPo}`);
+    console.log("PO rows detected:", rows.length);
 
-        const clicked = await this.clickPo(selectedPo);
+    const firstRow = rows[1]; // skip header
 
-        if (!clicked) {
-            throw new Error(`Failed to click PO ${selectedPo}`);
-        }
+    const poText = await firstRow.getText();
 
-        console.log(`✅ PO ${selectedPo} clicked successfully`);
+    console.log("Selected PO:", poText);
 
-        return selectedPo;
-    }
+    await firstRow.click();
+
+    return poText;
+}
 }
 
 export default new GoodsReceiptListPage();
