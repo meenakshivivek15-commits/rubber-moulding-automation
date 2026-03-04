@@ -24,24 +24,33 @@ class OperatorHomePage extends BasePage {
 }
   async clickTile(tileName: string): Promise<void> {
 
-    await this.ensureWebView();
     await this.ensureTilesVisible();
+    await this.ensureWebView(90000);
 
-    console.log(`Opening module: ${tileName}`);
+    const tiles = await $$('ion-img');
+    const tilecount = await tiles.length;
+    console.log("Tile count:", tiles.length);
+    console.log("Opening module:", tileName);
+     
+    if (tilecount < 23) {
+        throw new Error(`Expected at least 23 tiles but found ${tiles.length}`);
+    }
 
-    const tileImage = await $(
-        `//ion-text[contains(normalize-space(), "${tileName}")]/ancestor::ion-col//ion-img`
-    );
+    // GoodsReceipt = tile 23
+    if (tileName === "GoodsReceipt") {
 
-    await tileImage.waitForDisplayed({ timeout: 20000 });
+        const tile = tiles[22];
 
-    // Important improvement
-    await tileImage.waitForClickable({ timeout: 20000 });
+        await tile.scrollIntoView();
+        await tile.waitForDisplayed({ timeout: 10000 });
 
-    await tileImage.click();
+        console.log("Clicking GoodsReceipt tile (index 22)");
 
-    console.log(`Clicked tile: ${tileName}`);
+        await tile.click();
+        return;
+    }
 
+    throw new Error(`Tile mapping not defined for: ${tileName}`);
 }
 async printAllTiles(): Promise<void> {
 
