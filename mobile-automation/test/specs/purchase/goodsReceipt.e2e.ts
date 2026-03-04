@@ -20,29 +20,39 @@ describe('Goods Receipt Flow', () => {
     await driver.terminateApp(operatorAppId).catch(() => undefined);
     await driver.activateApp(operatorAppId);
 
-    try {
+    console.log("Waiting for WebView...");
 
-        console.log("Waiting for dashboard...");
+    await browser.waitUntil(async () => {
 
-        await browser.waitUntil(async () => {
+        const contexts = await driver.getContexts();
 
-            const grids = await $$('ion-grid');
-            const gridcount = await grids.length;
-            console.log("Detected ion-grid count:", gridcount);
-            return gridcount > 0;
+        console.log("Available contexts:", contexts);
 
-        }, { timeout: 60000 });
+        const webview = contexts.find(c => String(c).includes("WEBVIEW"));
 
-        console.log("Dashboard detected");
+        if (webview) {
+            await driver.switchContext(String(webview));
+            console.log("Switched to WebView:", webview);
+            return true;
+        }
 
-    } catch (err) {
+        return false;
 
-        console.log("Dashboard not detected, dumping DOM...");
+    }, { timeout: 90000 });
 
-        await operatorHomePage.debugPageSource("DASHBOARD LOAD FAILURE");
+    console.log("Waiting for dashboard tiles...");
 
-        throw err;
-    }
+    await browser.waitUntil(async () => {
+
+        const tiles = await $$('ion-img');
+        const tilecount = await tiles.length;
+        console.log("Tile count:", tiles.length);
+
+        return tilecount > 5;
+
+    }, { timeout: 60000 });
+
+    console.log("Dashboard loaded");
 
 });
     it(`should submit goods receipt for ${mobileData.location}`, async function () {
