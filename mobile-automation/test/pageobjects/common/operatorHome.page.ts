@@ -20,52 +20,31 @@ class OperatorHomePage extends BasePage {
             interval: 2000,
             timeoutMsg: "Operator dashboard tiles did not load"
         });
-
     }
 
-  async clickTile(tileName: string): Promise<void> {
+    async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
     await this.ensureWebView(90000);
 
     console.log(`Opening module: ${tileName}`);
 
-    const tileSelector =
-         await $('//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img');
-
-    let found = false;
-
-    for (let attempt = 1; attempt <= 6; attempt++) {
-
-        console.log(`Searching dashboard (attempt ${attempt})`);
-
-        const elements = await $$(tileSelector);
-        const count = await elements.length;
-        console.log(`Matching tiles: ${count}`);
-        if (count > 0) {
-
-            const tile = elements[0];
-
-            await tile.scrollIntoView();
-            await tile.waitForDisplayed({ timeout: 10000 });
-
-            console.log(`Clicking module tile: ${tileName}`);
-
-            await this.safeClick(tile);
-
-            found = true;
-            break;
-        }
-
-        console.log("Module not visible yet — scrolling dashboard");
-
+    // preload dashboard tiles (important for Ionic lazy loading)
+    for (let i = 0; i < 3; i++) {
         await this.scrollGrid("down");
-        await browser.pause(1500);
+        await browser.pause(1200);
     }
 
-    if (!found) {
-        throw new Error(`Module ${tileName} not found after scrolling dashboard`);
-    }
+    const tileSelector =
+        `//ion-text[contains(normalize-space(),"${tileName}")]/ancestor::ion-col//ion-img`;
+
+    const tile = await $(tileSelector);
+
+    await tile.waitForDisplayed({ timeout: 20000 });
+
+    console.log(`Clicking module: ${tileName}`);
+
+    await this.safeClick(tile);
 }
     async printAllTiles(): Promise<void> {
 
@@ -83,17 +62,14 @@ class OperatorHomePage extends BasePage {
             if (text.length > 0) {
                 console.log("Module:", text);
             }
-
         }
 
         console.log("===== END MODULE LIST =====\n");
-
     }
 
     async openModule(moduleName: string): Promise<void> {
         await this.clickTile(moduleName);
     }
-
 }
 
 export default new OperatorHomePage();
