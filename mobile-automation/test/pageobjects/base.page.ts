@@ -126,7 +126,7 @@ async scrollGrid(direction: "down" | "left"): Promise<void> {
         direction: direction,
         percent: 0.85
     });
-
+    await browser.pause(1200);
 }
 
     async safeClick(element: any): Promise<void> {

@@ -59,11 +59,7 @@ class OperatorHomePage extends BasePage {
 
         console.log("Module not visible yet — scrolling dashboard");
 
-        await driver.execute('mobile: scrollGesture', {
-            direction: 'down',
-            percent: 0.85
-        });
-
+        await this.scrollGrid("down");
         await browser.pause(1500);
     }
 
