@@ -22,40 +22,49 @@ class OperatorHomePage extends BasePage {
     });
 
 }
-   async clickTile(tileName: string): Promise<void> {
+  async clickTile(tileName: string): Promise<void> {
 
+    await this.ensureWebView();
     await this.ensureTilesVisible();
-    await this.ensureWebView(90000);
 
-    console.log(`Searching for tile: ${tileName}`);
+    console.log(`Opening module: ${tileName}`);
 
-    await browser.waitUntil(async () => {
+    const tileImage = await $(
+        `//ion-text[contains(normalize-space(), "${tileName}")]/ancestor::ion-col//ion-img`
+    );
 
-        const labels = await $$('ion-text');
-        const labelCount = await labels.length;
+    await tileImage.waitForDisplayed({ timeout: 20000 });
 
-        console.log("Detected tile labels:", labelCount);
-
-        return labelCount > 5;
-
-    }, { timeout: 20000, interval: 2000 });
-
-    // Ensure page scrolls in case tile is below viewport
-    await $('ion-content').scrollIntoView();
-
-    const tileLabel = await $(`//ion-text[contains(., "${tileName}")]`);
-    await tileLabel.waitForDisplayed({ timeout: 20000 });
-
-    const tileContainer = await tileLabel.$('ancestor::ion-col');
-    const tileImage = await tileContainer.$('ion-img');
-
+    // Important improvement
     await tileImage.waitForClickable({ timeout: 20000 });
 
-    console.log(`Clicking tile: ${tileName}`);
-
     await tileImage.click();
-}
 
+    console.log(`Clicked tile: ${tileName}`);
+
+}
+async printAllTiles(): Promise<void> {
+
+    await this.ensureWebView();
+    await this.ensureTilesVisible();
+
+    const labels = await $$('ion-text');
+
+    console.log("\n===== DASHBOARD MODULES =====");
+
+    for (const label of labels) {
+
+        const text = (await label.getText()).trim();
+
+        if (text.length > 0) {
+            console.log("Module:", text);
+        }
+
+    }
+
+    console.log("===== END MODULE LIST =====\n");
+
+}
 async openModule(moduleName: string): Promise<void> {
     await this.clickTile(moduleName);
 }

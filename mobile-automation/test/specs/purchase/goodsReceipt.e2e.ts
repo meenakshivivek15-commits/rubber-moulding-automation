@@ -67,7 +67,7 @@ describe('Goods Receipt Flow', () => {
         console.log("Detected tiles on home:", tiles.length);
         console.log("STEP 1: Navigate to Goods Receipt");
             
-
+        await operatorHomePage.printAllTiles();
         await operatorHomePage.openModule("GoodsReceipt");
 
         console.log("STEP 2: Select PO");
