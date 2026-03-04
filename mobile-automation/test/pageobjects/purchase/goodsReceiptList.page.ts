@@ -43,41 +43,38 @@ class GoodsReceiptListPage extends BasePage {
 
    async selectFirstAvailablePo(): Promise<string> {
 
-    console.log("\n========== SELECTING FIRST AVAILABLE PO ==========\n");
+    console.log("\n========= SELECTING FIRST AVAILABLE PO =========\n");
 
-    // Scroll page to trigger data load
-    const content = await $('ion-content');
+    await this.ensureWebView(90000);
 
-    await browser.execute((el) => {
-        el.scrollTo(0, 0);
-    }, content);
-
+     // 👉 Add refresh here
     await browser.pause(2000);
+    await driver.execute('mobile: swipe', { direction: 'down' });
 
-    // Wait until PO rows appear
+    // Wait until PO list loads
     await browser.waitUntil(async () => {
-        const rows = await $$('ion-row');
-        const rowcount = await rows.length;
-        console.log("PO row count:", rowcount);
-        return rowcount > 1;
+        const pos = await $$('//ion-text[contains(text(),"FP") or contains(text(),"JP") or contains(text(),"KP")]');
+        const poscount = await pos.length;
+        console.log("PO count:", poscount);
+
     }, {
         timeout: 20000,
         timeoutMsg: "PO list did not load"
     });
 
-    const rows = await $$('ion-row');
+    const poList = await $$('//ion-text[contains(text(),"FP") or contains(text(),"JP") or contains(text(),"KP")]');
 
-    console.log("PO rows detected:", rows.length);
+    console.log("PO rows detected:", poList.length);
 
-    const firstRow = rows[1]; // skip header
+    const firstPo = poList[0];
 
-    const poText = await firstRow.getText();
+    const poNumber = await firstPo.getText();
 
-    console.log("Selected PO:", poText);
+    console.log("Selected PO:", poNumber);
 
-    await firstRow.click();
+    await firstPo.click();
 
-    return poText;
+    return poNumber;
 }
 }
 
