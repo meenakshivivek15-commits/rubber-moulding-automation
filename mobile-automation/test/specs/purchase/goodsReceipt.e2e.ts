@@ -13,14 +13,32 @@ const mobileData = require('../../data/goodsReceiptData.json');
 
 describe('Goods Receipt Flow', () => {
 
-    before(async () => {
-        console.log("========= FRESH START =========");
+   before(async () => {
 
-        await driver.terminateApp(operatorAppId).catch(() => undefined);
-        await driver.activateApp(operatorAppId);
-        await $('ion-grid').waitForDisplayed({ timeout: 20000 });
-        console.log("App launched successfully");
+    console.log("========= FRESH START =========");
+
+    await driver.terminateApp(operatorAppId).catch(() => undefined);
+    await driver.activateApp(operatorAppId);
+
+    console.log("Waiting for dashboard to load...");
+
+    await browser.waitUntil(async () => {
+
+        const grids = await $$('ion-grid');
+        const gridCount = await grids.length;
+
+        console.log("Detected ion-grid count:", gridCount);
+
+        return gridCount > 0;
+
+    }, {
+        timeout: 60000,
+        interval: 2000,
+        timeoutMsg: "Operator dashboard did not load"
     });
+
+    console.log("App launched successfully");
+});
 
     it(`should submit goods receipt for ${mobileData.location}`, async function () {
 

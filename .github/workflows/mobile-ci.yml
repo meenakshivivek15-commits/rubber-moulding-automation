@@ -267,6 +267,14 @@ jobs:
           path: .github/tmp/mobile-logcat.txt
           if-no-files-found: ignore
 
+      - name: Upload Failure Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+        name: mobile-error-screenshots
+        path: mobile-automation/errorShots
+        if-no-files-found: ignore
+
       - name: Install Allure
         if: always()
         run: npm install -g allure-commandline
