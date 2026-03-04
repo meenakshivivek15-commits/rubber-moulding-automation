@@ -73,17 +73,46 @@ export default class BasePage {
     }
 
 
-    async ensureWebView(timeoutMs: number = 120000) {
+    async ensureWebView(timeout = 90000) {
 
-        const contexts = (await driver.getContexts()) as string[];
+    await browser.waitUntil(async () => {
 
-        const webview = contexts.find(ctx => ctx.includes('WEBVIEW'));
+        const contexts = await driver.getContexts();
 
-        if (!webview) {
-            await this.switchToWebView(timeoutMs);
+        console.log("Available contexts:", contexts);
+
+        const webview = contexts.find(c =>String(c).includes("WEBVIEW"));
+
+        if (webview) {
+
+            await driver.switchContext(webview);
+
+            console.log("Switched to context:", webview);
+            console.log("Current context:", await driver.getContext());
+
+            return true;
         }
-    }
 
+        return false;
+
+    }, {
+        timeout,
+        interval: 3000,
+        timeoutMsg: "WebView context not available"
+    });
+
+}
+    async debugPageSource(label: string = "DEBUG") {
+
+    console.log(`\n========== ${label} PAGE SOURCE ==========\n`);
+
+    const source = await driver.getPageSource();
+
+    console.log(source.substring(0, 3000)); // print first 3000 chars only
+
+    console.log("\n========== END PAGE SOURCE ==========\n");
+
+}
 
     async safeClick(element: WebdriverIO.Element) {
 

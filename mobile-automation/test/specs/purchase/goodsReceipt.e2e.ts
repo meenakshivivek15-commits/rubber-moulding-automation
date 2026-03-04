@@ -13,33 +13,38 @@ const mobileData = require('../../data/goodsReceiptData.json');
 
 describe('Goods Receipt Flow', () => {
 
-   before(async () => {
+  before(async () => {
 
     console.log("========= FRESH START =========");
 
     await driver.terminateApp(operatorAppId).catch(() => undefined);
     await driver.activateApp(operatorAppId);
 
-    console.log("Waiting for dashboard to load...");
+    try {
 
-    await browser.waitUntil(async () => {
+        console.log("Waiting for dashboard...");
 
-        const grids = await $$('ion-grid');
-        const gridCount = await grids.length;
+        await browser.waitUntil(async () => {
 
-        console.log("Detected ion-grid count:", gridCount);
+            const grids = await $$('ion-grid');
+            const gridcount = await grids.length;
+            console.log("Detected ion-grid count:", gridcount);
+            return gridcount > 0;
 
-        return gridCount > 0;
+        }, { timeout: 60000 });
 
-    }, {
-        timeout: 60000,
-        interval: 2000,
-        timeoutMsg: "Operator dashboard did not load"
-    });
+        console.log("Dashboard detected");
 
-    console.log("App launched successfully");
+    } catch (err) {
+
+        console.log("Dashboard not detected, dumping DOM...");
+
+        await operatorHomePage.debugPageSource("DASHBOARD LOAD FAILURE");
+
+        throw err;
+    }
+
 });
-
     it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
         this.timeout(600000);

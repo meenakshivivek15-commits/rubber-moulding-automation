@@ -50,37 +50,43 @@ class OperatorHomePage extends BasePage {
     }
 
 
-    async clickTile(tileName: string): Promise<void> {
+   async clickTile(tileName: string): Promise<void> {
 
-        await this.ensureTilesVisible();
-        await this.ensureWebView(90000);
+    await this.ensureTilesVisible();
+    await this.ensureWebView(90000);
 
-        console.log(`Searching for tile: ${tileName}`);
+    console.log(`Searching for tile: ${tileName}`);
 
-        await browser.waitUntil(async () => {
+    await browser.waitUntil(async () => {
 
-            const labels = await $$('ion-text');
-            const labelCount = await labels.length;
+        const labels = await $$('ion-text');
+        const labelCount = await labels.length;
 
-            return labelCount > 5;
+        console.log("Detected tile labels:", labelCount);
 
-        }, { timeout: 15000 });
+        return labelCount > 5;
 
-        await $('ion-content').scrollIntoView();
+    }, { timeout: 20000, interval: 2000 });
 
-        const tileLabel = await $(`//ion-text[contains(., "${tileName}")]`);
-        await tileLabel.waitForDisplayed({ timeout: 10000 });
+    // Ensure page scrolls in case tile is below viewport
+    await $('ion-content').scrollIntoView();
 
-        const tileContainer = await tileLabel.$('ancestor::ion-col');
-        const tileImage = await tileContainer.$('ion-img');
+    const tileLabel = await $(`//ion-text[contains(., "${tileName}")]`);
+    await tileLabel.waitForDisplayed({ timeout: 20000 });
 
-        await tileImage.click();
-    }
+    const tileContainer = await tileLabel.$('ancestor::ion-col');
+    const tileImage = await tileContainer.$('ion-img');
 
+    await tileImage.waitForClickable({ timeout: 20000 });
 
-    async openModule(moduleName: string): Promise<void> {
-        await this.clickTile(moduleName);
-    }
+    console.log(`Clicking tile: ${tileName}`);
+
+    await tileImage.click();
+}
+
+async openModule(moduleName: string): Promise<void> {
+    await this.clickTile(moduleName);
+}
 
 }
 
