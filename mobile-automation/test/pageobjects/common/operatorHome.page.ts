@@ -4,52 +4,24 @@ class OperatorHomePage extends BasePage {
 
     async ensureTilesVisible(): Promise<void> {
 
-        // Wait for dashboard grid
-        await $('ion-grid').waitForDisplayed({ timeout: 15000 });
+    console.log("Checking operator dashboard tiles...");
 
-        const tileElements = await $$('ion-img');
-        const tileCount = await tileElements.length;
+    await browser.waitUntil(async () => {
 
-        if (tileCount > 5) {
-            console.log(`Tiles already visible: ${tileCount}`);
-            return;
-        }
+        const tiles = await $$('ion-img');
+        const count = await tiles.length;
 
-        console.log("Tiles not visible → opening settings");
+        console.log("Tile count:", count);
 
-        const settings = await $('ion-icon[name="settings"]');
-        await settings.waitForDisplayed({ timeout: 10000 });
-        await settings.click();
+        return count >= 6;
 
-        await browser.pause(2000);
+    }, {
+        timeout: 60000,
+        interval: 2000,
+        timeoutMsg: "Operator dashboard tiles did not load"
+    });
 
-        const allBtn = await $('//ion-button[contains(.,"ALL")]');
-        await allBtn.waitForDisplayed({ timeout: 10000 });
-        await allBtn.click();
-
-        await browser.pause(2000);
-
-        console.log("Returning to home");
-
-        await browser.back();
-
-        // Wait until tiles appear
-        await browser.waitUntil(async () => {
-
-            const tiles = await $$('ion-img');
-            const count = await tiles.length;
-
-            console.log("Detected tiles:", count);
-
-            return count > 5;
-
-        }, {
-            timeout: 10000,
-            timeoutMsg: "Tiles did not appear after enabling ALL"
-        });
-    }
-
-
+}
    async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
