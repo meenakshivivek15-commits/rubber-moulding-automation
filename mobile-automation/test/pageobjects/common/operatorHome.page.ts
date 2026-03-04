@@ -29,20 +29,15 @@ class OperatorHomePage extends BasePage {
 
     console.log(`Opening module: ${tileName}`);
 
-    // preload dashboard tiles (important for Ionic lazy loading)
-    for (let i = 0; i < 3; i++) {
-        await this.scrollGrid("down");
-        await browser.pause(1200);
-    }
+    const label = await $(`//ion-text[normalize-space()='${tileName}']`);
 
-    const tileSelector =
-        `//ion-text[contains(normalize-space(),"${tileName}")]/ancestor::ion-col//ion-img`;
+    await label.waitForDisplayed({ timeout: 20000 });
 
-    const tile = await $(tileSelector);
+    console.log("Module label found");
 
-    await tile.waitForDisplayed({ timeout: 20000 });
+    const tile = await label.$('ancestor::ion-col');
 
-    console.log(`Clicking module: ${tileName}`);
+    await tile.scrollIntoView();
 
     await this.safeClick(tile);
 }
