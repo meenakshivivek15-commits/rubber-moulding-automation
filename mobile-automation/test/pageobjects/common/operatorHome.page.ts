@@ -36,34 +36,23 @@ class OperatorHomePage extends BasePage {
 
  async clickTile(tileName: string): Promise<void> {
 
-    await this.ensureTilesVisible();
     await this.ensureWebView(90000);
-
+    await this.ensureTilesVisible();
     console.log(`STEP: Navigate to ${tileName}`);
 
-    for (let i = 0; i < 12; i++) {
+    await this.scrollUntilModuleVisible(tileName);
 
-        const tile = await $(
-        `//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`
-        );
+    const label = await $(`//ion-text[normalize-space()='${tileName}']`);
 
-        if (await tile.isExisting()) {
-
-            console.log(`${tileName} tile found`);
-
-            await tile.scrollIntoView();
-            await this.safeClick(tile);
-
-            return;
-        }
-
-        console.log("Tile not visible — scrolling dashboard");
-
-        await this.scrollDashboard();
-        await browser.pause(800);
+    if (!(await label.isExisting())) {
+        throw new Error(`${tileName} module not found on dashboard`);
     }
 
-    throw new Error(`Module ${tileName} not found after scrolling`);
+    const tile = await label.$('./ancestor::ion-col//ion-img');
+
+    await this.safeClick(tile);
+
+    console.log(`${tileName} tile clicked`);
 }
   async getModuleIndex(tileName: string): Promise<number> {
 
@@ -138,9 +127,103 @@ async debugDashboard(): Promise<void> {
 
     console.log("===== END DASHBOARD DEBUG =====\n");
 }
-  async openModule(moduleName: string): Promise<void> {
-    await this.clickTile(moduleName);
-  }
+async scrollUntilModuleVisible(tileName: string): Promise<void> {
+
+    let previousCount = 0;
+    let sameCountAttempts = 0;
+
+    for (let i = 0; i < 20; i++) {
+
+        const labels = await $$('ion-text');
+        const currentCount = await labels.length;
+
+        console.log(`Visible modules: ${currentCount}`);
+
+        // check if module already visible
+        for (const label of labels) {
+
+            const text = (await label.getText()).trim();
+
+            if (text === tileName) {
+                console.log(`${tileName} module detected`);
+                return;
+            }
+        }
+
+        // detect bottom of dashboard
+        if (currentCount === previousCount) {
+            sameCountAttempts++;
+        } else {
+            sameCountAttempts = 0;
+        }
+
+        if (sameCountAttempts >= 2) {
+            console.log("Reached dashboard bottom");
+            break;
+        }
+
+        previousCount = currentCount;
+
+        console.log("Scrolling dashboard...");
+
+        await this.scrollDashboard();
+
+        await browser.pause(1500);
+    }
+}
+async buildModuleMap(): Promise<Map<string, ChainablePromiseElement>> {
+
+    const moduleMap = new Map<string, ChainablePromiseElement>();
+    for (let i = 0; i < 20; i++) {
+
+        const labels = await $$('ion-text');
+
+        for (const label of labels) {
+
+            const text = (await label.getText()).trim();
+
+            if (text.length > 0 && !moduleMap.has(text)) {
+
+                const tile = label.$('./ancestor::ion-col//ion-img');
+
+                moduleMap.set(text, tile);
+
+                console.log(`Mapped module: ${text}`);
+            }
+        }
+
+        const currentCount = moduleMap.size;
+
+        await this.scrollDashboard();
+        await browser.pause(1200);
+
+        const labelsAfter = await $$('ion-text');
+        const count = await labelsAfter.length;
+        if (count <= currentCount) {
+            break;
+        }
+    }
+
+    console.log(`Total modules mapped: ${moduleMap.size}`);
+
+    return moduleMap;
+}
+  async openModule(tileName: string): Promise<void> {
+
+    await this.ensureWebView(90000);
+
+    const moduleMap = await this.buildModuleMap();
+
+    if (!moduleMap.has(tileName)) {
+        throw new Error(`Module not found: ${tileName}`);
+    }
+
+    const tile = moduleMap.get(tileName)!;
+
+    await this.safeClick(tile);
+
+    console.log(`${tileName} tile clicked`);
+}
 
 }
 
