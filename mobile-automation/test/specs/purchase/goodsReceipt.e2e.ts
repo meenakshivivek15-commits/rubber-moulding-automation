@@ -13,7 +13,7 @@ const mobileData = require('../../data/goodsReceiptData.json');
 
 describe('Goods Receipt Flow', () => {
 
- before(async () => {
+before(async () => {
 
     console.log("========= FRESH START =========");
 
@@ -40,47 +40,57 @@ describe('Goods Receipt Flow', () => {
     console.log("Dashboard loaded");
 
 });
-    it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
-        this.timeout(600000);
+it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
-        allure.addFeature('Purchase Process');
-        allure.addStory('Goods Receipt Flow');
+    this.timeout(600000);
 
-        const runtime = readJson(runtimePath);
-        const tiles = await $$('ion-img');
-        console.log("Detected tiles on home:", tiles.length);
-        console.log("STEP 1: Navigate to Goods Receipt");
-         //await browser.pause(5000);  
-        //await operatorHomePage.printAllTiles();
-        //await operatorHomePage.debugDashboard();
-       await operatorHomePage.openModule("GoodsReceipt");
+    allure.addFeature('Purchase Process');
+    allure.addStory('Goods Receipt Flow');
 
-        console.log("STEP 2: Select PO");
-        const selectedPo = await goodsReceiptListPage.selectPoFromList(mobileData.poNumber);
-        console.log("Selected PO:", mobileData.poNumber);
+    const runtime = readJson(runtimePath);
 
-        console.log("STEP 3: Wait for Form");
-        await goodsReceiptFormPage.waitForFormToLoad();
+    const tiles = await $$('ion-img');
+    console.log("Detected tiles on home:", tiles.length);
 
-        console.log("STEP 4: Fill Form");
-        await goodsReceiptFormPage.selectLocation(mobileData.location);
-        await goodsReceiptFormPage.syncInvoiceDateFromLabel();
-        await goodsReceiptFormPage.enterPin(mobileData.pin);
+    console.log("STEP 1: Navigate to Goods Receipt");
 
-        runtime.grnStartTime = new Date().toISOString();
-        writeJson(runtimePath, runtime);
+    await operatorHomePage.openModule("GoodsReceipt");
 
-        console.log("STEP 5: Submit");
-        await goodsReceiptFormPage.submit();
+    console.log("STEP 2: Select PO");
 
-        const toast = await $('ion-toast');
-        await toast.waitForExist({ timeout: 20000 });
-        await toast.waitForDisplayed({ timeout: 20000 });   
-        console.log("Toast:", await toast.getText());
+    const selectedPo = await goodsReceiptListPage.selectPoFromList(mobileData.poNumber);
 
-        await expect(toast).toBeDisplayed({ wait: 20000 });
+    console.log("Selected PO:", mobileData.poNumber);
 
-        console.log("✅ Goods Receipt completed successfully");
-    });
+    console.log("STEP 3: Wait for Form");
+
+    await goodsReceiptFormPage.waitForFormToLoad();
+
+    console.log("STEP 4: Fill Form");
+
+    await goodsReceiptFormPage.selectLocation(mobileData.location);
+    await goodsReceiptFormPage.syncInvoiceDateFromLabel();
+    await goodsReceiptFormPage.enterPin(mobileData.pin);
+
+    runtime.grnStartTime = new Date().toISOString();
+    writeJson(runtimePath, runtime);
+
+    console.log("STEP 5: Submit");
+
+    await goodsReceiptFormPage.submit();
+
+    const toast = await $('ion-toast');
+
+    await toast.waitForExist({ timeout: 20000 });
+    await toast.waitForDisplayed({ timeout: 20000 });
+
+    console.log("Toast:", await toast.getText());
+
+    await expect(toast).toBeDisplayed({ wait: 20000 });
+
+    console.log("✅ Goods Receipt completed successfully");
+
+});
+
 });

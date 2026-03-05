@@ -28,21 +28,19 @@ async ensureTilesVisible(): Promise<void> {
 async clickTile(tileName: string): Promise<void> {
 
     await this.ensureWebView(90000);
-await this.ensureTilesVisible();
-await browser.pause(2000);
+    await this.ensureTilesVisible();
+
     console.log(`Opening module: ${tileName}`);
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
 
-        const label = await $(`//ion-text[normalize-space()='${tileName}']`);
+        const tile = await $(
+            `//ion-col[.//ion-text[contains(normalize-space(),'${tileName}')]]//ion-img`
+        );
 
-        if (await label.isExisting()) {
+        if (await tile.isExisting()) {
 
             console.log(`${tileName} module found`);
-
-            const tile = await label.$('./preceding-sibling::ion-img');
-
-            await tile.scrollIntoView();
 
             await this.safeClick(tile);
 
@@ -60,7 +58,6 @@ await browser.pause(2000);
 
     throw new Error(`Module ${tileName} not found after scrolling`);
 }
-
 async printAllTiles(): Promise<void> {
 
     await this.ensureWebView();
