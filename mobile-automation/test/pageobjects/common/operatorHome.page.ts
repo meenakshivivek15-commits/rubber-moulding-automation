@@ -4,23 +4,24 @@ class OperatorHomePage extends BasePage {
 
     async ensureTilesVisible(): Promise<void> {
 
-        console.log("Checking operator dashboard tiles...");
+    console.log("Waiting for dashboard modules to load...");
 
-        await browser.waitUntil(async () => {
+    await browser.waitUntil(async () => {
 
-            const tiles = await $$('ion-img');
-            const count = await tiles.length;
+        const tiles = await $$('ion-text');
+        const count = await tiles.length;
 
-            console.log("Tile count:", count);
+        console.log("Dashboard module count:", count);
 
-            return count >= 6;
+        return count >= 27;
 
-        }, {
-            timeout: 60000,
-            interval: 2000,
-            timeoutMsg: "Operator dashboard tiles did not load"
-        });
-    }
+    }, {
+        timeout: 60000,
+        interval: 2000,
+        timeoutMsg: "Dashboard did not load all modules"
+    });
+
+}
 
    async clickTile(tileName: string): Promise<void> {
 
