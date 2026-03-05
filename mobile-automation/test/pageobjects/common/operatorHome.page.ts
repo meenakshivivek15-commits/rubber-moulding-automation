@@ -22,24 +22,41 @@ class OperatorHomePage extends BasePage {
         });
     }
 
-    async clickTile(tileName: string): Promise<void> {
+   async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
     await this.ensureWebView(90000);
 
     console.log(`Opening module: ${tileName}`);
 
-    const label = await $(`//ion-text[normalize-space()='${tileName}']`);
+    let label;
 
-    await label.waitForDisplayed({ timeout: 20000 });
+    for (let i = 1; i <= 6; i++) {
 
-    console.log("Module label found");
+        console.log(`Searching dashboard attempt ${i}`);
 
-    const tile = await label.$('ancestor::ion-col');
+        label = await $(`//ion-text[normalize-space()='${tileName}']`);
 
-    await tile.scrollIntoView();
+        if (await label.isExisting()) {
 
-    await this.safeClick(tile);
+            console.log("Module label found");
+
+            const tile = await label.$('ancestor::ion-col');
+
+            await tile.scrollIntoView();
+
+            await this.safeClick(tile);
+
+            return;
+        }
+
+        console.log("Module not visible — scrolling dashboard");
+
+        await this.scrollGrid("down");
+        await browser.pause(1500);
+    }
+
+    throw new Error(`Module ${tileName} not found after scrolling dashboard`);
 }
     async printAllTiles(): Promise<void> {
 

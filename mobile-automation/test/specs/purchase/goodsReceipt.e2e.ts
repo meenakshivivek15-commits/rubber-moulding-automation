@@ -66,7 +66,7 @@ describe('Goods Receipt Flow', () => {
         const tiles = await $$('ion-img');
         console.log("Detected tiles on home:", tiles.length);
         console.log("STEP 1: Navigate to Goods Receipt");
-            
+          await browser.pause(5000);  
         await operatorHomePage.printAllTiles();
         await operatorHomePage.openModule("GoodsReceipt");
 
