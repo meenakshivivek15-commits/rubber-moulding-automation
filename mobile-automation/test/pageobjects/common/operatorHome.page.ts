@@ -22,27 +22,18 @@ async ensureTilesVisible(): Promise<void> {
     });
 }
 
-async forceRenderAllModules(): Promise<void> {
 
-    console.log("Scrolling dashboard to render all modules...");
-
-    for (let i = 0; i < 8; i++) {
-
-        await this.scrollDashboard();
-        await browser.pause(1000);
-
-    }
-}
+    
 
 async clickTile(tileName: string): Promise<void> {
 
     await this.ensureWebView(90000);
     await this.ensureTilesVisible();
-
+    await this.loadAllDashboardModules();
     console.log(`Opening module: ${tileName}`);
 
     // force Ionic to render all modules
-    await this.forceRenderAllModules();
+   // await this.forceRenderAllModules();
 
     const img = await $(
         `//ion-text[normalize-space()='${tileName}']/preceding-sibling::ion-img`
