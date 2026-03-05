@@ -70,7 +70,33 @@ export default class BasePage {
         throw lastError instanceof Error ? lastError : new Error('WebView not available');
     }
 
+async loadAllDashboardModules(): Promise<void> {
 
+    console.log("Loading all dashboard modules...");
+
+    let previousCount = 0;
+
+    for (let i = 0; i < 15; i++) {
+
+        const labels = await $$('ion-text');
+        const currentCount =await labels.length;
+
+        console.log(`Dashboard modules detected: ${currentCount}`);
+
+        if (currentCount === previousCount) {
+            console.log("Dashboard fully loaded");
+            return;
+        }
+
+        previousCount = currentCount;
+
+        await this.scrollDashboard();
+
+        await browser.pause(800);
+    }
+
+    console.log("Reached max scroll attempts");
+}
     async switchToNative() {
         if (!this.hasActiveSession()) return;
         await driver.switchContext('NATIVE_APP');

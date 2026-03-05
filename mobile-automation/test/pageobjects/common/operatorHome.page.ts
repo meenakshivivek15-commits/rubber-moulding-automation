@@ -2,32 +2,43 @@ import BasePage from '../base.page';
 
 class OperatorHomePage extends BasePage {
 
-  async ensureTilesVisible(): Promise<void> {
+ async ensureTilesVisible(): Promise<void> {
 
-    console.log("Waiting for dashboard tiles to appear...");
+    console.log("Waiting for dashboard tiles to stabilize...");
+
+    let previousCount = 0;
+    let stableCount = 0;
 
     await browser.waitUntil(async () => {
 
-      const tiles = await $$('ion-text');
-      const count = await tiles.length;
+        const labels = await $$('ion-text');
+        const currentCount = await labels.length;
 
-      console.log("Visible module count:", count);
+        console.log("Visible module count:", currentCount);
 
-      return count >= 6;
+        if (currentCount === previousCount) {
+            stableCount++;
+        } else {
+            stableCount = 0;
+        }
+
+        previousCount = currentCount;
+
+        return currentCount >= 6 && stableCount >= 2;
 
     }, {
-      timeout: 60000,
-      interval: 2000,
-      timeoutMsg: "Dashboard tiles did not load"
+        timeout: 60000,
+        interval: 2000,
+        timeoutMsg: "Dashboard modules did not stabilize"
     });
-  }
+}
 
 
   async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
     await this.ensureWebView(90000);
-
+await this.loadAllDashboardModules();
     console.log(`Opening module: ${tileName}`);
 
     for (let i = 1; i <= 12; i++) {
@@ -97,7 +108,34 @@ class OperatorHomePage extends BasePage {
     console.log("===== END MODULE LIST =====\n");
   }
 
+async debugDashboard(): Promise<void> {
 
+    await this.ensureWebView();
+
+    const tiles = await $$('ion-col');
+    const tilecount = await tiles.length;
+    console.log("Total dashboard tiles found:", tilecount);
+    console.log("\n===== DASHBOARD TILE DEBUG =====");
+
+    for (let i = 0; i < tilecount; i++) {
+
+        try {
+
+            const label = await tiles[i].$('ion-text');
+            const text = await label.getText();
+
+            console.log(`Tile ${i} -> ${text}`);
+
+        } catch {
+
+            console.log(`Tile ${i} -> (no label found)`);
+
+        }
+    }
+
+    console.log("Total tiles detected:", tiles.length);
+    console.log("===== END DASHBOARD DEBUG =====\n");
+}
   async openModule(moduleName: string): Promise<void> {
     await this.clickTile(moduleName);
   }
