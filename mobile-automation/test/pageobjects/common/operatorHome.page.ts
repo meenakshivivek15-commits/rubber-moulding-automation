@@ -2,74 +2,58 @@ import BasePage from '../base.page';
 
 class OperatorHomePage extends BasePage {
 
-   async ensureTilesVisible(): Promise<void> {
+  async ensureTilesVisible(): Promise<void> {
 
-    console.log("Waiting for dashboard modules...");
+    console.log("Waiting for dashboard tiles to appear...");
 
     await browser.waitUntil(async () => {
 
-        let tiles = await $$('ion-text');
-        let count = await tiles.length;
+        const tiles = await $$('ion-text');
+        const count = await tiles.length;
 
-        console.log("Dashboard module count:", count);
+        console.log("Visible module count:", count);
 
-        if (count < 27) {
-
-            console.log("Scrolling to load more modules");
-
-            await this.scrollGrid("down");
-            await browser.pause(1500);
-
-            tiles = await $$('ion-text');
-            count = await tiles.length;
-
-            console.log("After scroll module count:", count);
-        }
-
-        return count >= 27;
+        return count >= 6;   // dashboard loaded
 
     }, {
         timeout: 60000,
         interval: 2000,
-        timeoutMsg: "Dashboard did not load all modules"
+        timeoutMsg: "Dashboard tiles did not load"
     });
 
 }
-   async clickTile(tileName: string): Promise<void> {
+  async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
     await this.ensureWebView(90000);
 
     console.log(`Opening module: ${tileName}`);
 
-    let label;
+    for (let i = 1; i <= 10; i++) {
 
-    for (let i = 1; i <= 6; i++) {
+        console.log(`Search attempt ${i}`);
 
-        console.log(`Searching dashboard attempt ${i}`);
-
-        label = await $(`//ion-text[normalize-space()='${tileName}']`);
+        const label = await $(`//ion-text[normalize-space()='${tileName}']`);
 
         if (await label.isExisting()) {
 
-            console.log("Module label found");
+            console.log("Module found");
 
             const tile = await label.$('ancestor::ion-col');
 
             await tile.scrollIntoView();
-
             await this.safeClick(tile);
 
             return;
         }
 
-        console.log("Module not visible — scrolling dashboard");
+        console.log("Scrolling dashboard");
 
         await this.scrollGrid("down");
         await browser.pause(1500);
     }
 
-    throw new Error(`Module ${tileName} not found after scrolling dashboard`);
+    throw new Error(`Module ${tileName} not found after scrolling`);
 }
     async printAllTiles(): Promise<void> {
 
