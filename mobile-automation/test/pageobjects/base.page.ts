@@ -83,10 +83,10 @@ async loadAllDashboardModules(): Promise<void> {
 
         console.log(`Dashboard modules detected: ${currentCount}`);
 
-        if (currentCount === previousCount) {
-            console.log("Dashboard fully loaded");
-            return;
-        }
+       if (currentCount === previousCount) {
+    console.log("Dashboard module count stabilized");
+    break;
+}
 
         previousCount = currentCount;
 
@@ -175,31 +175,32 @@ async loadAllDashboardModules(): Promise<void> {
         percent: 0.85
     });
 
-    await browser.pause(800);
+    await browser.pause(1200);
 }
 
 
     async safeClick(element: any): Promise<void> {
 
-        const el = await element;
+    const el = await element;
 
-        await el.waitForClickable({ timeout: 15000 });
+    await el.waitForDisplayed({ timeout: 15000 });
+    await el.waitForEnabled({ timeout: 15000 });
 
-        await el.scrollIntoView();
+    await el.scrollIntoView();
 
-        try {
+    try {
 
-            await el.click();
+        await el.click();
 
-        } catch {
+    } catch {
 
-            console.log("Normal click failed — using JS click");
+        console.log("Normal click failed — using JS click");
 
-            await browser.execute((e: HTMLElement) => {
-                e.click();
-            }, el);
-        }
+        await browser.execute((e: HTMLElement) => {
+            e.click();
+        }, el);
     }
+}
 
 
     async safeType(element: any, value: string) {
@@ -207,7 +208,7 @@ async loadAllDashboardModules(): Promise<void> {
         const el = await element;
 
         await el.waitForDisplayed({ timeout: 15000 });
-
+        await el.waitForEnabled({ timeout: 15000 });
         await el.setValue(value);
     }
 }

@@ -13,7 +13,7 @@ const mobileData = require('../../data/goodsReceiptData.json');
 
 describe('Goods Receipt Flow', () => {
 
-  before(async () => {
+ before(async () => {
 
     console.log("========= FRESH START =========");
 
@@ -22,33 +22,18 @@ describe('Goods Receipt Flow', () => {
 
     console.log("Waiting for WebView...");
 
-    await browser.waitUntil(async () => {
-
-        const contexts = await driver.getContexts();
-
-        console.log("Available contexts:", contexts);
-
-        const webview = contexts.find(c => String(c).includes("WEBVIEW"));
-
-        if (webview) {
-            await driver.switchContext(String(webview));
-            console.log("Switched to WebView:", webview);
-            return true;
-        }
-
-        return false;
-
-    }, { timeout: 90000 });
+    await operatorHomePage.ensureWebView(90000);
 
     console.log("Waiting for dashboard tiles...");
 
     await browser.waitUntil(async () => {
 
         const tiles = await $$('ion-img');
-        const tilecount = await tiles.length;
-        console.log("Tile count:", tiles.length);
+        const count = await tiles.length;
 
-        return tilecount > 5;
+        console.log("Tile count:", count);
+
+        return count > 5;
 
     }, { timeout: 60000 });
 
@@ -69,8 +54,8 @@ describe('Goods Receipt Flow', () => {
           await browser.pause(5000);  
         await operatorHomePage.printAllTiles();
         await operatorHomePage.debugDashboard();
-        await operatorHomePage.openModule("GoodsReceipt");
-
+       await operatorHomePage.clickTile("GoodsReceipt");
+       
         console.log("STEP 2: Select PO");
         const selectedPo = await goodsReceiptListPage.selectPoFromList(mobileData.poNumber);
         console.log("Selected PO:", mobileData.poNumber);
