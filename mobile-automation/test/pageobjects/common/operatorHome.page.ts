@@ -42,6 +42,8 @@ class OperatorHomePage extends BasePage {
             const tile = await label.$('ancestor::ion-col');
 
             await tile.scrollIntoView();
+            await browser.pause(500);
+
             await this.safeClick(tile);
 
             return;
@@ -49,7 +51,8 @@ class OperatorHomePage extends BasePage {
 
         console.log("Scrolling dashboard");
 
-        await this.scrollGrid("down");
+        await this.scrollDashboard();
+
         await browser.pause(1500);
     }
 

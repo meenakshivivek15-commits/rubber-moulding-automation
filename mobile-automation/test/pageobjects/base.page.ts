@@ -128,7 +128,19 @@ async scrollGrid(direction: "down" | "left"): Promise<void> {
     });
     await browser.pause(1200);
 }
+    async scrollDashboard(): Promise<void> {
 
+    await driver.execute(() => {
+
+        const content = document.querySelector('ion-content');
+
+        if (content) {
+            content.scrollBy(0, 600);
+        }
+
+    });
+
+}
     async safeClick(element: any): Promise<void> {
 
     const el = await element;
