@@ -30,20 +30,19 @@ class OperatorHomePage extends BasePage {
 
     console.log(`Opening module: ${tileName}`);
 
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 12; i++) {
 
         console.log(`Searching dashboard attempt ${i}`);
 
         const img = await $(
-            `//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`
+        `//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`
         );
 
         if (await img.isExisting()) {
 
-            console.log("Module located");
+            console.log("Module found");
 
             await img.scrollIntoView();
-
             await this.safeClick(img);
 
             return;
@@ -52,8 +51,6 @@ class OperatorHomePage extends BasePage {
         console.log("Module not visible yet — scrolling dashboard");
 
         await this.scrollDashboard();
-
-        await browser.pause(800);
     }
 
     throw new Error(`Module ${tileName} not found after scrolling`);

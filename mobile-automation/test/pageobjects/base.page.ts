@@ -136,24 +136,17 @@ export default class BasePage {
     }
 
 
-    async scrollDashboard(): Promise<void> {
+   async scrollDashboard(): Promise<void> {
 
-    await driver.execute(() => {
+    const rect: any = await driver.execute('mobile: viewportRect');
 
-        const content = document.querySelector('ion-content');
-
-        if (!content) {
-            console.log("Dashboard scroll container not found");
-            return;
-        }
-
-        const scrollElement =
-            (content as any).shadowRoot?.querySelector('.inner-scroll');
-
-        if (scrollElement) {
-            scrollElement.scrollTop += 700;
-        }
-
+    await driver.execute('mobile: scrollGesture', {
+        left: rect.left + 20,
+        top: rect.top + 200,
+        width: rect.width - 40,
+        height: rect.height - 250,
+        direction: "down",
+        percent: 0.85
     });
 
     await browser.pause(800);
