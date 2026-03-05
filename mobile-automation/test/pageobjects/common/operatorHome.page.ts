@@ -114,16 +114,24 @@ async openModule(tileName: string) {
 
     console.log(`Opening module: ${tileName}`);
 
-    const tile = await $(
-        `//ion-text[normalize-space()='${tileName}']/ancestor::ion-col//ion-img`
-    );
+    const tileXpath = `//ion-text[normalize-space()='${tileName}']/preceding::ion-img[1]`;
 
-    await tile.waitForDisplayed({ timeout: 20000 });
-    await tile.click();
+    for (let i = 0; i < 5; i++) {
 
-    console.log(`${tileName} tile clicked`);
+        const tile = await $(tileXpath);
+
+        if (await tile.isExisting() && await tile.isDisplayed()) {
+            await tile.click();
+            console.log(`${tileName} tile clicked`);
+            return;
+        }
+
+        console.log("Tile not visible, scrolling dashboard...");
+        await this.scrollDashboard();   // ← use existing method
+    }
+
+    throw new Error(`Module ${tileName} not found after scrolling`);
 }
-
 }
 
 export default new OperatorHomePage();
