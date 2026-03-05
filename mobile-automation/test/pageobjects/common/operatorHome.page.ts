@@ -32,49 +32,32 @@ class OperatorHomePage extends BasePage {
 
     for (let i = 1; i <= 10; i++) {
 
-      console.log(`Searching dashboard attempt ${i}`);
-
-      const index = await this.getModuleIndex(tileName);
-
-      if (index >= 0) {
-
-        console.log(`Module found at index ${index}`);
+        console.log(`Searching dashboard attempt ${i}`);
 
         const img = await $(
-          `//ion-text[normalize-space()='${tileName}']/preceding-sibling::ion-img`
+            `//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`
         );
 
-        await img.waitForExist({ timeout: 10000 });
+        if (await img.isExisting()) {
 
-        await img.scrollIntoView();
+            console.log("Module located");
 
-        await this.safeClick(img);
+            await img.scrollIntoView();
 
-        return;
-      }
+            await this.safeClick(img);
 
-      console.log("Module not visible yet — scrolling dashboard");
+            return;
+        }
 
-      await this.scrollDashboard();
+        console.log("Module not visible yet — scrolling dashboard");
 
-      await browser.waitUntil(async () => {
+        await this.scrollDashboard();
 
-        const labels = await $$('ion-text');
-        const count = await labels.length;
-
-        console.log(`After scroll ${i}, visible modules: ${count}`);
-
-        return count > 5;
-
-      }, {
-        timeout: 5000,
-        interval: 500
-      });
+        await browser.pause(800);
     }
 
     throw new Error(`Module ${tileName} not found after scrolling`);
-  }
-
+}
 
   async getModuleIndex(tileName: string): Promise<number> {
 

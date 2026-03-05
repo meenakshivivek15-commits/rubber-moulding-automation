@@ -138,18 +138,26 @@ export default class BasePage {
 
     async scrollDashboard(): Promise<void> {
 
-        await driver.execute(() => {
+    await driver.execute(() => {
 
-            const content = document.querySelector('ion-content');
+        const content = document.querySelector('ion-content');
 
-            if (!content) {
-                console.log("Dashboard scroll container not found");
-                return;
-            }
+        if (!content) {
+            console.log("Dashboard scroll container not found");
+            return;
+        }
 
-            content.scrollBy(0, 600);
-        });
-    }
+        const scrollElement =
+            (content as any).shadowRoot?.querySelector('.inner-scroll');
+
+        if (scrollElement) {
+            scrollElement.scrollTop += 700;
+        }
+
+    });
+
+    await browser.pause(800);
+}
 
 
     async safeClick(element: any): Promise<void> {
