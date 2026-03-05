@@ -108,10 +108,20 @@ async debugDashboard(): Promise<void> {
     console.log("===== END DASHBOARD DEBUG =====\n");
 }
 
-async openModule(tileName: string): Promise<void> {
+async openModule(tileName: string) {
 
-    await this.clickTile(tileName);
+    await this.ensureWebView();
 
+    console.log(`Opening module: ${tileName}`);
+
+    const tile = await $(
+        `//ion-text[normalize-space()='${tileName}']/ancestor::ion-col//ion-img`
+    );
+
+    await tile.waitForDisplayed({ timeout: 20000 });
+    await tile.click();
+
+    console.log(`${tileName} tile clicked`);
 }
 
 }
