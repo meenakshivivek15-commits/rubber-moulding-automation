@@ -28,22 +28,37 @@ async ensureTilesVisible(): Promise<void> {
 async clickTile(tileName: string): Promise<void> {
 
     await this.ensureWebView(90000);
-    await this.ensureTilesVisible();
-    await this.loadAllDashboardModules();
+await this.ensureTilesVisible();
+await browser.pause(2000);
     console.log(`Opening module: ${tileName}`);
 
-    // force Ionic to render all modules
-   // await this.forceRenderAllModules();
+    for (let i = 0; i < 6; i++) {
 
-    const img = await $(
-        `//ion-text[normalize-space()='${tileName}']/preceding-sibling::ion-img`
-    );
+        const label = await $(`//ion-text[normalize-space()='${tileName}']`);
 
-    await img.waitForDisplayed({ timeout: 20000 });
+        if (await label.isExisting()) {
 
-    await this.safeClick(img);
+            console.log(`${tileName} module found`);
 
-    console.log(`${tileName} tile clicked`);
+            const tile = await label.$('./preceding-sibling::ion-img');
+
+            await tile.scrollIntoView();
+
+            await this.safeClick(tile);
+
+            console.log(`${tileName} tile clicked`);
+
+            return;
+        }
+
+        console.log(`Module not visible — scrolling dashboard (${i + 1})`);
+
+        await this.scrollDashboard();
+
+        await browser.pause(1200);
+    }
+
+    throw new Error(`Module ${tileName} not found after scrolling`);
 }
 
 async printAllTiles(): Promise<void> {

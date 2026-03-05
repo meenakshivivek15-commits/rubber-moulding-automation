@@ -33,7 +33,7 @@ describe('Goods Receipt Flow', () => {
 
         console.log("Tile count:", count);
 
-        return count > 5;
+        return count >= 6;
 
     }, { timeout: 60000 });
 
@@ -51,11 +51,11 @@ describe('Goods Receipt Flow', () => {
         const tiles = await $$('ion-img');
         console.log("Detected tiles on home:", tiles.length);
         console.log("STEP 1: Navigate to Goods Receipt");
-          await browser.pause(5000);  
-        await operatorHomePage.printAllTiles();
-        await operatorHomePage.debugDashboard();
-       await operatorHomePage.clickTile("GoodsReceipt");
-       
+         //await browser.pause(5000);  
+        //await operatorHomePage.printAllTiles();
+        //await operatorHomePage.debugDashboard();
+       await operatorHomePage.openModule("GoodsReceipt");
+
         console.log("STEP 2: Select PO");
         const selectedPo = await goodsReceiptListPage.selectPoFromList(mobileData.poNumber);
         console.log("Selected PO:", mobileData.poNumber);
