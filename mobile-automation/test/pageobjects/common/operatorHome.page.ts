@@ -8,20 +8,21 @@ class OperatorHomePage extends BasePage {
 
     await browser.waitUntil(async () => {
 
-        const tiles = await $$('ion-text');
-        const count = await tiles.length;
+      const tiles = await $$('ion-text');
+      const count = await tiles.length;
 
-        console.log("Visible module count:", count);
+      console.log("Visible module count:", count);
 
-        return count >= 6;   // dashboard loaded
+      return count >= 6;
 
     }, {
-        timeout: 60000,
-        interval: 2000,
-        timeoutMsg: "Dashboard tiles did not load"
+      timeout: 60000,
+      interval: 2000,
+      timeoutMsg: "Dashboard tiles did not load"
     });
+  }
 
-}
+
   async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
@@ -31,57 +32,96 @@ class OperatorHomePage extends BasePage {
 
     for (let i = 1; i <= 10; i++) {
 
-        console.log(`Search attempt ${i}`);
+      console.log(`Searching dashboard attempt ${i}`);
 
-        const label = await $(`//ion-text[normalize-space()='${tileName}']`);
+      const index = await this.getModuleIndex(tileName);
 
-        if (await label.isExisting()) {
+      if (index >= 0) {
 
-            console.log("Module found");
+        console.log(`Module found at index ${index}`);
 
-            const tile = await label.$('ancestor::ion-col');
+        const img = await $(
+          `//ion-text[normalize-space()='${tileName}']/preceding-sibling::ion-img`
+        );
 
-            await tile.scrollIntoView();
-            await browser.pause(500);
+        await img.waitForExist({ timeout: 10000 });
 
-            await this.safeClick(tile);
+        await img.scrollIntoView();
 
-            return;
-        }
+        await this.safeClick(img);
 
-        console.log("Scrolling dashboard");
+        return;
+      }
 
-        await this.scrollDashboard();
+      console.log("Module not visible yet — scrolling dashboard");
 
-        await browser.pause(1500);
+      await this.scrollDashboard();
+
+      await browser.waitUntil(async () => {
+
+        const labels = await $$('ion-text');
+        const count = await labels.length;
+
+        console.log(`After scroll ${i}, visible modules: ${count}`);
+
+        return count > 5;
+
+      }, {
+        timeout: 5000,
+        interval: 500
+      });
     }
 
     throw new Error(`Module ${tileName} not found after scrolling`);
-}
-    async printAllTiles(): Promise<void> {
+  }
 
-        await this.ensureWebView();
-        await this.ensureTilesVisible();
 
-        const labels = await $$('ion-text');
+  async getModuleIndex(tileName: string): Promise<number> {
 
-        console.log("\n===== DASHBOARD MODULES =====");
+    const labels = await $$('ion-text');
+    const labelcount= await labels.length;
+    console.log("Checking module names, count:", labelcount);
+    for (let i = 0; i < labelcount; i++) {
 
-        for (const label of labels) {
+      const text = (await labels[i].getText()).trim();
 
-            const text = (await label.getText()).trim();
+      console.log(`Module ${i}: ${text}`);
 
-            if (text.length > 0) {
-                console.log("Module:", text);
-            }
-        }
-
-        console.log("===== END MODULE LIST =====\n");
+      if (text === tileName) {
+        return i;
+      }
     }
 
-    async openModule(moduleName: string): Promise<void> {
-        await this.clickTile(moduleName);
+    return -1;
+  }
+
+
+  async printAllTiles(): Promise<void> {
+
+    await this.ensureWebView();
+    await this.ensureTilesVisible();
+
+    const labels = await $$('ion-text');
+
+    console.log("\n===== DASHBOARD MODULES =====");
+
+    for (const label of labels) {
+
+      const text = (await label.getText()).trim();
+
+      if (text.length > 0) {
+        console.log("Module:", text);
+      }
     }
+
+    console.log("===== END MODULE LIST =====\n");
+  }
+
+
+  async openModule(moduleName: string): Promise<void> {
+    await this.clickTile(moduleName);
+  }
+
 }
 
 export default new OperatorHomePage();
