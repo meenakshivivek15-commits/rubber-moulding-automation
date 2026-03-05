@@ -35,8 +35,8 @@ async clickTile(tileName: string): Promise<void> {
     for (let i = 0; i < 8; i++) {
 
         const tile = await $(
-            `//ion-col[.//ion-text[contains(normalize-space(),'${tileName}')]]//ion-img`
-        );
+`//ion-text[contains(normalize-space(),'${tileName}')]/preceding::ion-img[1]`
+);
 
         if (await tile.isExisting()) {
 
