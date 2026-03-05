@@ -2,16 +2,29 @@ import BasePage from '../base.page';
 
 class OperatorHomePage extends BasePage {
 
-    async ensureTilesVisible(): Promise<void> {
+   async ensureTilesVisible(): Promise<void> {
 
-    console.log("Waiting for dashboard modules to load...");
+    console.log("Waiting for dashboard modules...");
 
     await browser.waitUntil(async () => {
 
-        const tiles = await $$('ion-text');
-        const count = await tiles.length;
+        let tiles = await $$('ion-text');
+        let count = await tiles.length;
 
         console.log("Dashboard module count:", count);
+
+        if (count < 27) {
+
+            console.log("Scrolling to load more modules");
+
+            await this.scrollGrid("down");
+            await browser.pause(1500);
+
+            tiles = await $$('ion-text');
+            count = await tiles.length;
+
+            console.log("After scroll module count:", count);
+        }
 
         return count >= 27;
 
@@ -22,7 +35,6 @@ class OperatorHomePage extends BasePage {
     });
 
 }
-
    async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
