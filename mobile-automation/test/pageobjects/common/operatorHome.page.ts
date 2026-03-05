@@ -34,30 +34,30 @@ class OperatorHomePage extends BasePage {
 }
 
 
-  async clickTile(tileName: string): Promise<void> {
+ async clickTile(tileName: string): Promise<void> {
 
     await this.ensureTilesVisible();
     await this.ensureWebView(90000);
 
-    console.log(`Opening module: ${tileName}`);
+    console.log(`STEP: Navigate to ${tileName}`);
 
     for (let i = 0; i < 12; i++) {
 
-        const label = await $(`//ion-text[normalize-space()='${tileName}']`);
+        const tile = await $(
+        `//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`
+        );
 
-        if (await label.isExisting()) {
+        if (await tile.isExisting()) {
 
-            console.log("Module found");
+            console.log(`${tileName} tile found`);
 
-            const img = await label.$('preceding-sibling::ion-img');
-
-            await img.scrollIntoView();
-            await this.safeClick(img);
+            await tile.scrollIntoView();
+            await this.safeClick(tile);
 
             return;
         }
 
-        console.log("Module not visible — scrolling dashboard");
+        console.log("Tile not visible — scrolling dashboard");
 
         await this.scrollDashboard();
         await browser.pause(800);
@@ -65,7 +65,6 @@ class OperatorHomePage extends BasePage {
 
     throw new Error(`Module ${tileName} not found after scrolling`);
 }
-
   async getModuleIndex(tileName: string): Promise<number> {
 
     const labels = await $$('ion-text');
