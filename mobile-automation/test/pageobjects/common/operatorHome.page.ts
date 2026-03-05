@@ -114,7 +114,7 @@ async openModule(tileName: string) {
 
     console.log(`Opening module: ${tileName}`);
 
-    const tileXpath = `//ion-text[normalize-space()='${tileName}']/preceding::ion-img[1]`;
+    const tileXpath = `//div[.//ion-text[normalize-space()='${tileName}']]//ion-img//img`;
 
     for (let i = 0; i < 5; i++) {
 
@@ -126,8 +126,9 @@ async openModule(tileName: string) {
             return;
         }
 
-        console.log("Tile not visible, scrolling dashboard...");
-        await this.scrollDashboard();   // ← use existing method
+        console.log("Scrolling dashboard...");
+        await this.scrollDashboard();
+        await browser.pause(800);
     }
 
     throw new Error(`Module ${tileName} not found after scrolling`);
