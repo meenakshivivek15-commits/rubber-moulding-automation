@@ -110,29 +110,56 @@ async debugDashboard(): Promise<void> {
 
 async openModule(moduleName: string): Promise<void> {
 
+    console.log(`\n===== OPENING ${moduleName} MENU =====\n`);
+
+    // 1️⃣ Ensure WEBVIEW
     await this.ensureWebView();
 
-    console.log(`Opening module: ${moduleName}`);
+    await browser.pause(3000);
 
-    const tileXpath =
-        `//ion-text[normalize-space()='${moduleName}']/preceding::ion-img[1]`;
+    // OLD working absolute XPath
+    const receiptXpath =
+        '//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img';
 
     for (let i = 0; i < 12; i++) {
 
-        const tile = await $(tileXpath);
+        const tiles = await $$(receiptXpath);
 
-        if (await tile.isExisting()) {
+        if (tiles.length > 0) {
 
-            console.log(`${moduleName} module found`);
+            const tile = tiles[0];
 
-            await tile.scrollIntoView();
-            await tile.waitForClickable({ timeout: 10000 });
+            if (await tile.isDisplayed()) {
 
-            await this.safeClick(tile);
+                console.log("GoodsReceipt tile found using old XPath");
 
-            console.log(`${moduleName} clicked`);
+                await tile.waitForClickable({ timeout: 15000 });
+                await this.safeClick(tile);
 
-            return;
+                console.log("GoodsReceipt tile clicked");
+
+                // 2️⃣ Wait for navigation
+                await driver.waitUntil(async () => {
+
+                    const url = await driver.execute(() => window.location.href);
+                    console.log("Current URL:", url);
+
+                    return !url.includes('/home');
+
+                }, {
+                    timeout: 20000,
+                    interval: 1000,
+                    timeoutMsg: "Navigation did not happen"
+                });
+
+                // 3️⃣ Confirm list page
+                const grid = await $('//*[@id="grid"]');
+                await grid.waitForDisplayed({ timeout: 30000 });
+
+                console.log("Goods Receipt list page loaded");
+
+                return;
+            }
         }
 
         console.log(`Scrolling dashboard (${i + 1})`);
