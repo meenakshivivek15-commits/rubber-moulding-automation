@@ -126,7 +126,8 @@ async openModule(moduleName: string): Promise<void> {
     });
 
     const tileXpath =
-        `//ion-col[.//ion-text[contains(normalize-space(),'${moduleName}')]]//ion-img`;
+        `//div[.//ion-text[contains(normalize-space(),'${moduleName}')]]//ion-img//img`;
+
 
     for (let i = 0; i < 10; i++) {
 
