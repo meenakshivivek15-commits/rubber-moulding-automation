@@ -114,6 +114,18 @@ async openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
 
+    // 🔎 DEBUG: Print all detected modules
+    const debugLabels = await $$('ion-text');
+
+    console.log("====== MODULES DETECTED ======");
+
+    for (const label of debugLabels) {
+        const text = (await label.getText()).trim();
+        console.log(text);
+    }
+
+    console.log("===============================");
+
     for (let scroll = 0; scroll < 10; scroll++) {
 
         console.log(`Checking visible modules (scroll ${scroll})`);
@@ -126,13 +138,12 @@ async openModule(moduleName: string): Promise<void> {
 
             console.log("Module:", text);
 
-            if (text === moduleName) {
+            if (text.replace(/\s/g,'') === moduleName.replace(/\s/g,'')) {
 
                 console.log(`${moduleName} module found`);
 
                 const tile = await label.$('.//ancestor::div[1]//img');
 
-                // 🔎 Debug information
                 console.log("Tile exists:", await tile.isExisting());
                 console.log("Tile displayed:", await tile.isDisplayed());
 
