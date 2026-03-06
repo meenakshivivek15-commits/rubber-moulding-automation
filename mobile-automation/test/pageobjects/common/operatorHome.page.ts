@@ -118,6 +118,16 @@ aasync openModule(moduleName: string): Promise<void> {
         const labels = await $$('ion-text');
         return labels.length > 10;
     }, { timeout: 30000 });
+        // 🔎 DEBUG: Print module names
+    const labels = await $$('ion-text');
+
+    console.log("===== MODULE LABELS DETECTED =====");
+
+    for (const l of labels) {
+        console.log("Module label:", await l.getText());
+    }
+
+    console.log("=================================");
 
     const tileXpath =
         `//ion-text[normalize-space()='${moduleName}']/ancestor::div[1]//ion-img`;
