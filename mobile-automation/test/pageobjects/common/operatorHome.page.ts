@@ -108,14 +108,13 @@ async debugDashboard(): Promise<void> {
     console.log("===== END DASHBOARD DEBUG =====\n");
 }
 
-async openModule(tileName: string) {
+async openModule(moduleName: string) {
 
     await this.ensureWebView();
 
-    console.log(`Opening module: ${tileName}`);
+    console.log(`Opening module: ${moduleName}`);
 
-    const tileXpath =
-        `//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`;
+    const tileXpath = `//ion-text[contains(.,'${moduleName}')]/preceding::ion-img[1]`;
 
     for (let i = 0; i < 8; i++) {
 
@@ -127,17 +126,17 @@ async openModule(tileName: string) {
             await tile.waitForClickable({ timeout: 10000 });
             await tile.click();
 
-            console.log(`${tileName} tile clicked`);
+            console.log(`${moduleName} tile clicked`);
             return;
         }
 
-        console.log(`Tile not visible, scrolling (${i + 1})`);
+        console.log(`Scrolling dashboard (${i + 1})`);
 
         await this.scrollDashboard();
-        await browser.pause(1000);
+        await browser.pause(800);
     }
 
-    throw new Error(`Module ${tileName} not found after scrolling`);
+    throw new Error(`Module ${moduleName} not found after scrolling`);
 }
 }
 
