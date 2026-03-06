@@ -130,7 +130,13 @@ async openModule(moduleName: string): Promise<void> {
 
                 console.log(`${moduleName} module found`);
 
-                const tile = await label.$('xpath=ancestor::div[1]//ion-img');
+                const tile = await label.$('.//ancestor::div[1]//img');
+
+                // 🔎 Debug information
+                console.log("Tile exists:", await tile.isExisting());
+                console.log("Tile displayed:", await tile.isDisplayed());
+
+                await tile.waitForDisplayed({ timeout: 10000 });
 
                 await this.safeClick(tile);
 
@@ -143,6 +149,7 @@ async openModule(moduleName: string): Promise<void> {
         console.log("Module not visible yet — scrolling dashboard");
 
         await this.scrollDashboard();
+
         await browser.pause(1200);
     }
 
