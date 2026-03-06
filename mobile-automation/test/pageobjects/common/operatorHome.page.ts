@@ -112,18 +112,18 @@ async openModule(moduleName: string): Promise<void> {
 
     console.log(`\n===== OPENING ${moduleName} MENU =====\n`);
 
-    // 1️⃣ Ensure WEBVIEW
     await this.ensureWebView();
+    const labels = await $$('ion-text');
 
-    await browser.pause(3000);
-
-    // OLD working absolute XPath
-    const receiptXpath =
-        '//*[@id="main"]/app-home/ion-content[2]/ion-grid/ion-row/div[23]/ion-col/ion-img';
+for (const l of labels) {
+    console.log("Module:", await l.getText());
+}
+    const tileXpath =
+        `//div[.//ion-text[normalize-space()='${moduleName}']]//ion-img`;
 
     for (let i = 0; i < 12; i++) {
 
-        const tiles = await $$(receiptXpath);
+        const tiles = await $$(tileXpath);
 
         if (tiles.length > 0) {
 
@@ -131,32 +131,11 @@ async openModule(moduleName: string): Promise<void> {
 
             if (await tile.isDisplayed()) {
 
-                console.log("GoodsReceipt tile found using old XPath");
+                console.log(`${moduleName} tile found`);
 
-                await tile.waitForClickable({ timeout: 15000 });
                 await this.safeClick(tile);
 
-                console.log("GoodsReceipt tile clicked");
-
-                // 2️⃣ Wait for navigation
-                await driver.waitUntil(async () => {
-
-                    const url = await driver.execute(() => window.location.href);
-                    console.log("Current URL:", url);
-
-                    return !url.includes('/home');
-
-                }, {
-                    timeout: 20000,
-                    interval: 1000,
-                    timeoutMsg: "Navigation did not happen"
-                });
-
-                // 3️⃣ Confirm list page
-                const grid = await $('//*[@id="grid"]');
-                await grid.waitForDisplayed({ timeout: 30000 });
-
-                console.log("Goods Receipt list page loaded");
+                console.log(`${moduleName} tile clicked`);
 
                 return;
             }
