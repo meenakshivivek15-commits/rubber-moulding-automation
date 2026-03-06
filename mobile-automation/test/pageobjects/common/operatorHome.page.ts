@@ -114,24 +114,33 @@ async openModule(moduleName: string): Promise<void> {
 
     console.log(`Opening module: ${moduleName}`);
 
+    // ✅ Wait until the required module label appears
     await browser.waitUntil(async () => {
+
         const labels = await $$('ion-text');
-        return labels.length > 10;
-    }, { timeout: 30000 });
 
-    // 🔎 DEBUG: Print module names
-    const labels = await $$('ion-text');
+        for (const l of labels) {
+            const text = (await l.getText()).trim();
 
-    console.log("===== MODULE LABELS DETECTED =====");
+            console.log("Detected label:", text);
 
-    for (const l of labels) {
-        console.log("Module label:", await l.getText());
-    }
+            if (text.includes(moduleName)) {
+                console.log(`${moduleName} module detected`);
+                return true;
+            }
+        }
 
-    console.log("=================================");
+        console.log(`Waiting for ${moduleName} module to appear...`);
+        return false;
 
-    const tileXpath =
-        `//ion-text[normalize-space()='${moduleName}']/ancestor::div[1]//ion-img`;
+    }, {
+        timeout: 90000,
+        interval: 2000,
+        timeoutMsg: `${moduleName} module did not load on dashboard`
+    });
+
+    // Locator for tile icon
+    const tileXpath = `//ion-text[contains(.,'${moduleName}')]/preceding::ion-img[1]`;
 
     for (let i = 0; i < 10; i++) {
 
@@ -140,7 +149,7 @@ async openModule(moduleName: string): Promise<void> {
         if (await tile.isExisting()) {
 
             await tile.scrollIntoView();
-            await tile.waitForDisplayed({ timeout: 10000 });
+            await tile.waitForDisplayed({ timeout: 15000 });
 
             await tile.click();
 
@@ -149,8 +158,9 @@ async openModule(moduleName: string): Promise<void> {
         }
 
         console.log(`Scrolling dashboard (${i + 1})`);
+
         await this.scrollDashboard();
-        await browser.pause(800);
+        await browser.pause(1000);
     }
 
     throw new Error(`Module ${moduleName} not found after scrolling`);
