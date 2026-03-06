@@ -114,53 +114,30 @@ async openModule(moduleName: string): Promise<void> {
 
     console.log(`Opening module: ${moduleName}`);
 
-    // ✅ Wait until the required module label appears
-    await browser.waitUntil(async () => {
+    const tileXpath =
+        `//ion-text[normalize-space()='${moduleName}']/preceding::ion-img[1]`;
 
-        const labels = await $$('ion-text');
-
-        for (const l of labels) {
-            const text = (await l.getText()).trim();
-
-            console.log("Detected label:", text);
-
-            if (text.includes(moduleName)) {
-                console.log(`${moduleName} module detected`);
-                return true;
-            }
-        }
-
-        console.log(`Waiting for ${moduleName} module to appear...`);
-        return false;
-
-    }, {
-        timeout: 90000,
-        interval: 2000,
-        timeoutMsg: `${moduleName} module did not load on dashboard`
-    });
-
-    // Locator for tile icon
-    const tileXpath = `//ion-text[contains(.,'${moduleName}')]/preceding::ion-img[1]`;
-
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
 
         const tile = await $(tileXpath);
 
         if (await tile.isExisting()) {
 
+            console.log(`${moduleName} module found`);
+
             await tile.scrollIntoView();
-            await tile.waitForDisplayed({ timeout: 15000 });
+            await tile.waitForClickable({ timeout: 10000 });
 
-            await tile.click();
+            await this.safeClick(tile);
 
-            console.log(`${moduleName} tile clicked`);
+            console.log(`${moduleName} clicked`);
+
             return;
         }
 
         console.log(`Scrolling dashboard (${i + 1})`);
 
         await this.scrollDashboard();
-        await browser.pause(1000);
     }
 
     throw new Error(`Module ${moduleName} not found after scrolling`);
