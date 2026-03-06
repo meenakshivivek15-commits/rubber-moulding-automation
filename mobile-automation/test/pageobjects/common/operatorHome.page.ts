@@ -114,19 +114,24 @@ async openModule(tileName: string) {
 
     console.log(`Opening module: ${tileName}`);
 
-    const tileXpath = ` //ion-content//ion-col[.//ion-text[normalize-space()='GoodsReceipt']]//ion-img//img`;
+    const tileXpath =
+        `//*[@id="main"]//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`;
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 8; i++) {
 
         const tile = await $(tileXpath);
 
         if (await tile.isExisting() && await tile.isDisplayed()) {
+
+            await tile.waitForClickable({ timeout: 10000 });
             await tile.click();
+
             console.log(`${tileName} tile clicked`);
             return;
         }
 
-        console.log("Scrolling dashboard...");
+        console.log(`Tile not visible, scrolling dashboard (${i + 1})`);
+
         await this.scrollDashboard();
         await browser.pause(800);
     }
