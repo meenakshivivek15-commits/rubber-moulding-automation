@@ -114,25 +114,40 @@ async openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
 
-    for (let i = 0; i < 20; i++) {
+    for (let scroll = 0; scroll < 20; scroll++) {
 
-        console.log(`Scroll attempt: ${i}`);
+        console.log(`Scroll attempt: ${scroll}`);
 
-        const moduleLabel = await $(`//ion-text[contains(text(),"${moduleName}")]`);
+        const tiles = await $$('ion-grid ion-row div');
 
-        if (await moduleLabel.isExisting()) {
+        console.log("Tiles detected:", tiles.length);
 
-            console.log(`${moduleName} module found`);
+        for (const tile of tiles) {
 
-            const tile = await moduleLabel.$('xpath=ancestor::div[1]//img');
+            const label = await tile.$('ion-text');
 
-            await tile.waitForDisplayed({ timeout: 10000 });
+            if (!(await label.isExisting())) continue;
 
-            await this.safeClick(tile);
+            const text = (await label.getText()).trim();
 
-            console.log(`${moduleName} tile clicked`);
+            if (!text) continue;
 
-            return;
+            console.log("Module:", text);
+
+            if (text === moduleName) {
+
+                console.log(`${moduleName} module found`);
+
+                const img = await tile.$('img');
+
+                await img.waitForDisplayed({ timeout: 10000 });
+
+                await this.safeClick(img);
+
+                console.log(`${moduleName} tile clicked`);
+
+                return;
+            }
         }
 
         console.log("Module not visible yet — scrolling");
