@@ -114,54 +114,30 @@ async openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
 
-    // 🔎 DEBUG: Print all detected modules
-    const debugLabels = await $$('ion-text');
+    for (let i = 0; i < 20; i++) {
 
-    console.log("====== MODULES DETECTED ======");
+        console.log(`Scroll attempt: ${i}`);
 
-    for (const label of debugLabels) {
-        const text = (await label.getText()).trim();
-        console.log(text);
-    }
+        const moduleLabel = await $(`//ion-text[contains(text(),"${moduleName}")]`);
 
-    console.log("===============================");
+        if (await moduleLabel.isExisting()) {
 
-    for (let scroll = 0; scroll < 20; scroll++) {
+            console.log(`${moduleName} module found`);
 
-        console.log(`Checking visible modules (scroll ${scroll})`);
+            const tile = await moduleLabel.$('xpath=ancestor::div[1]//img');
 
-        const labels = await $$('ion-text');
+            await tile.waitForDisplayed({ timeout: 10000 });
 
-        for (const label of labels) {
+            await this.safeClick(tile);
 
-            const text = (await label.getText()).trim();
+            console.log(`${moduleName} tile clicked`);
 
-            console.log("Module:", text);
-
-            if (text.replace(/\s/g,'') === moduleName.replace(/\s/g,'')) {
-
-                console.log(`${moduleName} module found`);
-
-                const tile = await label.$('.//ancestor::div[1]//img');
-
-                console.log("Tile exists:", await tile.isExisting());
-                console.log("Tile displayed:", await tile.isDisplayed());
-
-                await tile.waitForDisplayed({ timeout: 10000 });
-
-                await this.safeClick(tile);
-
-                console.log(`${moduleName} tile clicked`);
-
-                return;
-            }
+            return;
         }
 
-        console.log("Module not visible yet — scrolling dashboard");
+        console.log("Module not visible yet — scrolling");
 
         await this.scrollDashboard();
-
-        await browser.pause(1200);
     }
 
     throw new Error(`Module ${moduleName} not found after scrolling`);
