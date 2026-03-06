@@ -108,7 +108,7 @@ async debugDashboard(): Promise<void> {
     console.log("===== END DASHBOARD DEBUG =====\n");
 }
 
-aasync openModule(moduleName: string): Promise<void> {
+async openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
 
@@ -118,7 +118,8 @@ aasync openModule(moduleName: string): Promise<void> {
         const labels = await $$('ion-text');
         return labels.length > 10;
     }, { timeout: 30000 });
-        // 🔎 DEBUG: Print module names
+
+    // 🔎 DEBUG: Print module names
     const labels = await $$('ion-text');
 
     console.log("===== MODULE LABELS DETECTED =====");
