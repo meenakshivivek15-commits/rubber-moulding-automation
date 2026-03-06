@@ -108,35 +108,29 @@ async debugDashboard(): Promise<void> {
     console.log("===== END DASHBOARD DEBUG =====\n");
 }
 
-async openModule(moduleName: string): Promise<void> {
+aasync openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
 
     console.log(`Opening module: ${moduleName}`);
 
-    // wait until dashboard tiles render
     await browser.waitUntil(async () => {
-        const tiles = await $$('ion-img');
-        const count = await tiles.length;
-        return count > 10;
+        const labels = await $$('ion-text');
+        return labels.length > 10;
     }, { timeout: 30000 });
 
-    let tile;
-
-    if (moduleName === "GoodsReceipt") {
-        tile = await $('//ion-img[contains(@ng-reflect-src,"receipt")]');
-    } else {
-        const tileXpath =
-            `//div[.//ion-text[contains(normalize-space(),'${moduleName}')]]//ion-img`;
-        tile = await $(tileXpath);
-    }
+    const tileXpath =
+        `//ion-text[normalize-space()='${moduleName}']/ancestor::div[1]//ion-img`;
 
     for (let i = 0; i < 10; i++) {
+
+        const tile = await $(tileXpath);
 
         if (await tile.isExisting()) {
 
             await tile.scrollIntoView();
-            await tile.waitForDisplayed({ timeout: 15000 });
+            await tile.waitForDisplayed({ timeout: 10000 });
+
             await tile.click();
 
             console.log(`${moduleName} tile clicked`);
@@ -145,7 +139,7 @@ async openModule(moduleName: string): Promise<void> {
 
         console.log(`Scrolling dashboard (${i + 1})`);
         await this.scrollDashboard();
-        await browser.pause(1000);
+        await browser.pause(800);
     }
 
     throw new Error(`Module ${moduleName} not found after scrolling`);
