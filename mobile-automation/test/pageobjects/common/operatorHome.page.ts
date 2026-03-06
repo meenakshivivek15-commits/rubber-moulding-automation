@@ -114,7 +114,7 @@ async openModule(tileName: string) {
 
     console.log(`Opening module: ${tileName}`);
 
-    const tileXpath = `//div[.//ion-text[normalize-space()='${tileName}']]//ion-img//img`;
+    const tileXpath = ` //ion-content//ion-col[.//ion-text[normalize-space()='GoodsReceipt']]//ion-img//img`;
 
     for (let i = 0; i < 5; i++) {
 
