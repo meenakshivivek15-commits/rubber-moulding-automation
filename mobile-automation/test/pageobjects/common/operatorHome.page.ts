@@ -110,28 +110,27 @@ async debugDashboard(): Promise<void> {
 
 async openModule(moduleName: string): Promise<void> {
 
-    console.log(`\n===== OPENING ${moduleName} MENU =====\n`);
+    console.log(`\n===== OPENING MODULE: ${moduleName} =====\n`);
 
     await this.ensureWebView();
-    const labels = await $$('ion-text');
 
-for (const l of labels) {
-    console.log("Module:", await l.getText());
-}
-    const tileXpath =
-        `//div[.//ion-text[normalize-space()='${moduleName}']]//ion-img`;
+    for (let scroll = 0; scroll < 10; scroll++) {
 
-    for (let i = 0; i < 12; i++) {
+        console.log(`Checking visible modules (scroll ${scroll})`);
 
-        const tiles = await $$(tileXpath);
+        const labels = await $$('ion-text');
 
-        if (tiles.length > 0) {
+        for (const label of labels) {
 
-            const tile = tiles[0];
+            const text = (await label.getText()).trim();
 
-            if (await tile.isDisplayed()) {
+            console.log("Module:", text);
 
-                console.log(`${moduleName} tile found`);
+            if (text === moduleName) {
+
+                console.log(`${moduleName} module found`);
+
+                const tile = await label.$('xpath=ancestor::div[1]//ion-img');
 
                 await this.safeClick(tile);
 
@@ -141,9 +140,10 @@ for (const l of labels) {
             }
         }
 
-        console.log(`Scrolling dashboard (${i + 1})`);
+        console.log("Module not visible yet — scrolling dashboard");
 
         await this.scrollDashboard();
+        await browser.pause(1200);
     }
 
     throw new Error(`Module ${moduleName} not found after scrolling`);
