@@ -126,7 +126,7 @@ async openModule(moduleName: string): Promise<void> {
 
     console.log("===============================");
 
-    for (let scroll = 0; scroll < 10; scroll++) {
+    for (let scroll = 0; scroll < 20; scroll++) {
 
         console.log(`Checking visible modules (scroll ${scroll})`);
 

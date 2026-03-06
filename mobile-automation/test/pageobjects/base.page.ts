@@ -146,10 +146,10 @@ export default class BasePage {
         width: rect.width - 40,
         height: rect.height - 250,
         direction: "down",
-        percent: 0.85
+        percent: 0.40   // smaller scroll for lazy loading
     });
 
-    await browser.pause(1500);
+    await browser.pause(1800); // allow tiles to render
 }
 
 
