@@ -115,14 +115,15 @@ async openModule(tileName: string) {
     console.log(`Opening module: ${tileName}`);
 
     const tileXpath =
-        `//*[@id="main"]//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`;
+        `//ion-col[.//ion-text[normalize-space()='${tileName}']]//ion-img`;
 
     for (let i = 0; i < 8; i++) {
 
         const tile = await $(tileXpath);
 
-        if (await tile.isExisting() && await tile.isDisplayed()) {
+        if (await tile.isExisting()) {
 
+            await tile.scrollIntoView();
             await tile.waitForClickable({ timeout: 10000 });
             await tile.click();
 
@@ -130,10 +131,10 @@ async openModule(tileName: string) {
             return;
         }
 
-        console.log(`Tile not visible, scrolling dashboard (${i + 1})`);
+        console.log(`Tile not visible, scrolling (${i + 1})`);
 
         await this.scrollDashboard();
-        await browser.pause(800);
+        await browser.pause(1000);
     }
 
     throw new Error(`Module ${tileName} not found after scrolling`);
