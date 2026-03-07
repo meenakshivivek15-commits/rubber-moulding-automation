@@ -116,9 +116,9 @@ async openModule(moduleName: string): Promise<void> {
 
     const normalizedTarget = moduleName.replace(/\s/g, '').toLowerCase();
 
-    for (let scrollAttempt = 0; scrollAttempt < 6; scrollAttempt++) {
+    for (let attempt = 0; attempt < 6; attempt++) {
 
-        const modules = await $$('//ion-text');
+        const modules = await $$('//ion-text');   // refresh list each loop
         console.log("Modules detected:", modules.length);
 
         for (const module of modules) {
