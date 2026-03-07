@@ -142,39 +142,20 @@ export default class BasePage {
 
    async scrollDashboard(): Promise<void> {
 
-    try {
-
-        const rect: any = await driver.execute('mobile: viewportRect');
-
-        await driver.execute('mobile: scrollGesture', {
-            left: rect.left + 20,
-            top: rect.top + 200,
-            width: rect.width - 40,
-            height: rect.height - 250,
-            direction: "down",
-            percent: 0.10
-        });
-
-        console.log("Native scrollGesture executed");
-
-    } catch (err) {
-
-        console.log("Native scroll failed, using DOM scroll");
-
-    }
-
-    // DOM scroll fallback (works for Ionic WebView)
     await browser.execute(() => {
 
         const content = document.querySelector('ion-content');
 
         if (content) {
-            content.scrollBy(0, 400);
+            content.scrollBy({
+                top: 500,
+                behavior: "auto"
+            });
         }
 
     });
 
-    console.log("ion-content DOM scroll executed");
+    console.log("Scrolling ion-content dashboard");
 
     await browser.pause(1200);
 }
