@@ -63,8 +63,8 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
 
     console.log("STEP 1: Navigate to Goods Receipt");
-    await operatorHomePage.prepareDashboardForModule("Goods Receipt");
-    await operatorHomePage.openModule("Goods Receipt");
+    await operatorHomePage.prepareDashboardForModule("GoodsReceipt");
+    await operatorHomePage.openModule("GoodsReceipt");
 
     console.log("STEP 2: Select PO");
 
