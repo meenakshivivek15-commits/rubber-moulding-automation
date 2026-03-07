@@ -35,18 +35,7 @@ class OperatorHomePage extends BasePage {
     await search.setValue(moduleName);
 
     // enable checkbox
-   const checkbox = await $(`
-//ion-text[
-contains(
-translate(normalize-space(),
-'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-'abcdefghijklmnopqrstuvwxyz'),
-translate("${moduleName}",
-'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-'abcdefghijklmnopqrstuvwxyz')
-)
-]/preceding::input[@type="checkbox"][1]
-`);
+   const checkbox = await $(`//ion-text[normalize-space()="${moduleName}"]/preceding::input[@type="checkbox"][1]`);
 
 await checkbox.waitForDisplayed({ timeout: 10000 });
 
