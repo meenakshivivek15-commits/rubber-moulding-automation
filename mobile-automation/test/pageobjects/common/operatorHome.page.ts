@@ -110,52 +110,43 @@ async debugDashboard(): Promise<void> {
 
 async openModule(moduleName: string): Promise<void> {
 
-    console.log(`\n===== OPENING MODULE: ${moduleName} =====\n`);
-
     await this.ensureWebView();
 
-    for (let scroll = 0; scroll < 20; scroll++) {
+    console.log(`Opening module: ${moduleName}`);
 
-        console.log(`Scroll attempt: ${scroll}`);
+    await browser.waitUntil(async () => {
+        const labels = await $$('//ion-text');
+        const count = await labels.length;
+        console.log("Modules detected:", count);
+        return count > 5;
+    }, { timeout: 30000, timeoutMsg: 'Dashboard modules not loaded' });
 
-        const tiles = await $$('ion-grid ion-row div');
+    const modules = await $$('//ion-text');
 
-        console.log("Tiles detected:", tiles.length);
+    console.log("===== MODULE LABELS DETECTED =====");
 
-        for (const tile of tiles) {
+    for (const module of modules) {
 
-            const label = await tile.$('ion-text');
+        const text = (await module.getText()).trim();
+        console.log("Found module:", text);
 
-            if (!(await label.isExisting())) continue;
+        if (text === moduleName) {
 
-            const text = (await label.getText()).trim();
+            console.log(`Module matched: ${text}`);
 
-            if (!text) continue;
+            // go to parent tile and click image
+            const tile = await module.$('./ancestor::ion-col');
+            const icon = await tile.$('.//ion-img');
 
-            console.log("Module:", text);
+            await icon.waitForDisplayed({ timeout: 10000 });
+            await icon.click();
 
-            if (text === moduleName) {
-
-                console.log(`${moduleName} module found`);
-
-                const img = await tile.$('img');
-
-                await img.waitForDisplayed({ timeout: 10000 });
-
-                await this.safeClick(img);
-
-                console.log(`${moduleName} tile clicked`);
-
-                return;
-            }
+            console.log(`${moduleName} module clicked successfully`);
+            return;
         }
-
-        console.log("Module not visible yet — scrolling");
-
-        await this.scrollDashboard();
     }
 
-    throw new Error(`Module ${moduleName} not found after scrolling`);
+    throw new Error(`Module ${moduleName} not found on dashboard`);
 }
 }
 

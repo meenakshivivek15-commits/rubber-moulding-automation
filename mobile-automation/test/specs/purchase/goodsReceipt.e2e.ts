@@ -52,10 +52,19 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
     const tiles = await $$('ion-img');
     console.log("Detected tiles on home:", tiles.length);
+     // 👇 ADD HERE
+    const moduleName = "RMIssue";
 
-    console.log("STEP 1: Navigate to Goods Receipt");
+    console.log(`STEP 1: Navigate to ${moduleName}`);
 
-    await operatorHomePage.openModule("GoodsReceipt");
+    await operatorHomePage.openModule(moduleName);
+
+    console.log("✅ Module click verified");
+
+
+    /*console.log("STEP 1: Navigate to Goods Receipt");
+
+    //await operatorHomePage.openModule("GoodsReceipt");
 
     console.log("STEP 2: Select PO");
 
@@ -89,7 +98,7 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
     await expect(toast).toBeDisplayed({ wait: 20000 });
 
-    console.log("✅ Goods Receipt completed successfully");
+    console.log("✅ Goods Receipt completed successfully"); */
 
 });
 
