@@ -138,7 +138,7 @@ async openModule(moduleName: string): Promise<void> {
 
             console.log(`Module matched: ${text}`);
 
-            const icon = await module.$('./preceding::ion-img[1]');
+            const icon = await module.$('./preceding::ion-img[1]//img');
 
             await icon.scrollIntoView();
             await icon.click();
