@@ -53,7 +53,7 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
     const tiles = await $$('ion-img');
     console.log("Detected tiles on home:", tiles.length);
      // 👇 ADD HERE
-    const moduleName = "RMIssue";
+    const moduleName = "RM Issue";
 
     console.log(`STEP 1: Navigate to ${moduleName}`);
 
