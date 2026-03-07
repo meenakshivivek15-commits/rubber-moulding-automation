@@ -107,62 +107,46 @@ async debugDashboard(): Promise<void> {
 
     console.log("===== END DASHBOARD DEBUG =====\n");
 }
+        async ensureModuleEnabled(moduleName: string): Promise<void> {
+
+    console.log(`Ensuring module ${moduleName} is enabled`);
+
+    const settingsIcon = await $('//ion-icon[@name="settings"]');
+    await this.safeClick(settingsIcon);
+
+    const searchBox = await $('//input[@placeholder="Search"]');
+    await searchBox.waitForDisplayed({ timeout: 10000 });
+
+    await searchBox.clearValue();
+    await searchBox.setValue(moduleName);
+
+    const checkbox = await $(`//ion-label[normalize-space()="${moduleName}"]/preceding::ion-checkbox`);
+
+    if (!(await checkbox.isSelected())) {
+        await checkbox.click();
+        console.log(`${moduleName} enabled`);
+    } else {
+        console.log(`${moduleName} already enabled`);
+    }
+
+    await browser.back();   // return to dashboard
+}
 
 async openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
 
-    const target = moduleName.replace(/\s/g, '').toLowerCase();
+    console.log(`Opening module: ${moduleName}`);
 
-    for (let attempt = 0; attempt < 30; attempt++) {
+    const moduleLabel = await $(`//ion-text[normalize-space()="${moduleName}"]`);
 
-        const modules = await $$('//ion-grid//ion-col//ion-text');
+    await moduleLabel.waitForDisplayed({ timeout: 20000 });
 
-        console.log(`Scan attempt ${attempt + 1} — modules detected: ${modules.length}`);
+    const icon = await moduleLabel.$('./preceding::ion-img[1]');
 
-        for (const module of modules) {
+    await this.safeClick(icon);
 
-            const text = (await module.getText()).trim();
-            console.log("Found module:", text);
-
-            const normalized = text.replace(/\s/g, '').toLowerCase();
-
-            if (normalized === target) {
-
-                console.log(`Module matched: ${text}`);
-
-                const icon = await module.$('./preceding::ion-img[1]');
-
-                await this.safeClick(icon);
-
-                console.log(`${moduleName} module clicked successfully`);
-                return;
-            }
-        }
-
-        console.log("Module not visible — adjusting dashboard");
-
-        // 1️⃣ reveal hidden tiles in current row
-        if (attempt % 3 === 0) {
-            console.log("Scrolling row right");
-            await this.scrollRow("right");
-        }
-
-        // 2️⃣ move to next row
-        else if (attempt % 3 === 1) {
-            console.log("Scrolling dashboard down");
-            await this.scrollDashboard();
-        }
-
-        // 3️⃣ reset row position
-        else {
-            console.log("Resetting row to left");
-            await this.scrollRow("left");
-        }
-    }
-
-    throw new Error(`Module ${moduleName} not found on dashboard`);
+    console.log(`${moduleName} module clicked successfully`);
 }
 }
-
 export default new OperatorHomePage();
