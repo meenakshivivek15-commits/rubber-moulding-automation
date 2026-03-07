@@ -38,9 +38,8 @@ class OperatorHomePage extends BasePage {
         await browser.pause(1000); // allow Ionic filter to render results
 
         // wait for module text to appear
-        const moduleText = await $(`//ion-text[normalize-space()="${moduleName}"]`);
-        await moduleText.waitForDisplayed({ timeout: 15000 });
-
+const moduleText = await $(`//ion-text[contains(translate(normalize-space(), " ", ""), "${moduleName.replace(/\s/g,"")}")]`);
+await moduleText.waitForDisplayed({ timeout: 15000 });
         // find checkbox relative to module text
        const checkbox = await $(`//ion-item[.//ion-text[normalize-space()="${moduleName}"]]//ion-checkbox`);
 
