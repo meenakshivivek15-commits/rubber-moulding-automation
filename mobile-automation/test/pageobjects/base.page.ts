@@ -121,20 +121,24 @@ export default class BasePage {
 
     async scrollGrid(direction: "down" | "left"): Promise<void> {
 
-        const rect: any = await driver.execute('mobile: viewportRect');
+    await browser.execute((dir) => {
 
-        await driver.execute('mobile: scrollGesture', {
-            left: rect.left + 10,
-            top: rect.top + 200,
-            width: rect.width - 20,
-            height: rect.height - 250,
-            direction: direction,
-            percent: 0.85
-        });
+        const content = document.querySelector('ion-content');
 
-        await browser.pause(500);
-    }
+        if (!content) return;
 
+        if (dir === "down") {
+            content.scrollBy(0, 600);
+        }
+
+        if (dir === "left") {
+            content.scrollBy(600, 0);
+        }
+
+    }, direction);
+
+    await browser.pause(1200);
+}
 
    async scrollDashboard(): Promise<void> {
 
