@@ -58,14 +58,19 @@ if (checked !== "true") {
     console.log(`${moduleName} already enabled`);
 }
         // go back to dashboard
-        const back = await $(this.backButton);
-        await this.safeClick(back);
+       console.log("Navigating back to dashboard");
 
+await driver.back();
+
+await browser.pause(1500);
         // refresh dashboard
         const refresh = await $(this.refreshIcon);
-        await this.safeClick(refresh);
 
-        await browser.pause(2000);
+await refresh.waitForDisplayed({ timeout: 15000 });
+
+await this.safeClick(refresh);
+
+await this.ensureTilesVisible();;
     }
 
 
