@@ -127,25 +127,28 @@ async openModule(moduleName: string): Promise<void> {
 
     for (const module of modules) {
 
-    const text = (await module.getText()).trim();
+        const text = (await module.getText()).trim();
 
-    
-    console.log("Found module:", JSON.stringify(text));
+        console.log("Found module:", JSON.stringify(text));
 
-    if (text.replace(/\s/g,'').toLowerCase() === moduleName.replace(/\s/g,'').toLowerCase()) {
+        const normalizedText = text.replace(/\s/g, '').toLowerCase();
+        const normalizedTarget = moduleName.replace(/\s/g, '').toLowerCase();
 
-        console.log(`Module matched: ${text}`);
+        if (normalizedText === normalizedTarget) {
 
-        const tile = await module.$('./ancestor::ion-col');
-        const icon = await tile.$('.//ion-img');
+            console.log(`Module matched: ${text}`);
 
-        await icon.waitForDisplayed({ timeout: 10000 });
-        await icon.click();
+            // locate icon inside same tile
+            const icon = await module.$('./ancestor::ion-col//ion-img');
 
-        console.log(`${moduleName} module clicked successfully`);
-        return;
+            await icon.waitForDisplayed({ timeout: 10000 });
+            await icon.click();
+
+            console.log(`${moduleName} module clicked successfully`);
+
+            return;
+        }
     }
-}
 
     throw new Error(`Module ${moduleName} not found on dashboard`);
 }
