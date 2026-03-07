@@ -142,20 +142,67 @@ export default class BasePage {
 
    async scrollDashboard(): Promise<void> {
 
-    const rect: any = await driver.execute('mobile: viewportRect');
+    try {
 
-    await driver.execute('mobile: scrollGesture', {
-        left: rect.left + 20,
-        top: rect.top + 200,
-        width: rect.width - 40,
-        height: rect.height - 250,
-        direction: "down",
-        percent: 0.10   // smaller scroll for lazy loading
+        const rect: any = await driver.execute('mobile: viewportRect');
+
+        await driver.execute('mobile: scrollGesture', {
+            left: rect.left + 20,
+            top: rect.top + 200,
+            width: rect.width - 40,
+            height: rect.height - 250,
+            direction: "down",
+            percent: 0.10
+        });
+
+        console.log("Native scrollGesture executed");
+
+    } catch (err) {
+
+        console.log("Native scroll failed, using DOM scroll");
+
+    }
+
+    // DOM scroll fallback (works for Ionic WebView)
+    await browser.execute(() => {
+
+        const content = document.querySelector('ion-content');
+
+        if (content) {
+            content.scrollBy(0, 400);
+        }
+
     });
 
-    await browser.pause(1200); // allow tiles to render
-}
+    console.log("ion-content DOM scroll executed");
 
+    await browser.pause(1200);
+}
+    async scrollRow(direction: "right" | "left" = "right"): Promise<void> {
+
+    await browser.execute((dir) => {
+
+        const content = document.querySelector('ion-content');
+        if (!content) return;
+
+        const grid = content.querySelector('ion-grid') || content;
+
+        const amount = 350;
+
+        if (dir === "right") {
+            (grid as HTMLElement).scrollBy({ left: amount, behavior: "auto" });
+        }
+
+        if (dir === "left") {
+            (grid as HTMLElement).scrollBy({ left: -amount, behavior: "auto" });
+        }
+
+    }, direction);
+
+    console.log(`Scrolled row ${direction}`);
+
+    await browser.pause(800);
+}
 
     async safeClick(element: any): Promise<void> {
 

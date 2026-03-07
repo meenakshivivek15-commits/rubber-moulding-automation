@@ -114,9 +114,9 @@ async openModule(moduleName: string): Promise<void> {
 
     const target = moduleName.replace(/\s/g, '').toLowerCase();
 
-    for (let attempt = 0; attempt < 20; attempt++) {
+    for (let attempt = 0; attempt < 30; attempt++) {
 
-        const modules = await $$('//ion-col//ion-text');
+        const modules = await $$('//ion-grid//ion-col//ion-text');
 
         console.log(`Scan attempt ${attempt + 1} — modules detected: ${modules.length}`);
 
@@ -140,12 +140,24 @@ async openModule(moduleName: string): Promise<void> {
             }
         }
 
-        console.log("Module not visible — scrolling grid");
+        console.log("Module not visible — adjusting dashboard");
 
-        if (attempt % 2 === 0) {
-            await this.scrollGrid("left");
-        } else {
-            await this.scrollGrid("down");
+        // 1️⃣ reveal hidden tiles in current row
+        if (attempt % 3 === 0) {
+            console.log("Scrolling row right");
+            await this.scrollRow("right");
+        }
+
+        // 2️⃣ move to next row
+        else if (attempt % 3 === 1) {
+            console.log("Scrolling dashboard down");
+            await this.scrollDashboard();
+        }
+
+        // 3️⃣ reset row position
+        else {
+            console.log("Resetting row to left");
+            await this.scrollRow("left");
         }
     }
 
