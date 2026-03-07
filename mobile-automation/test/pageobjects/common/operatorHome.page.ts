@@ -1,6 +1,62 @@
 import BasePage from '../base.page';
 
 class OperatorHomePage extends BasePage {
+    
+    // ===== Locators =====
+
+    private settingsIcon = '//*[@id="main"]/app-home/ion-header/ion-toolbar/ion-grid/ion-row/ion-col[4]/ion-img';
+
+    private refreshIcon = '//*[@id="main"]/app-home/ion-header/ion-toolbar/ion-grid/ion-row/ion-col[3]/ion-img';
+
+    private searchBox = '//*[@id="grid"]/form/ion-grid/ion-row[1]/ion-col[1]/ion-searchbar/div/input';
+
+    private clearButton = '//*[@id="grid"]/form/ion-grid/ion-row[1]/ion-col[3]/ion-button';
+
+    private backButton = '//*[@id="main"]/app-setting/ion-header/ion-toolbar/ion-back-button//button';
+
+    async prepareDashboardForModule(moduleName: string): Promise<void> {
+
+    console.log(`Preparing dashboard for module: ${moduleName}`);
+
+    // open settings
+    const settings = await $(this.settingsIcon);
+    await this.safeClick(settings);
+
+    // clear all modules
+    const clearBtn = await $(this.clearButton);
+    await clearBtn.waitForDisplayed({ timeout: 10000 });
+    await this.safeClick(clearBtn);
+
+    console.log("All modules cleared");
+
+    // search module
+    const search = await $(this.searchBox);
+    await search.waitForDisplayed({ timeout: 10000 });
+    await search.setValue(moduleName);
+
+    // enable checkbox
+    const checkbox = await $(`//ion-label[normalize-space()="${moduleName}"]/preceding::ion-checkbox`);
+
+    if (!(await checkbox.isSelected())) {
+
+        await checkbox.click();
+        console.log(`${moduleName} enabled`);
+
+    } else {
+
+        console.log(`${moduleName} already enabled`);
+    }
+
+    // back to home
+    const back = await $(this.backButton);
+    await this.safeClick(back);
+
+    // refresh dashboard
+    const refresh = await $(this.refreshIcon);
+    await this.safeClick(refresh);
+
+    await browser.pause(2000);
+}
 
 async ensureTilesVisible(): Promise<void> {
 
@@ -107,31 +163,7 @@ async debugDashboard(): Promise<void> {
 
     console.log("===== END DASHBOARD DEBUG =====\n");
 }
-        async ensureModuleEnabled(moduleName: string): Promise<void> {
-
-    console.log(`Ensuring module ${moduleName} is enabled`);
-
-    const settingsIcon = await $('//ion-icon[@name="settings"]');
-    await this.safeClick(settingsIcon);
-
-    const searchBox = await $('//input[@placeholder="Search"]');
-    await searchBox.waitForDisplayed({ timeout: 10000 });
-
-    await searchBox.clearValue();
-    await searchBox.setValue(moduleName);
-
-    const checkbox = await $(`//ion-label[normalize-space()="${moduleName}"]/preceding::ion-checkbox`);
-
-    if (!(await checkbox.isSelected())) {
-        await checkbox.click();
-        console.log(`${moduleName} enabled`);
-    } else {
-        console.log(`${moduleName} already enabled`);
-    }
-
-    await browser.back();   // return to dashboard
-}
-
+        
 async openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
