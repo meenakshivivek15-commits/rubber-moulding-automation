@@ -35,18 +35,32 @@ class OperatorHomePage extends BasePage {
     await search.setValue(moduleName);
 
     // enable checkbox
-    const checkbox = await $(`//ion-label[normalize-space()="${moduleName}"]/preceding::ion-checkbox`);
+   const checkbox = await $(`
+//ion-text[
+contains(
+translate(normalize-space(),
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+'abcdefghijklmnopqrstuvwxyz'),
+translate("${moduleName}",
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+'abcdefghijklmnopqrstuvwxyz')
+)
+]/preceding::input[@type="checkbox"][1]
+`);
 
-    if (!(await checkbox.isSelected())) {
+await checkbox.waitForDisplayed({ timeout: 10000 });
 
-        await checkbox.click();
-        console.log(`${moduleName} enabled`);
+const checked = await checkbox.getAttribute("aria-checked");
 
-    } else {
+if (checked !== "true") {
 
-        console.log(`${moduleName} already enabled`);
-    }
+    await checkbox.click();
+    console.log(`${moduleName} enabled`);
 
+} else {
+
+    console.log(`${moduleName} already enabled`);
+}
     // back to home
     const back = await $(this.backButton);
     await this.safeClick(back);
