@@ -114,7 +114,7 @@ async openModule(moduleName: string): Promise<void> {
 
     const target = moduleName.replace(/\s/g, '').toLowerCase();
 
-    for (let attempt = 0; attempt < 8; attempt++) {
+    for (let attempt = 0; attempt < 20; attempt++) {
 
         const modules = await $$('//ion-col//ion-text');
 
@@ -142,10 +142,10 @@ async openModule(moduleName: string): Promise<void> {
 
         console.log("Module not visible — scrolling grid");
 
-        await this.scrollGrid("down");
-
-        if (attempt % 2 === 1) {
-            await this.scrollDashboard();
+        if (attempt % 2 === 0) {
+            await this.scrollGrid("left");
+        } else {
+            await this.scrollGrid("down");
         }
     }
 
