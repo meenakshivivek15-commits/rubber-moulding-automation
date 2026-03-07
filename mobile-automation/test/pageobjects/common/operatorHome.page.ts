@@ -116,7 +116,7 @@ async openModule(moduleName: string): Promise<void> {
 
     await browser.waitUntil(async () => {
         const labels = await $$('//ion-text');
-        const count = await labels.length;
+        const count = labels.length;
         console.log("Modules detected:", count);
         return count > 5;
     }, { timeout: 30000, timeoutMsg: 'Dashboard modules not loaded' });
@@ -138,10 +138,13 @@ async openModule(moduleName: string): Promise<void> {
 
             console.log(`Module matched: ${text}`);
 
-            const icon = await module.$('./preceding::ion-img[1]//img');
+            const icon = await module.$('./preceding::ion-img[1]');
 
             await icon.scrollIntoView();
-            await icon.click();
+
+            await browser.execute((el) => {
+                (el as HTMLElement).click();
+            }, icon);
 
             console.log(`${moduleName} module clicked successfully`);
             return;
