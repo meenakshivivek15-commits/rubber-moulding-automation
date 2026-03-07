@@ -116,10 +116,13 @@ async openModule(moduleName: string): Promise<void> {
 
     await browser.waitUntil(async () => {
         const labels = await $$('//ion-text');
-        const count = labels.length;
+        const count = await labels.length;
         console.log("Modules detected:", count);
         return count > 5;
-    }, { timeout: 30000, timeoutMsg: 'Dashboard modules not loaded' });
+    }, {
+        timeout: 30000,
+        timeoutMsg: 'Dashboard modules not loaded'
+    });
 
     const modules = await $$('//ion-text');
 
@@ -128,7 +131,6 @@ async openModule(moduleName: string): Promise<void> {
     for (const module of modules) {
 
         const text = (await module.getText()).trim();
-
         console.log("Found module:", JSON.stringify(text));
 
         const normalizedText = text.replace(/\s/g, '').toLowerCase();
@@ -138,10 +140,12 @@ async openModule(moduleName: string): Promise<void> {
 
             console.log(`Module matched: ${text}`);
 
+            // Locate the icon just before the module label
             const icon = await module.$('./preceding::ion-img[1]');
 
             await icon.scrollIntoView();
 
+            // JS click for Ionic elements
             await browser.execute((el) => {
                 (el as HTMLElement).click();
             }, icon);
