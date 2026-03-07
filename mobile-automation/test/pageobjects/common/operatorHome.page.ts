@@ -42,20 +42,21 @@ class OperatorHomePage extends BasePage {
         await moduleText.waitForDisplayed({ timeout: 15000 });
 
         // find checkbox relative to module text
-        const checkbox = await moduleText.$('./preceding::input[@type="checkbox"][1]');
+       const checkbox = await $(`//ion-item[.//ion-text[normalize-space()="${moduleName}"]]//ion-checkbox`);
 
-        const checked = await checkbox.getAttribute("aria-checked");
+await checkbox.waitForDisplayed({ timeout: 15000 });
 
-        if (checked !== "true") {
+const checked = await checkbox.getAttribute("aria-checked");
 
-            await this.safeClick(checkbox);
-            console.log(`${moduleName} enabled`);
+if (checked !== "true") {
 
-        } else {
+    await this.safeClick(checkbox);
+    console.log(`${moduleName} enabled`);
 
-            console.log(`${moduleName} already enabled`);
-        }
+} else {
 
+    console.log(`${moduleName} already enabled`);
+}
         // go back to dashboard
         const back = await $(this.backButton);
         await this.safeClick(back);
@@ -79,7 +80,7 @@ class OperatorHomePage extends BasePage {
         await browser.waitUntil(async () => {
 
             const labels = await $$('ion-text');
-            const count = labels.length;
+            const count = await labels.length;
 
             console.log("Visible modules:", count);
 
@@ -162,7 +163,7 @@ class OperatorHomePage extends BasePage {
         await this.ensureWebView();
 
         const tiles = await $$('ion-col');
-        const count = tiles.length;
+        const count = await tiles.length;
 
         console.log("\n===== DASHBOARD TILE DEBUG =====");
 
