@@ -190,26 +190,69 @@ await this.ensureTilesVisible();;
         console.log("===== END DASHBOARD DEBUG =====\n");
     }
 
+    async printDashboardModules(): Promise<void> {
 
+    await this.ensureWebView();
+
+    const modules = await $$('//ion-text');
+
+    console.log("\n===== DASHBOARD MODULES =====");
+
+    for (const module of modules) {
+
+        const text = (await module.getText()).trim();
+
+        if (text.length > 0) {
+            console.log("Module label:", text);
+        }
+    }
+
+    console.log("===== END MODULE LIST =====\n");
+}
     // ===============================
     // Open module
     // ===============================
 
-    async openModule(moduleName: string): Promise<void> {
+   async openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
 
     console.log(`Opening module: ${moduleName}`);
 
-    const moduleIcon = await $(
-        `//ion-text[contains(normalize-space(),"${moduleName}")]/preceding::ion-img[1]`
-    );
+    await browser.waitUntil(async () => {
+        const labels = await $$('//ion-col//ion-text');
+        const count = await labels.length;
+        console.log("Modules detected:", count);
+        return count > 5;
+    }, { timeout: 30000, timeoutMsg: 'Dashboard modules not loaded' });
 
-    await moduleIcon.waitForDisplayed({ timeout: 20000 });
+    const modules = await $$('//ion-col//ion-text');
 
-    await this.safeClick(moduleIcon);
+    console.log("===== MODULE LABELS DETECTED =====");
 
-    console.log(`${moduleName} module clicked successfully`);
+    for (const module of modules) {
+
+        const text = (await module.getText()).trim();
+
+        console.log("Found module:", JSON.stringify(text));
+
+        const normalizedText = text.replace(/\s/g, '').toLowerCase();
+        const normalizedTarget = moduleName.replace(/\s/g, '').toLowerCase();
+
+        if (normalizedText === normalizedTarget) {
+
+            console.log(`Module matched: ${text}`);
+
+            const icon = await module.$('./preceding::ion-img[1]');
+
+            await this.safeClick(icon);
+
+            console.log(`${moduleName} module clicked successfully`);
+            return;
+        }
+    }
+
+    throw new Error(`Module ${moduleName} not found on dashboard`);
 }
 }
 
