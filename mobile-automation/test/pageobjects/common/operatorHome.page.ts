@@ -114,45 +114,47 @@ async openModule(moduleName: string): Promise<void> {
 
     console.log(`Opening module: ${moduleName}`);
 
-    await browser.waitUntil(async () => {
-        const labels = await $$('//ion-text');
-        const count = await labels.length;
-        console.log("Modules detected:", count);
-        return count > 5;
-    }, {
-        timeout: 30000,
-        timeoutMsg: 'Dashboard modules not loaded'
-    });
+    const normalizedTarget = moduleName.replace(/\s/g, '').toLowerCase();
 
-    const modules = await $$('//ion-text');
+    for (let scrollAttempt = 0; scrollAttempt < 6; scrollAttempt++) {
 
-    console.log("===== MODULE LABELS DETECTED =====");
+        const modules = await $$('//ion-text');
+        console.log("Modules detected:", modules.length);
 
-    for (const module of modules) {
+        for (const module of modules) {
 
-        const text = (await module.getText()).trim();
-        console.log("Found module:", JSON.stringify(text));
+            const text = (await module.getText()).trim();
+            console.log("Found module:", JSON.stringify(text));
 
-        const normalizedText = text.replace(/\s/g, '').toLowerCase();
-        const normalizedTarget = moduleName.replace(/\s/g, '').toLowerCase();
+            const normalizedText = text.replace(/\s/g, '').toLowerCase();
 
-        if (normalizedText === normalizedTarget) {
+            if (normalizedText === normalizedTarget) {
 
-            console.log(`Module matched: ${text}`);
+                console.log(`Module matched: ${text}`);
 
-            // Locate the icon just before the module label
-            const icon = await module.$('./preceding::ion-img[1]');
+                const icon = await module.$('./preceding::ion-img[1]');
 
-            await icon.scrollIntoView();
+                await icon.scrollIntoView();
 
-            // JS click for Ionic elements
-            await browser.execute((el) => {
-                (el as HTMLElement).click();
-            }, icon);
+                await browser.execute((el) => {
+                    (el as HTMLElement).click();
+                }, icon);
 
-            console.log(`${moduleName} module clicked successfully`);
-            return;
+                console.log(`${moduleName} module clicked successfully`);
+                return;
+            }
         }
+
+        console.log("Module not found yet — scrolling dashboard");
+
+        await browser.execute(() => {
+            const content = document.querySelector('ion-content');
+            if (content) {
+                content.scrollBy(0, 600);
+            }
+        });
+
+        await browser.pause(1200);
     }
 
     throw new Error(`Module ${moduleName} not found on dashboard`);
