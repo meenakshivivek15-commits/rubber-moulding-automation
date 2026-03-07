@@ -197,20 +197,20 @@ await this.ensureTilesVisible();;
 
     async openModule(moduleName: string): Promise<void> {
 
-        await this.ensureWebView();
+    await this.ensureWebView();
 
-        console.log(`Opening module: ${moduleName}`);
+    console.log(`Opening module: ${moduleName}`);
 
-        const moduleLabel = await $(`//ion-text[normalize-space()="${moduleName}"]`);
+    const moduleIcon = await $(
+        `//ion-text[contains(normalize-space(),"${moduleName}")]/preceding::ion-img[1]`
+    );
 
-        await moduleLabel.waitForDisplayed({ timeout: 20000 });
+    await moduleIcon.waitForDisplayed({ timeout: 20000 });
 
-        const icon = await moduleLabel.$('./preceding::ion-img[1]');
+    await this.safeClick(moduleIcon);
 
-        await this.safeClick(icon);
-
-        console.log(`${moduleName} module clicked successfully`);
-    }
+    console.log(`${moduleName} module clicked successfully`);
+}
 }
 
 export default new OperatorHomePage();
