@@ -138,14 +138,13 @@ async openModule(moduleName: string): Promise<void> {
 
             console.log(`Module matched: ${text}`);
 
-            // locate icon inside same tile
-            const icon = await module.$('./ancestor::ion-col//ion-img');
+            // locate icon before module label
+            const icon = await module.$('./preceding::ion-img[1]');
 
             await icon.waitForDisplayed({ timeout: 10000 });
             await icon.click();
 
             console.log(`${moduleName} module clicked successfully`);
-
             return;
         }
     }
