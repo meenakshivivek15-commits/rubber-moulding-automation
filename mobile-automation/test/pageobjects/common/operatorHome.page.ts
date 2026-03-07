@@ -112,49 +112,41 @@ async openModule(moduleName: string): Promise<void> {
 
     await this.ensureWebView();
 
-    console.log(`Opening module: ${moduleName}`);
+    const target = moduleName.replace(/\s/g, '').toLowerCase();
 
-    const normalizedTarget = moduleName.replace(/\s/g, '').toLowerCase();
+    for (let attempt = 0; attempt < 8; attempt++) {
 
-    for (let attempt = 0; attempt < 6; attempt++) {
+        const modules = await $$('//ion-col//ion-text');
 
-        const modules = await $$('//ion-text');   // refresh list each loop
-        console.log("Modules detected:", modules.length);
+        console.log(`Scan attempt ${attempt + 1} — modules detected: ${modules.length}`);
 
         for (const module of modules) {
 
             const text = (await module.getText()).trim();
-            console.log("Found module:", JSON.stringify(text));
+            console.log("Found module:", text);
 
-            const normalizedText = text.replace(/\s/g, '').toLowerCase();
+            const normalized = text.replace(/\s/g, '').toLowerCase();
 
-            if (normalizedText === normalizedTarget) {
+            if (normalized === target) {
 
                 console.log(`Module matched: ${text}`);
 
                 const icon = await module.$('./preceding::ion-img[1]');
 
-                await icon.scrollIntoView();
-
-                await browser.execute((el) => {
-                    (el as HTMLElement).click();
-                }, icon);
+                await this.safeClick(icon);
 
                 console.log(`${moduleName} module clicked successfully`);
                 return;
             }
         }
 
-        console.log("Module not found yet — scrolling dashboard");
+        console.log("Module not visible — scrolling grid");
 
-        await browser.execute(() => {
-            const content = document.querySelector('ion-content');
-            if (content) {
-                content.scrollBy(0, 600);
-            }
-        });
+        await this.scrollGrid("down");
 
-        await browser.pause(1200);
+        if (attempt % 2 === 1) {
+            await this.scrollDashboard();
+        }
     }
 
     throw new Error(`Module ${moduleName} not found on dashboard`);
