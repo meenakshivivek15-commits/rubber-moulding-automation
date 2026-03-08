@@ -5,11 +5,12 @@ import goodsReceiptListPage from '../../pageobjects/purchase/goodsReceiptList.pa
 import goodsReceiptFormPage from '../../pageobjects/purchase/goodsReceiptForm.page';
 import allure from '@wdio/allure-reporter';
 import { readJson, writeJson } from '../../../../common/utils/fileHelper';
-
+import runtimeData from '../../../../common/test-data/runtime/runtimeData.json';
+import mobileData from '../../data/goodsReceiptData.json';
 const runtimePath = 'runtime/runtimeData.json';
 const operatorAppId = 'com.ppaoperator.app';
 
-const mobileData = require('../../data/goodsReceiptData.json');
+//const mobileData = require('../../data/goodsReceiptData.json');
 
 describe('Goods Receipt Flow', () => {
 
@@ -68,9 +69,9 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
     console.log("STEP 2: Select PO");
 
-    const selectedPo = await goodsReceiptListPage.selectPoFromList(mobileData.poNumber);
+    const selectedPo = await goodsReceiptListPage.selectPoFromList(runtimeData.poNumber);
 
-    console.log("Selected PO:", mobileData.poNumber);
+    console.log("Selected PO:", runtimeData.poNumber);
 
     console.log("STEP 3: Wait for Form");
 
