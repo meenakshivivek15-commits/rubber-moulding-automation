@@ -26,25 +26,27 @@ export class RMQualityCheckPage extends ApprovalBasePage {
 
 
   // ================= OPEN LATEST GRN (MOST STABLE METHOD) =================
-  async openNewlyCreatedGRN(): Promise<string> {
+ async openNewlyCreatedGRN(runtime): Promise<string> {
 
-  const firstGRNCell = this.page
-    .locator('ion-col')
-    .filter({ hasText: /\d{2}-\d{4}/ })
-    .first();
+  const row = this.page.locator('tr', {
+    has: this.page.locator('td', { hasText: runtime.grnDate })
+  }).first();
 
-  await firstGRNCell.waitFor({ state: 'visible', timeout: 20000 });
+  await row.waitFor({ timeout: 20000 });
 
-  const grnId = (await firstGRNCell.textContent())?.trim();
+  const grnId = await row.locator('td').first().textContent();
 
   if (!grnId) {
-    throw new Error('GRN ID not found in first row');
+    throw new Error('GRN ID not found');
   }
 
-  await firstGRNCell.click();
+  console.log("Opening GRN:", grnId);
 
-  return grnId;
+  await row.click();
+
+  return grnId.trim();
 }
+
 
 
   // ================= FILL MANDATORY FIELDS =================

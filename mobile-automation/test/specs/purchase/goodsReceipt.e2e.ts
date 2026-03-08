@@ -98,48 +98,34 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
     console.log("STEP 6: Capture success toast");
 
-    const toast = await $('ion-toast');
+const toast = await $('ion-toast');
 
-    await browser.waitUntil(async () => {
-        return await toast.isExisting();
-    }, {
-        timeout: 15000,
-        timeoutMsg: "Toast did not appear"
-    });
+await browser.waitUntil(async () => {
+    return await toast.isDisplayed();
+}, { timeout: 5000 });
 
-    await toast.waitForDisplayed({ timeout: 5000 });
+const toastText = await toast.getText();
 
-    const toastText = await toast.getText();
+console.log("Toast message:", toastText);
 
-    console.log("Toast message:", toastText);
+/* Capture GRN time + date */
+const now = new Date();
 
-    runtime.grnToast = toastText;
+runtime.grnDate = now.toLocaleDateString("en-GB");
 
-    // Extract PO number from toast
-    const poMatch = toastText.match(/25LP\d+/);
-    if (poMatch) {
-        runtime.poNumber = poMatch[0];
-    }
-
-    // Capture GRN Date and Time
-    const now = new Date();
-
-    runtime.grnDate = now.toLocaleDateString("en-GB");
-    runtime.grnTime = now.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-
-    writeJson(runtimePath, runtime);
-
-    console.log("Captured GRN Date:", runtime.grnDate);
-    console.log("Captured GRN Time:", runtime.grnTime);
-
-    await expect(toast).toBeDisplayed({ wait: 5000 });
-
-    console.log("✅ Goods Receipt completed successfully");
-
+runtime.grnTime = now.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit"
 });
 
+writeJson(runtimePath, runtime);
 
+console.log("Captured GRN Date:", runtime.grnDate);
+console.log("Captured GRN Time:", runtime.grnTime);
+
+await expect(toast).toBeDisplayed({ wait: 5000 });
+
+console.log("✅ Goods Receipt completed successfully");
+
+});
 });
