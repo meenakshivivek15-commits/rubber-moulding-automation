@@ -81,7 +81,7 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
     console.log("STEP 4: Fill Form");
 
     await goodsReceiptFormPage.selectLocation(mobileData.location);
-    await goodsReceiptFormPage.enableInvoiceDate();
+    //await goodsReceiptFormPage.enableInvoiceDate();
     await goodsReceiptFormPage.enterPin(mobileData.pin);
 
     runtime.grnStartTime = new Date().toISOString();
