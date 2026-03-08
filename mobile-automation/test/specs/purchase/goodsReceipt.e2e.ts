@@ -3,105 +3,104 @@
 import operatorHomePage from '../../pageobjects/common/operatorHome.page';
 import goodsReceiptListPage from '../../pageobjects/purchase/goodsReceiptList.page';
 import goodsReceiptFormPage from '../../pageobjects/purchase/goodsReceiptForm.page';
+
 import allure from '@wdio/allure-reporter';
+
 import { readJson, writeJson } from '../../../../common/utils/fileHelper';
+
 import runtimeData from '../../../../common/test-data/runtime/runtimeData.json';
 import mobileData from '../../data/goodsReceiptData.json';
 
 const runtimePath = 'runtime/runtimeData.json';
 const operatorAppId = 'com.ppaoperator.app';
 
-//const mobileData = require('../../data/goodsReceiptData.json');
-
 describe('Goods Receipt Flow', () => {
 
-before(async () => {
+    before(async () => {
 
-    console.log("========= FRESH START =========");
+        console.log("========= FRESH START =========");
 
-    await driver.terminateApp(operatorAppId).catch(() => undefined);
-    await driver.activateApp(operatorAppId);
+        await driver.terminateApp(operatorAppId).catch(() => undefined);
+        await driver.activateApp(operatorAppId);
 
-    console.log("Waiting for WebView...");
+        console.log("Waiting for WebView...");
 
-    await operatorHomePage.ensureWebView(90000);
+        await operatorHomePage.ensureWebView(90000);
 
-    console.log("Waiting for dashboard tiles...");
+        console.log("Waiting for dashboard tiles...");
 
-    await browser.waitUntil(async () => {
+        await browser.waitUntil(async () => {
 
-        const tiles = await $$('ion-img');
-        const count = await tiles.length;
+            const tiles = await $$('ion-img');
+            const count = await tiles.length;
 
-        console.log("Tile count:", count);
+            console.log("Tile count:", count);
 
-        return count >= 6;
+            return count >= 6;
 
-    }, { timeout: 60000 });
+        }, { timeout: 60000 });
 
-    console.log("Dashboard loaded");
+        console.log("✅ Dashboard loaded");
 
-});
+    });
 
-it(`should submit goods receipt for ${mobileData.location}`, async function () {
+    it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
-    this.timeout(600000);
+        this.timeout(600000);
 
-    allure.addFeature('Purchase Process');
-    allure.addStory('Goods Receipt Flow');
+        allure.addFeature('Purchase Process');
+        allure.addStory('Goods Receipt Flow');
 
-    const runtime = readJson(runtimePath);
+        const runtime = readJson(runtimePath);
 
-    const tiles = await $$('ion-img');
-    console.log("Detected tiles on home:", tiles.length);
-     // 👇 ADD HERE
-   /* const moduleName = "RM Issue";
+        console.log("STEP 1: Navigate to GoodsReceipt module");
 
-    console.log(`STEP 1: Navigate to ${moduleName}`);
+        await operatorHomePage.prepareDashboardForModule("GoodsReceipt");
+        await operatorHomePage.openModule("GoodsReceipt");
 
-    await operatorHomePage.openModule(moduleName);
+        console.log("STEP 2: Select PO from list");
 
-    console.log("✅ Module click verified");*/
+        await goodsReceiptListPage.selectPoFromList(runtimeData.poNumber);
 
+        console.log("Selected PO:", runtimeData.poNumber);
 
-    console.log("STEP 1: Navigate to Goods Receipt");
-    await operatorHomePage.prepareDashboardForModule("GoodsReceipt");
-    await operatorHomePage.openModule("GoodsReceipt");
+        console.log("STEP 3: Wait for Goods Receipt Form");
 
-    console.log("STEP 2: Select PO");
+        await goodsReceiptFormPage.waitForFormToLoad();
 
-    const selectedPo = await goodsReceiptListPage.selectPoFromList(runtimeData.poNumber);
+        console.log("STEP 4: Fill form fields");
 
-    console.log("Selected PO:", runtimeData.poNumber);
+        // Copy PO label → input field
+        await goodsReceiptFormPage.fillPoFromLabel();
 
-    console.log("STEP 3: Wait for Form");
+        // Select location
+        await goodsReceiptFormPage.selectLocation(mobileData.location);
 
-    await goodsReceiptFormPage.waitForFormToLoad();
+        // Enter PIN
+        await goodsReceiptFormPage.enterPin(mobileData.pin);
 
-    console.log("STEP 4: Fill Form");
+        runtime.grnStartTime = new Date().toISOString();
+        writeJson(runtimePath, runtime);
 
-    await goodsReceiptFormPage.selectLocation(mobileData.location);
-    //await goodsReceiptFormPage.enableInvoiceDate();
-    await goodsReceiptFormPage.enterPin(mobileData.pin);
+        console.log("STEP 5: Submit Goods Receipt");
 
-    runtime.grnStartTime = new Date().toISOString();
-    writeJson(runtimePath, runtime);
+        await goodsReceiptFormPage.submit();
 
-    console.log("STEP 5: Submit");
+        console.log("STEP 6: Validate success toast");
 
-    await goodsReceiptFormPage.submit();
+        const toast = await $('ion-toast');
 
-    const toast = await $('ion-toast');
+        await toast.waitForExist({ timeout: 20000 });
+        await toast.waitForDisplayed({ timeout: 20000 });
 
-    await toast.waitForExist({ timeout: 20000 });
-    await toast.waitForDisplayed({ timeout: 20000 });
+        const toastText = await toast.getText();
 
-    console.log("Toast:", await toast.getText());
+        console.log("Toast message:", toastText);
 
-    await expect(toast).toBeDisplayed({ wait: 20000 });
+        await expect(toast).toBeDisplayed({ wait: 20000 });
 
-    console.log("✅ Goods Receipt completed successfully"); 
+        console.log("✅ Goods Receipt completed successfully");
 
-});
+    });
 
 });
