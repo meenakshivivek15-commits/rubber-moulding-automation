@@ -73,6 +73,6 @@ class GoodsReceiptFormPage extends BasePage {
         console.log("Form submitted");
     }
 }
-}
+
 
 export default new GoodsReceiptFormPage();

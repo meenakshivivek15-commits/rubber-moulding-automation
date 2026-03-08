@@ -74,7 +74,7 @@ describe('Goods Receipt Flow', () => {
         // Select location
         await goodsReceiptFormPage.selectLocation(mobileData.location);
         // Copy PO label → input field
-       await goodsReceiptFormPage.enterPo(runtimeData.poNumber);
+       await goodsReceiptFormPage.enterPoNumber(runtimeData.poNumber);
 
         // Enter PIN
         await goodsReceiptFormPage.enterPin(mobileData.pin);
