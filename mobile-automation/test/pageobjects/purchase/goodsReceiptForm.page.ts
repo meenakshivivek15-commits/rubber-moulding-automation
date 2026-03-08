@@ -48,29 +48,38 @@ class GoodsReceiptFormPage extends BasePage {
 
     async syncInvoiceDateFromLabel() {
 
-        await this.invoiceLabelDate.waitForDisplayed({ timeout: 20000 });
+    await this.switchToWebView();
 
-        const dateText = (await this.invoiceLabelDate.getText()).trim();
-        console.log("📅 Label date:", dateText);
+    // Get the blue invoice date label
+    const labelDate = await $('//*[contains(text(),"-20")]');
 
-        const [day, month, year] = dateText.split('-');
-        const pad = (n: string) => n.padStart(2, '0');
-        const formattedDate = `${year}-${pad(month)}-${pad(day)}`;
+    await labelDate.waitForDisplayed({ timeout: 20000 });
 
-        const dateComponent = await this.dateComponent;
+    const dateText = (await labelDate.getText()).trim();
 
-        await browser.execute((el: any, value: string) => {
-            el.setAttribute('value', value);
-            el.value = value;
-            el.dispatchEvent(new CustomEvent('ionChange', {
-                detail: { value },
-                bubbles: true
-            }));
-        }, dateComponent, formattedDate);
+    console.log("📅 Label date:", dateText);
 
-        console.log("📅 Invoice date synced");
-    }
+    const [day, month, year] = dateText.split('-');
 
+    const formattedDate = `${year}-${month}-${day}`;
+
+    const dateComponent = await $('ion-datetime');
+
+    await dateComponent.waitForDisplayed({ timeout: 20000 });
+
+    await browser.execute((el: any, value: string) => {
+
+        el.value = value;
+
+        el.dispatchEvent(new CustomEvent('ionChange', {
+            detail: { value },
+            bubbles: true
+        }));
+
+    }, dateComponent, formattedDate);
+
+    console.log("📅 Invoice date synced:", formattedDate);
+}
     async enterPin(pin: string) {
 
         await this.pinInput.waitForDisplayed({ timeout: 20000 });
