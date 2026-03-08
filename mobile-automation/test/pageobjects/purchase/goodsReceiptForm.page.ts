@@ -2,88 +2,76 @@ import BasePage from '../base.page';
 
 class GoodsReceiptFormPage extends BasePage {
 
-    get locationDropdown() {
+      get locationDropdown() {
         return $('select');
     }
 
-    
     get poInput() {
-    return $('//*[contains(text(),"PO/Invoice Ref")]/following::input[1]');
-}
+        return $('input[type="text"]');
+    }
+
     get pinInput() {
-        return $('input[type="number"]');
+        return $$('input[type="number"]')[1];
     }
 
     get submitButton() {
-        return $('//ion-button[contains(.,"Submit") or contains(.,"SAVE")]');
+        return $('(//ion-grid[@id="grid"])[2]/ion-row[11]/ion-col[1]/ion-button');
     }
 
-    async waitForFormToLoad() {
+   async waitForFormToLoad() {
 
-        await this.switchToWebView();
+    await this.switchToWebView();
 
-        await browser.waitUntil(async () => {
-            return await browser.execute(() =>
-                !!document.querySelector('ion-datetime')
-            );
-        }, {
-            timeout: 30000,
-            timeoutMsg: 'Goods Receipt FORM page did not load'
-        });
+    await this.poInput.waitForDisplayed({ timeout: 30000 });
 
-        console.log('✅ Goods Receipt Form Loaded');
-    }
+    console.log('✅ Goods Receipt Form Loaded');
+}
 
-    async selectLocation(location: string) {
+     async selectLocation(location: string) {
 
-        await this.locationDropdown.waitForDisplayed({ timeout: 30000 });
+        await this.locationDropdown.waitForDisplayed({ timeout: 10000 });
 
         await this.locationDropdown.selectByVisibleText(location);
 
-        console.log(`📍 Location selected: ${location}`);
+        console.log(`Location selected: ${location}`);
     }
 
-    async enterPo(poNumber: string) {
+     async enterPoNumber(poNumber: string) {
 
-    await this.poInput.waitForDisplayed({ timeout: 20000 });
+        await this.poInput.waitForDisplayed({ timeout: 10000 });
 
-    await this.poInput.clearValue();
-    await this.poInput.setValue(poNumber);
+        console.log("Entering PO Number:", poNumber);
 
-    // trigger Angular validation
-    await browser.execute((el) => {
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-    }, await this.poInput);
+        await this.poInput.clearValue();
+        await this.poInput.setValue(poNumber);
 
-    console.log("📄 PO entered:", poNumber);
-}
+        // 🔴 IMPORTANT for Ionic validation
+        await browser.keys('Tab');
 
-    async enterPin(pin: string) {
+    }
 
-        await this.pinInput.waitForDisplayed({ timeout: 20000 });
+     async enterPin(pin: string) {
+
+        await this.pinInput.waitForDisplayed({ timeout: 10000 });
 
         await this.pinInput.setValue(pin);
 
-        console.log("🔐 PIN entered:", pin);
+        // optional but safer
+        await browser.keys('Tab');
     }
 
     async submit() {
 
-    await this.submitButton.waitForDisplayed({ timeout: 20000 });
+        await this.submitButton.waitForDisplayed({ timeout: 15000 });
 
-    await browser.waitUntil(
-        async () => await this.submitButton.isEnabled(),
-        {
-            timeout: 20000,
-            timeoutMsg: "Submit button did not enable"
-        }
-    );
+        await this.submitButton.waitForEnabled({ timeout: 20000 });
 
-    await this.submitButton.scrollIntoView();
-    await this.submitButton.click();
+        await this.submitButton.scrollIntoView();
 
-    console.log("🚀 Form submitted");
+        await this.submitButton.click();
+
+        console.log("Form submitted");
+    }
 }
 }
 
