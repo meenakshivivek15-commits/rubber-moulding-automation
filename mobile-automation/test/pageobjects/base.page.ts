@@ -159,30 +159,26 @@ export default class BasePage {
 
     await browser.pause(1200);
 }
-    async scrollRow(direction: "right" | "left" = "right"): Promise<void> {
+    async scrollRow(): Promise<void> {
 
-    await browser.execute((dir) => {
+    await browser.execute(() => {
 
         const content = document.querySelector('ion-content');
+
         if (!content) return;
 
         const grid = content.querySelector('ion-grid') || content;
 
-        const amount = 350;
+        (grid as HTMLElement).scrollBy({
+            top: 600,
+            behavior: "auto"
+        });
 
-        if (dir === "right") {
-            (grid as HTMLElement).scrollBy({ left: amount, behavior: "auto" });
-        }
+    });
 
-        if (dir === "left") {
-            (grid as HTMLElement).scrollBy({ left: -amount, behavior: "auto" });
-        }
+    console.log("⬇️ Scrolled rows down");
 
-    }, direction);
-
-    console.log(`Scrolled row ${direction}`);
-
-    await browser.pause(800);
+    await browser.pause(1200);
 }
 
     async safeClick(element: any): Promise<void> {

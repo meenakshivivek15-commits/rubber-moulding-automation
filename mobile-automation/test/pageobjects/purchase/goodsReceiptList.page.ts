@@ -1,3 +1,4 @@
+import { count } from 'node:console';
 import BasePage from '../base.page';
 import operatorHomePage from '../common/operatorHome.page';
 
@@ -6,9 +7,10 @@ class GoodsReceiptListPage extends BasePage {
     private async getGridData(): Promise<string[]> {
 
         const rows = await $$('ion-row');
+        const rowCount = await rows.length;
         const poList: string[] = [];
 
-        for (let i = 1; i < rows.length; i++) { // skip header
+        for (let i = 1; i < rowCount; i++) { // skip header
 
             const text = (await rows[i].getText()).trim();
 
@@ -46,63 +48,50 @@ class GoodsReceiptListPage extends BasePage {
 
     async selectPoFromList(poNumber: string): Promise<void> {
 
-        console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
+    console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
-        await this.ensureWebView(90000);
+    await this.ensureWebView(90000);
 
-        const poSelector = `//ion-text[contains(normalize-space(),"${poNumber}")]`;
+    // reveal Purchase ID column
+    await this.scrollGrid("left");
 
-        let found = false;
+    const maxScrollAttempts = 30;
 
-        for (let attempt = 1; attempt <= 10; attempt++) {
+    for (let attempt = 1; attempt <= maxScrollAttempts; attempt++) {
 
-            console.log(`🔄 Attempt ${attempt} to find PO`);
+        console.log(`🔎 Scan attempt ${attempt}`);
 
-            // reveal Purchase ID column
-            await this.scrollGrid("left");
+        const rows = await $$('ion-row');
+        const rowcount = await rows.length;
 
-            await browser.pause(1500);
+        console.log(`Found ${rowcount} rows`);
+        for (let i = 1; i < rowcount; i++) {
 
-            const elements = await $$(poSelector);
-            const count = elements.length;
+            const poCell = await rows[i].$('ion-col:nth-child(4)');
 
-            console.log(`Matching PO elements: ${count}`);
+            const poText = (await poCell.getText()).trim();
 
-            if (count > 0) {
+            console.log(`Row ${i} PO: ${poText}`);
 
-                const poElement = elements[0];
-
-                await poElement.waitForDisplayed({ timeout: 10000 });
+            if (poText === poNumber) {
 
                 console.log(`✅ PO found: ${poNumber}`);
 
-                await this.safeClick(poElement);
+                await rows[i].scrollIntoView();
 
-                found = true;
-                break;
+                await this.safeClick(rows[i]);
+
+                return;
             }
-
-            console.log("PO not found — returning to Operator Home");
-
-            // go back to Operator Home
-            await driver.back();
-
-            await browser.pause(3000);
-
-            // ensure dashboard is loaded
-            await operatorHomePage.ensureTilesVisible();
-
-            console.log("Re-opening GoodsReceipt module");
-
-            await operatorHomePage.openModule("GoodsReceipt");
-
-            await browser.pause(8000);
         }
 
-        if (!found) {
-            throw new Error(`❌ PO ${poNumber} not found after refreshing GoodsReceipt`);
-        }
+        console.log("⬇️ PO not found — scrolling down");
+
+        await this.scrollRow();
     }
+
+    throw new Error(`❌ PO ${poNumber} not found after scrolling list`);
+}
 }
 
 export default new GoodsReceiptListPage();
