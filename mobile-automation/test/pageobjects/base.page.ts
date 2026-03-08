@@ -118,7 +118,31 @@ export default class BasePage {
         console.log("\n========== END PAGE SOURCE ==========\n");
     }
 
+async scrollRow(direction: "right" | "left" = "right"): Promise<void> {
 
+    await browser.execute((dir) => {
+
+        const content = document.querySelector('ion-content');
+        if (!content) return;
+
+        const grid = content.querySelector('#grid') || content;
+
+        const amount = 350;
+
+        if (dir === "right") {
+            (grid as HTMLElement).scrollBy({ left: amount, behavior: "auto" });
+        }
+
+        if (dir === "left") {
+            (grid as HTMLElement).scrollBy({ left: -amount, behavior: "auto" });
+        }
+
+    }, direction);
+
+    console.log(`Scrolled row ${direction}`);
+
+    await browser.pause(800);
+}
     async scrollGrid(direction: "down" | "left"): Promise<void> {
 
     await browser.execute((dir) => {
@@ -159,27 +183,7 @@ export default class BasePage {
 
     await browser.pause(1200);
 }
-    async scrollRow(): Promise<void> {
-
-    await browser.execute(() => {
-
-        const content = document.querySelector('ion-content');
-
-        if (!content) return;
-
-        const grid = content.querySelector('ion-grid') || content;
-
-        (grid as HTMLElement).scrollBy({
-            top: 600,
-            behavior: "auto"
-        });
-
-    });
-
-    console.log("⬇️ Scrolled rows down");
-
-    await browser.pause(1200);
-}
+    
 
     async safeClick(element: any): Promise<void> {
 

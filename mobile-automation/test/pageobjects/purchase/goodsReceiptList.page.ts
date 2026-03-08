@@ -52,22 +52,24 @@ class GoodsReceiptListPage extends BasePage {
 
     await this.ensureWebView(90000);
 
-    // reveal Purchase ID column
-    await this.scrollGrid("left");
+    let found = false;
 
-    const maxScrollAttempts = 30;
+    for (let attempt = 1; attempt <= 20; attempt++) {
 
-    for (let attempt = 1; attempt <= maxScrollAttempts; attempt++) {
+        console.log(`🔍 Scan attempt ${attempt}`);
 
-        console.log(`🔎 Scan attempt ${attempt}`);
+        // reveal Purchase ID column
+        await this.scrollRow("right");
 
-        const rows = await $$('ion-row');
+        const rows = await $$('#grid ion-row');
         const rowcount = await rows.length;
+        console.log(`Rows visible: ${rowcount}`);
 
-        console.log(`Found ${rowcount} rows`);
         for (let i = 1; i < rowcount; i++) {
 
             const poCell = await rows[i].$('ion-col:nth-child(4)');
+
+            if (!(await poCell.isExisting())) continue;
 
             const poText = (await poCell.getText()).trim();
 
@@ -81,16 +83,34 @@ class GoodsReceiptListPage extends BasePage {
 
                 await this.safeClick(rows[i]);
 
-                return;
+                found = true;
+                break;
             }
         }
 
-        console.log("⬇️ PO not found — scrolling down");
+        if (found) break;
 
-        await this.scrollRow();
+        console.log("⬇️ PO not visible — scrolling grid");
+
+        await browser.execute(() => {
+
+            const grid = document.querySelector('#grid');
+
+            if (!grid) return;
+
+            (grid as HTMLElement).scrollBy({
+                top: 500,
+                behavior: "auto"
+            });
+
+        });
+
+        await browser.pause(1500);
     }
 
-    throw new Error(`❌ PO ${poNumber} not found after scrolling list`);
+    if (!found) {
+        throw new Error(`❌ PO ${poNumber} not found after scrolling grid`);
+    }
 }
 }
 

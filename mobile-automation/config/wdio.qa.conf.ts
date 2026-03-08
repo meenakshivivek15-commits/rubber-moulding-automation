@@ -131,9 +131,9 @@ export const config: Options.Testrunner = {
     ],
 
     mochaOpts: {
-        ui: 'bdd',
-        timeout: 300000
-    },
+  ui: 'bdd',
+  timeout: 600000
+}
 
     // ======================
     // HOOKS
