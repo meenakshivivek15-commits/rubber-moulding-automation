@@ -94,14 +94,12 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
     // ================= STEP 5 =================
 
     console.log("STEP 5: Submit Goods Receipt");
-
+    console.log("Checking form values before submit...");
     await goodsReceiptFormPage.submit();
 
     // ================= STEP 6 =================
 
-   console.log("STEP 5: Submit Goods Receipt");
-
-await goodsReceiptFormPage.submit();
+   
 
 console.log("STEP 6: Capture success toast");
 

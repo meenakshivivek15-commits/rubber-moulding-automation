@@ -9,7 +9,13 @@ class GoodsReceiptFormPage extends BasePage {
     get poInput() {
         return $('input[type="text"]');
     }
+get quantityInput() {
+    return $('input[type="number"]');
+}
 
+get invoiceDateInput() {
+    return $('ion-datetime');
+}
     get pinInput() {
         return $$('input[type="number"]')[1];
     }
@@ -104,18 +110,35 @@ async copyQuantityFromLabel() {
         await browser.keys('Tab');
     }
 
-    async submit() {
+   async submit() {
 
-        await this.submitButton.waitForDisplayed({ timeout: 15000 });
+    const submitButton = await $('//ion-button[contains(.,"Submit")]');
 
-        await this.submitButton.waitForEnabled({ timeout: 20000 });
+    await submitButton.waitForDisplayed({ timeout: 20000 });
 
-        await this.submitButton.scrollIntoView();
+    const enabled = await submitButton.isEnabled();
 
-        await this.submitButton.click();
+    if (!enabled) {
 
-        console.log("Form submitted");
+        console.log("❌ Submit button is disabled.");
+
+        const location = await this.locationDropdown.getValue();
+        const qty = await this.quantityInput.getValue();
+        const pin = await this.pinInput.getValue();
+
+        console.log("Location value:", location);
+        console.log("Quantity value:", qty);
+        console.log("PIN value:", pin);
+
+        throw new Error("Submit button disabled. Required fields missing.");
     }
+
+    console.log("✅ Submit button enabled");
+
+    await submitButton.click();
+
+    console.log("Form submitted");
+}
 }
 
 
