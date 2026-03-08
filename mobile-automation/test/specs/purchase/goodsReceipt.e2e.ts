@@ -16,91 +16,130 @@ const operatorAppId = 'com.ppaoperator.app';
 
 describe('Goods Receipt Flow', () => {
 
-    before(async () => {
 
-        console.log("========= FRESH START =========");
+before(async () => {
 
-        await driver.terminateApp(operatorAppId).catch(() => undefined);
-        await driver.activateApp(operatorAppId);
+    console.log("========= FRESH START =========");
 
-        console.log("Waiting for WebView...");
+    await driver.terminateApp(operatorAppId).catch(() => undefined);
+    await driver.activateApp(operatorAppId);
 
-        await operatorHomePage.ensureWebView(90000);
+    console.log("Waiting for WebView...");
+    await operatorHomePage.ensureWebView(90000);
 
-        console.log("Waiting for dashboard tiles...");
+    console.log("Waiting for dashboard tiles...");
 
-        await browser.waitUntil(async () => {
+    await browser.waitUntil(async () => {
 
-            const tiles = await $$('ion-img');
-            const count = await tiles.length;
+        const tiles = await $$('ion-img');
+        const count = await tiles.length;
 
-            console.log("Tile count:", count);
+        console.log("Tile count:", count);
 
-            return count >= 6;
+        return count >= 6;
 
-        }, { timeout: 60000 });
+    }, { timeout: 60000 });
 
-        console.log("✅ Dashboard loaded");
+    console.log("✅ Dashboard loaded");
+});
 
+it(`should submit goods receipt for ${mobileData.location}`, async function () {
+
+    this.timeout(600000);
+
+    allure.addFeature('Purchase Process');
+    allure.addStory('Goods Receipt Flow');
+
+    const runtime = readJson(runtimePath);
+
+    // ================= STEP 1 =================
+
+    console.log("STEP 1: Navigate to GoodsReceipt module");
+
+    await operatorHomePage.prepareDashboardForModule("GoodsReceipt");
+    await operatorHomePage.openModule("GoodsReceipt");
+
+    // ================= STEP 2 =================
+
+    console.log("STEP 2: Select PO from list");
+
+    await goodsReceiptListPage.selectPoFromList(runtimeData.poNumber);
+
+    console.log("Selected PO:", runtimeData.poNumber);
+
+    // ================= STEP 3 =================
+
+    console.log("STEP 3: Wait for Goods Receipt Form");
+
+    await goodsReceiptFormPage.waitForFormToLoad();
+
+    // ================= STEP 4 =================
+
+    console.log("STEP 4: Fill form fields");
+
+    await goodsReceiptFormPage.selectLocation(mobileData.location);
+
+    // Fill PO number
+    await goodsReceiptFormPage.enterPoNumber(runtimeData.poNumber);
+
+    // Enter PIN
+    await goodsReceiptFormPage.enterPin(mobileData.pin);
+
+    runtime.grnStartTime = new Date().toISOString();
+    writeJson(runtimePath, runtime);
+
+    // ================= STEP 5 =================
+
+    console.log("STEP 5: Submit Goods Receipt");
+
+    await goodsReceiptFormPage.submit();
+
+    // ================= STEP 6 =================
+
+    console.log("STEP 6: Capture success toast");
+
+    const toast = await $('ion-toast');
+
+    await browser.waitUntil(async () => {
+        return await toast.isExisting();
+    }, {
+        timeout: 15000,
+        timeoutMsg: "Toast did not appear"
     });
 
-    it(`should submit goods receipt for ${mobileData.location}`, async function () {
+    await toast.waitForDisplayed({ timeout: 5000 });
 
-        this.timeout(600000);
+    const toastText = await toast.getText();
 
-        allure.addFeature('Purchase Process');
-        allure.addStory('Goods Receipt Flow');
+    console.log("Toast message:", toastText);
 
-        const runtime = readJson(runtimePath);
+    runtime.grnToast = toastText;
 
-        console.log("STEP 1: Navigate to GoodsReceipt module");
+    // Extract PO number from toast
+    const poMatch = toastText.match(/25LP\d+/);
+    if (poMatch) {
+        runtime.poNumber = poMatch[0];
+    }
 
-        await operatorHomePage.prepareDashboardForModule("GoodsReceipt");
-        await operatorHomePage.openModule("GoodsReceipt");
+    // Capture GRN Date and Time
+    const now = new Date();
 
-        console.log("STEP 2: Select PO from list");
-
-        await goodsReceiptListPage.selectPoFromList(runtimeData.poNumber);
-
-        console.log("Selected PO:", runtimeData.poNumber);
-
-        console.log("STEP 3: Wait for Goods Receipt Form");
-
-        await goodsReceiptFormPage.waitForFormToLoad();
-
-        console.log("STEP 4: Fill form fields");
-
-        
-        // Select location
-        await goodsReceiptFormPage.selectLocation(mobileData.location);
-        // Copy PO label → input field
-       await goodsReceiptFormPage.enterPoNumber(runtimeData.poNumber);
-
-        // Enter PIN
-        await goodsReceiptFormPage.enterPin(mobileData.pin);
-
-        runtime.grnStartTime = new Date().toISOString();
-        writeJson(runtimePath, runtime);
-
-        console.log("STEP 5: Submit Goods Receipt");
-
-        await goodsReceiptFormPage.submit();
-
-        console.log("STEP 6: Validate success toast");
-
-        const toast = await $('ion-toast');
-
-        await toast.waitForExist({ timeout: 20000 });
-        await toast.waitForDisplayed({ timeout: 20000 });
-
-        const toastText = await toast.getText();
-
-        console.log("Toast message:", toastText);
-
-        await expect(toast).toBeDisplayed({ wait: 20000 });
-
-        console.log("✅ Goods Receipt completed successfully");
-
+    runtime.grnDate = now.toLocaleDateString("en-GB");
+    runtime.grnTime = now.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit"
     });
+
+    writeJson(runtimePath, runtime);
+
+    console.log("Captured GRN Date:", runtime.grnDate);
+    console.log("Captured GRN Time:", runtime.grnTime);
+
+    await expect(toast).toBeDisplayed({ wait: 5000 });
+
+    console.log("✅ Goods Receipt completed successfully");
+
+});
+
 
 });
