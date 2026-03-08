@@ -45,41 +45,28 @@ class GoodsReceiptFormPage extends BasePage {
 
         console.log(`📍 Location selected: ${location}`);
     }
-
-    async syncInvoiceDateFromLabel() {
+async enableInvoiceDate() {
 
     await this.switchToWebView();
-
-    // Get the blue invoice date label
-    const labelDate = await $('//*[contains(text(),"-20")]');
-
-    await labelDate.waitForDisplayed({ timeout: 20000 });
-
-    const dateText = (await labelDate.getText()).trim();
-
-    console.log("📅 Label date:", dateText);
-
-    const [day, month, year] = dateText.split('-');
-
-    const formattedDate = `${year}-${month}-${day}`;
 
     const dateComponent = await $('ion-datetime');
 
     await dateComponent.waitForDisplayed({ timeout: 20000 });
 
-    await browser.execute((el: any, value: string) => {
+    await browser.execute((el: any) => {
 
-        el.value = value;
+        const value = el.value;
 
         el.dispatchEvent(new CustomEvent('ionChange', {
             detail: { value },
             bubbles: true
         }));
 
-    }, dateComponent, formattedDate);
+    }, dateComponent);
 
-    console.log("📅 Invoice date synced:", formattedDate);
+    console.log("📅 Invoice date enabled");
 }
+    
     async enterPin(pin: string) {
 
         await this.pinInput.waitForDisplayed({ timeout: 20000 });

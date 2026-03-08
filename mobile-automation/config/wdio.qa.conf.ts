@@ -164,7 +164,10 @@ export const config: Options.Testrunner = {
                 if (browser.sessionId) {
                     const screenshot = await browser.takeScreenshot()
                     const fs = require('fs')
-                    const screenshotPath = `./errorShots/error-${Date.now()}.png`
+                    const screenshotsDir = path.resolve(__dirname, '../errorShots')
+                    const screenshotPath = path.resolve(screenshotsDir, `error-${Date.now()}.png`)
+
+                    fs.mkdirSync(screenshotsDir, { recursive: true })
 
                     fs.writeFileSync(screenshotPath, screenshot, 'base64')
                     console.log(`Screenshot saved: ${screenshotPath}`)

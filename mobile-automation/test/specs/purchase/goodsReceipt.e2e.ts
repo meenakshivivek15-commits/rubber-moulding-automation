@@ -7,6 +7,7 @@ import allure from '@wdio/allure-reporter';
 import { readJson, writeJson } from '../../../../common/utils/fileHelper';
 import runtimeData from '../../../../common/test-data/runtime/runtimeData.json';
 import mobileData from '../../data/goodsReceiptData.json';
+
 const runtimePath = 'runtime/runtimeData.json';
 const operatorAppId = 'com.ppaoperator.app';
 
@@ -80,7 +81,7 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
     console.log("STEP 4: Fill Form");
 
     await goodsReceiptFormPage.selectLocation(mobileData.location);
-    await goodsReceiptFormPage.syncInvoiceDateFromLabel();
+    await goodsReceiptFormPage.enableInvoiceDate();
     await goodsReceiptFormPage.enterPin(mobileData.pin);
 
     runtime.grnStartTime = new Date().toISOString();
