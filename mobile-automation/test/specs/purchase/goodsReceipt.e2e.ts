@@ -70,11 +70,11 @@ describe('Goods Receipt Flow', () => {
 
         console.log("STEP 4: Fill form fields");
 
-        // Copy PO label → input field
-        await goodsReceiptFormPage.fillPoFromLabel();
-
+        
         // Select location
         await goodsReceiptFormPage.selectLocation(mobileData.location);
+        // Copy PO label → input field
+       await goodsReceiptFormPage.enterPo(runtimeData.poNumber);
 
         // Enter PIN
         await goodsReceiptFormPage.enterPin(mobileData.pin);

@@ -6,14 +6,10 @@ class GoodsReceiptFormPage extends BasePage {
         return $('select');
     }
 
-    get poLabel() {
-        return $('//*[contains(text(),"PO/Invoice Ref")]/following::*[contains(text(),"LP")]');
-    }
-
+    
     get poInput() {
-        return $('//*[contains(text(),"PO/Invoice Ref")]/following::input[1]');
-    }
-
+    return $('//*[contains(text(),"PO/Invoice Ref")]/following::input[1]');
+}
     get pinInput() {
         return $('input[type="number"]');
     }
@@ -47,18 +43,21 @@ class GoodsReceiptFormPage extends BasePage {
         console.log(`📍 Location selected: ${location}`);
     }
 
-    async fillPoFromLabel() {
+    async enterPo(poNumber: string) {
 
-        await this.poLabel.waitForDisplayed({ timeout: 20000 });
+    await this.poInput.waitForDisplayed({ timeout: 20000 });
 
-        const poValue = (await this.poLabel.getText()).trim();
+    await this.poInput.clearValue();
+    await this.poInput.setValue(poNumber);
 
-        console.log("📄 PO from label:", poValue);
+    // trigger Angular validation
+    await browser.execute((el) => {
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }, await this.poInput);
 
-        await this.poInput.setValue(poValue);
-
-        console.log("📄 PO copied to input field");
-    }
+    console.log("📄 PO entered:", poNumber);
+}
 
     async enterPin(pin: string) {
 
@@ -71,20 +70,21 @@ class GoodsReceiptFormPage extends BasePage {
 
     async submit() {
 
-        await this.submitButton.waitForDisplayed({ timeout: 20000 });
+    await this.submitButton.waitForDisplayed({ timeout: 20000 });
 
-        await browser.waitUntil(
-            async () => await this.submitButton.isEnabled(),
-            {
-                timeout: 20000,
-                timeoutMsg: "Submit button did not enable"
-            }
-        );
+    await browser.waitUntil(
+        async () => await this.submitButton.isEnabled(),
+        {
+            timeout: 20000,
+            timeoutMsg: "Submit button did not enable"
+        }
+    );
 
-        await this.submitButton.click();
+    await this.submitButton.scrollIntoView();
+    await this.submitButton.click();
 
-        console.log("🚀 Goods Receipt submitted");
-    }
+    console.log("🚀 Form submitted");
+}
 }
 
 export default new GoodsReceiptFormPage();
