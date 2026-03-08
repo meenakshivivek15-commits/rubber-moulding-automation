@@ -5,12 +5,13 @@ class GoodsReceiptListPage extends BasePage {
 
     private async getGridData(): Promise<string[]> {
 
-        const rows = await $$('ion-row').length;
-
+        const rows = await $$('ion-row');
         const poList: string[] = [];
 
-        for (let i = 1; i < rows; i++) { // skip header
+        for (let i = 1; i < rows.length; i++) { // skip header
+
             const text = (await rows[i].getText()).trim();
+
             if (text) {
                 poList.push(text.toUpperCase());
             }
@@ -32,7 +33,8 @@ class GoodsReceiptListPage extends BasePage {
 
                 await row.scrollIntoView();
                 await row.waitForDisplayed({ timeout: 10000 });
-                await row.click();
+
+                await this.safeClick(row);
 
                 console.log(`🟢 WebDriver click performed on PO: ${normalizedPo}`);
                 return true;
@@ -42,62 +44,65 @@ class GoodsReceiptListPage extends BasePage {
         return false;
     }
 
- async selectPoFromList(poNumber: string): Promise<void> {
+    async selectPoFromList(poNumber: string): Promise<void> {
 
-    console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
+        console.log(`\n========== SEARCHING FOR PO: ${poNumber} ==========\n`);
 
-    await this.ensureWebView(90000);
+        await this.ensureWebView(90000);
 
-    const poSelector = `//ion-text[contains(normalize-space(),"${poNumber}")]`;
+        const poSelector = `//ion-text[contains(normalize-space(),"${poNumber}")]`;
 
-    let found = false;
+        let found = false;
 
-    for (let attempt = 1; attempt <= 5; attempt++) {
+        for (let attempt = 1; attempt <= 10; attempt++) {
 
-        console.log(`🔄 Attempt ${attempt} to find PO`);
+            console.log(`🔄 Attempt ${attempt} to find PO`);
 
-        // reveal Purchase ID column
-        await this.scrollGrid("left");
+            // reveal Purchase ID column
+            await this.scrollGrid("left");
 
-        await browser.pause(1500);
+            await browser.pause(1500);
 
-        const elements = await $$(poSelector);
-        const count = await elements.length;
+            const elements = await $$(poSelector);
+            const count = elements.length;
 
-        console.log(`Matching PO elements: ${count}`);
+            console.log(`Matching PO elements: ${count}`);
 
-        if (count > 0) {
+            if (count > 0) {
 
-            const poElement = elements[0];
+                const poElement = elements[0];
 
-            await poElement.waitForDisplayed({ timeout: 10000 });
+                await poElement.waitForDisplayed({ timeout: 10000 });
 
-            console.log(`✅ PO found: ${poNumber}`);
+                console.log(`✅ PO found: ${poNumber}`);
 
-            await this.safeClick(poElement);
+                await this.safeClick(poElement);
 
-            found = true;
-            break;
+                found = true;
+                break;
+            }
+
+            console.log("PO not found — returning to Operator Home");
+
+            // go back to Operator Home
+            await driver.back();
+
+            await browser.pause(3000);
+
+            // ensure dashboard is loaded
+            await operatorHomePage.ensureTilesVisible();
+
+            console.log("Re-opening GoodsReceipt module");
+
+            await operatorHomePage.openModule("GoodsReceipt");
+
+            await browser.pause(8000);
         }
 
-        console.log("PO not found — refreshing GoodsReceipt page");
-
-        // go back to Operator Home
-        await driver.back();
-
-        await browser.pause(2000);
-
-        // reopen GoodsReceipt
-        await operatorHomePage.clickTile("GoodsReceipt");
-
-        await browser.pause(5000);
-    }
-
-    if (!found) {
-        throw new Error(`❌ PO ${poNumber} not found after refreshing GoodsReceipt`);
+        if (!found) {
+            throw new Error(`❌ PO ${poNumber} not found after refreshing GoodsReceipt`);
+        }
     }
 }
-}
-
 
 export default new GoodsReceiptListPage();
