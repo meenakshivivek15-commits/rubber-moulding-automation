@@ -131,9 +131,9 @@ export const config: Options.Testrunner = {
     ],
 
     mochaOpts: {
-  ui: 'bdd',
-  timeout: 600000
-}
+        ui: 'bdd',
+        timeout: 300000
+    },
 
     // ======================
     // HOOKS
@@ -159,29 +159,22 @@ export const config: Options.Testrunner = {
     },
 
     afterTest: async function (_test, _context, result: any) {
+        if (result.error) {
+            try {
+                if (browser.sessionId) {
+                    const screenshot = await browser.takeScreenshot()
+                    const fs = require('fs')
+                    const screenshotPath = `./errorShots/error-${Date.now()}.png`
 
-    if (result.error) {
-        try {
-
-            if (browser.sessionId) {
-
-                const screenshot = await browser.takeScreenshot();
-
-                const fs = require('fs');
-                const path = `./errorShots/error-${Date.now()}.png`;
-
-                fs.writeFileSync(path, screenshot, 'base64');
-
-                console.log(`Screenshot saved: ${path}`);
-
-            } else {
-                console.log('Skipping screenshot: no active browser session.');
+                    fs.writeFileSync(screenshotPath, screenshot, 'base64')
+                    console.log(`Screenshot saved: ${screenshotPath}`)
+                } else {
+                    console.log('Skipping screenshot: no active browser session.')
+                }
+            } catch (error) {
+                console.log('Skipping screenshot due to session or transport error:', error)
             }
-
-        } catch (error) {
-            console.log('Skipping screenshot due to session or transport error:', error);
         }
     }
 }
-        }
-    
+
