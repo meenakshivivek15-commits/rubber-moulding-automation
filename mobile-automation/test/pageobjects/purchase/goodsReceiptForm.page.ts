@@ -5,14 +5,17 @@ class GoodsReceiptFormPage extends BasePage {
     get locationDropdown() {
         return $('select');
     }
+    get poInput() {
+        return $('input[type="text"]');
+    }
 
-    get invoiceLabelDate() {
+    /*get invoiceLabelDate() {
         return $('ion-datetime .datetime-text');
     }
 
     get dateComponent() {
         return $('ion-datetime');
-    }
+    }*/
 
     get pinInput() {
         return $('input[type="number"]');
@@ -45,6 +48,21 @@ class GoodsReceiptFormPage extends BasePage {
 
         console.log(`📍 Location selected: ${location}`);
     }
+    async fillPoFromLabel() {
+
+    const poLabel = await $('//*[contains(text(),"PO/Invoice Ref")]/following::*[contains(text(),"LP")]');
+    const poInput = await $('input[name*="po"]');
+
+    await poLabel.waitForDisplayed({ timeout: 20000 });
+
+    const poValue = (await poLabel.getText()).trim();
+
+    console.log("PO from label:", poValue);
+
+    await poInput.setValue(poValue);
+
+    console.log("PO copied to input");
+}
 async enableInvoiceDate() {
 
     await this.switchToWebView();
