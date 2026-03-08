@@ -13,6 +13,7 @@ import mobileData from '../../data/goodsReceiptData.json';
 
 const runtimePath = 'runtime/runtimeData.json';
 const operatorAppId = 'com.ppaoperator.app';
+const runtime = readJson(runtimePath);
 
 describe('Goods Receipt Flow', () => {
 
@@ -50,8 +51,7 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
     allure.addFeature('Purchase Process');
     allure.addStory('Goods Receipt Flow');
 
-    const runtime = readJson(runtimePath);
-
+    
     // ================= STEP 1 =================
 
     console.log("STEP 1: Navigate to GoodsReceipt module");
@@ -81,6 +81,9 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
     // Fill PO number
     await goodsReceiptFormPage.enterPoNumber(runtimeData.poNumber);
+    await goodsReceiptFormPage.copyInvoiceDateFromLabel();
+
+    await goodsReceiptFormPage.copyQuantityFromLabel();
 
     // Enter PIN
     await goodsReceiptFormPage.enterPin(mobileData.pin);
@@ -96,19 +99,28 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
     // ================= STEP 6 =================
 
-    console.log("STEP 6: Capture success toast");
+   console.log("STEP 5: Submit Goods Receipt");
+
+await goodsReceiptFormPage.submit();
+
+console.log("STEP 6: Capture success toast");
 
 const toast = await $('ion-toast');
 
-await browser.waitUntil(async () => {
-    return await toast.isDisplayed();
-}, { timeout: 5000 });
+await toast.waitForExist({ timeout: 20000 });
+await toast.waitForDisplayed({ timeout: 20000 });
 
 const toastText = await toast.getText();
 
 console.log("Toast message:", toastText);
 
-/* Capture GRN time + date */
+if (!toastText.includes("Updated")) {
+    throw new Error(`Goods Receipt failed. Toast message: ${toastText}`);
+}
+
+console.log("✅ Goods Receipt success toast validated");
+
+
 const now = new Date();
 
 runtime.grnDate = now.toLocaleDateString("en-GB");
@@ -122,7 +134,6 @@ writeJson(runtimePath, runtime);
 
 console.log("Captured GRN Date:", runtime.grnDate);
 console.log("Captured GRN Time:", runtime.grnTime);
-
 await expect(toast).toBeDisplayed({ wait: 5000 });
 
 console.log("✅ Goods Receipt completed successfully");
