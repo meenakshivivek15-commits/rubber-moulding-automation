@@ -1,6 +1,6 @@
 {
   "TC_A4": {
-    "taxRate": 5,
+    "taxRate": 12,
     "calculateIGST": true,
     "roundOff": 2
   }
