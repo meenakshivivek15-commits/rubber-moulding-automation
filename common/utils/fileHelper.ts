@@ -17,11 +17,12 @@ export function readJson(relativePath: string) {
 export function writeJson(relativePath: string, data: any) {
   const fullPath = path.resolve(__dirname, '../test-data', relativePath);
 
-  // Ensure directory exists
   const dir = path.dirname(fullPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
   fs.writeFileSync(fullPath, JSON.stringify(data, null, 2));
+
+  console.log("JSON written to:", fullPath);
 }

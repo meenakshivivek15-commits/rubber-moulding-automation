@@ -26,25 +26,42 @@ export class RMQualityCheckPage extends ApprovalBasePage {
 
 
   // ================= OPEN LATEST GRN (MOST STABLE METHOD) =================
-async openNewlyCreatedGRN(runtime: { grnDate: string }): Promise<string> {
+async openNewlyCreatedGRN(runtime: {
+  supplier: string;
+  rmName: string;
+  grnTime: string;
+}): Promise<string> {
 
-  const row = this.page.locator('ion-row', {
-    has: this.page.locator('ion-col', { hasText: runtime.grnDate })
-  }).first();
+  const rows = this.page.locator('ion-row');
+  const count = await rows.count();
 
-  await row.waitFor({ timeout: 20000 });
+  for (let i = 0; i < count; i++) {
 
-  const grnId = await row.locator('ion-col').first().textContent();
+    const row = rows.nth(i);
 
-  if (!grnId) {
-    throw new Error('GRN ID not found');
+    const supplier = await row.locator('ion-col').nth(2).textContent();
+    const rmName = await row.locator('ion-col').nth(3).textContent();
+    const time = await row.locator('ion-col').nth(4).textContent();
+
+    if (
+      supplier?.includes(runtime.supplier) &&
+      rmName?.includes(runtime.rmName) &&
+      time?.includes(runtime.grnTime)
+    ) {
+
+      const grnId = await row.locator('ion-col').first().textContent();
+
+      if (!grnId) throw new Error("GRN ID not found");
+
+      console.log("Matched GRN:", grnId);
+
+      await row.click();
+
+      return grnId.trim();
+    }
   }
 
-  console.log("Opening GRN:", grnId);
-
-  await row.click();
-
-  return grnId.trim();
+  throw new Error("Matching GRN record not found");
 }
 
 

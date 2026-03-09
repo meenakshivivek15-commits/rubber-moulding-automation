@@ -13,9 +13,9 @@ test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const rmQC = new RMQualityCheckPage(page);
   const sideMenu = new SideMenuPage(page);
-
-  // ================= READ RUNTIME =================
   const runtime = readJson(runtimePath);
+  // ================= READ RUNTIME =================
+  
   console.log("Runtime loaded:", runtime);
   console.log("GRN Date:", runtime.grnDate);
   console.log("GRN Time:", runtime.grnTime);

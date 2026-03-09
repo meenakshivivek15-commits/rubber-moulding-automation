@@ -15,12 +15,12 @@ import { waitForElement } from '../../../utils/waitUtils';
 import { ensureWebView } from '../../../utils/contextManager';
 const runtimePath = 'runtime/runtimeData.json';
 const operatorAppId = 'com.ppaoperator.app';
-const runtime = readJson(runtimePath);
 
 describe('Goods Receipt Flow', () => {
 
 
 before(async () => {
+    
 
     console.log("========= FRESH START =========");
 
@@ -52,8 +52,9 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
 
     allure.addFeature('Purchase Process');
     allure.addStory('Goods Receipt Flow');
+    const runtime = readJson(runtimePath);
+    console.log("Runtime loaded:", runtime);
 
-    
     // ================= STEP 1 =================
 
     console.log("STEP 1: Navigate to GoodsReceipt module");
@@ -108,7 +109,6 @@ console.log("STEP 6: Capture success toast");
 const toastText = await verifyToast("Updated");
 
 console.log("Toast message:", toastText);
-
 console.log("✅ Goods Receipt success toast validated");
 
 const now = new Date();
@@ -117,7 +117,8 @@ runtime.grnDate = now.toLocaleDateString("en-GB");
 
 runtime.grnTime = now.toLocaleTimeString("en-GB", {
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    second: "2-digit"
 });
 
 writeJson(runtimePath, runtime);
