@@ -3,10 +3,11 @@ import { LoginPage } from '../../../../pages/login.page';
 import { SideMenuPage } from '../../../../pages/SideMenuPage';
 import { RMQualityCheckPage } from '../../../../pages/Planner/purchase/Approval/rmQualityCheck.page';
 import { readJson, writeJson } from '../../../../../common/utils/fileHelper';
+import { verifyWebToast } from '../../../../Utils/toastUtils';
 
- const runtimePath = 'runtime/runtimeData.json';
 
- 
+  const runtimePath = 'runtime/runtimeData.json';
+
 
 test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
 
@@ -37,8 +38,7 @@ test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
   // ================= OPEN LATEST GRN =================
   const grnId = await rmQC.openNewlyCreatedGRN(runtime);
 
-  console.log('Captured GRN ID:', grnId);
-
+  await verifyWebToast(page, `GRN ${grnId}`);
   // ================= SAVE GRN TO RUNTIME =================
   runtime.grnId = grnId;
 

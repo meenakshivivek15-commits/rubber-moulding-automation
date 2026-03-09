@@ -2,15 +2,16 @@ import { Page, expect } from '@playwright/test';
 
 export async function verifyWebToast(
   page: Page,
-  expectedText: string,
-  selector: string = 'ion-toast'
+  expectedText: string
 ) {
 
-  const toast = page.locator(selector);
+  const toast = page.locator('ion-toast');
 
+  // wait for toast to appear
   await expect(toast).toBeVisible({ timeout: 15000 });
 
-  const message = await toast.textContent();
+  // capture the real message from UI
+  const message = await toast.locator('.toast-message').textContent();
 
   console.log('Web Toast message:', message);
 
