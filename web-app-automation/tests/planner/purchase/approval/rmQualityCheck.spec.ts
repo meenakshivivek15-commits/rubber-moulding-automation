@@ -4,7 +4,7 @@ import { SideMenuPage } from '../../../../pages/SideMenuPage';
 import { RMQualityCheckPage } from '../../../../pages/Planner/purchase/Approval/rmQualityCheck.page';
 import { readJson, writeJson } from '../../../../../common/utils/fileHelper';
 
-const runtimePath = 'runtime/runtimeData.json';
+ const runtimePath = 'common/test-data/runtime/runtimeData.json';
 
 test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
 
@@ -14,7 +14,10 @@ test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
 
   // ================= READ RUNTIME =================
   const runtime = readJson(runtimePath);
-
+  console.log("Runtime loaded:", runtime);
+  console.log("GRN Date:", runtime.grnDate);
+  console.log("GRN Time:", runtime.grnTime);
+  console.log("PO Number:", runtime.poNumber);
   // ================= LOGIN =================
   await loginPage.open();
   await loginPage.login();
@@ -30,7 +33,7 @@ test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
   await page.waitForTimeout(5000);
 
   // ================= OPEN LATEST GRN =================
-  const grnId = await rmQC.openNewlyCreatedGRN();
+  const grnId = await rmQC.openNewlyCreatedGRN(runtime);
 
   console.log('Captured GRN ID:', grnId);
 

@@ -26,8 +26,8 @@ export class RMQualityCheckPage extends ApprovalBasePage {
 
 
   // ================= OPEN LATEST GRN (MOST STABLE METHOD) =================
- async openNewlyCreatedGRN(runtime): Promise<string> {
-
+async openNewlyCreatedGRN(runtime: { grnDate: string }): Promise<string> {
+  
   const row = this.page.locator('tr', {
     has: this.page.locator('td', { hasText: runtime.grnDate })
   }).first();
