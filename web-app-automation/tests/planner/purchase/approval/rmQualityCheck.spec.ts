@@ -37,9 +37,10 @@ test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
 
   // ================= OPEN LATEST GRN =================
   const grnId = await rmQC.openNewlyCreatedGRN(runtime);
-  const bodyText = await page.textContent('body');
-  console.log("PAGE TEXT:", bodyText);
-  await verifyWebToast(page, 'Approval');
+  await Promise.all([
+  verifyWebToast(page, 'Approval'),
+  rmQC.submit()
+]);
   // ================= SAVE GRN TO RUNTIME =================
   runtime.grnId = grnId;
 
