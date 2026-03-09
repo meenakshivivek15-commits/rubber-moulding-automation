@@ -4,8 +4,10 @@ import { SideMenuPage } from '../../../../pages/SideMenuPage';
 import { RMQualityCheckPage } from '../../../../pages/Planner/purchase/Approval/rmQualityCheck.page';
 import { readJson, writeJson } from '../../../../../common/utils/fileHelper';
 import { verifyWebToast } from '../../../../Utils/toastUtils';
+import rmQCData from '../../../../../common/test-data/purchase/rmQualityCheck.json';
 
 const runtimePath = 'runtime/runtimeData.json';
+const data = rmQCData.TC_A3;
 
 test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
 
@@ -32,19 +34,17 @@ test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
   await rmQC.openRMQualityCheckCard();
   await rmQC.waitForGRNList();
 
-  // Small backend buffer (important for async DB update)
-  await page.waitForTimeout(5000);
-
+  
   // ================= OPEN LATEST GRN =================
   const grnId = await rmQC.openNewlyCreatedGRN(runtime);
 
   // ================= FILL MANDATORY FIELDS =================
   await rmQC.fillMandatoryFields(
-    'AUTO_CERT_001',
-    'tests/testFiles/sample.pdf'
+    data.testCertRef,
+    data.filePath
   );
 
-  // ================= SUBMIT + VERIFY TOAST =================
+  // ================= SUBMIT + VERIFY =================
   await Promise.all([
     verifyWebToast(page, 'Approval'),
     rmQC.submit()
