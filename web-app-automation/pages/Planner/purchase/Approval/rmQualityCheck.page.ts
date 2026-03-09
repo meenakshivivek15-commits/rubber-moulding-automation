@@ -51,7 +51,7 @@ console.log("Searching GRN with date:", uiDate);
 
   console.log("Rows found:", count);
 
-  for (let i = 1; i < count; i++) {
+  for (let i = 0; i < count; i++) {
 
     const row = rows.nth(i);
 

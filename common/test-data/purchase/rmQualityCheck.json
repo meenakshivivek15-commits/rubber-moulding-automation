@@ -2,6 +2,6 @@
   "TC_A3": {
     "grnId": "25-0091",
     "testCertRef": "REF001",
-    "filePath": "tests/testfiles/sample.pdf"
+    "filePath": "tests/testFiles/sample.pdf"
   }
 }
