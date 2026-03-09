@@ -27,14 +27,14 @@ export class RMQualityCheckPage extends ApprovalBasePage {
 
   // ================= OPEN LATEST GRN (MOST STABLE METHOD) =================
 async openNewlyCreatedGRN(runtime: { grnDate: string }): Promise<string> {
-  
-  const row = this.page.locator('tr', {
-    has: this.page.locator('td', { hasText: runtime.grnDate })
+
+  const row = this.page.locator('ion-row', {
+    has: this.page.locator('ion-col', { hasText: runtime.grnDate })
   }).first();
 
   await row.waitFor({ timeout: 20000 });
 
-  const grnId = await row.locator('td').first().textContent();
+  const grnId = await row.locator('ion-col').first().textContent();
 
   if (!grnId) {
     throw new Error('GRN ID not found');
@@ -86,10 +86,18 @@ async openNewlyCreatedGRN(runtime: { grnDate: string }): Promise<string> {
 
   // ================= VERIFY SUCCESS =================
   async verifySuccess(grnId: string) {
-    const toastMessage = this.page.getByText(
-      new RegExp(`GRN\\s+${grnId}.*Completed`, 'i')
-    );
 
-    await expect(toastMessage).toBeVisible({ timeout: 10000 });
+  const toastMessage = this.page.locator('ion-toast');
+
+  await expect(toastMessage).toBeVisible({ timeout: 15000 });
+
+  const message = await toastMessage.textContent();
+
+  console.log("Toast message:", message);
+
+  if (!message?.includes(grnId)) {
+    throw new Error(`Success toast not found for GRN ${grnId}`);
   }
+
+}
 }

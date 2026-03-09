@@ -10,7 +10,9 @@ import { readJson, writeJson } from '../../../../common/utils/fileHelper';
 
 import runtimeData from '../../../../common/test-data/runtime/runtimeData.json';
 import mobileData from '../../data/goodsReceiptData.json';
-
+import { verifyToast } from '../../../utils/toastUtils';
+import { waitForElement } from '../../../utils/waitUtils';
+import { ensureWebView } from '../../../utils/contextManager';
 const runtimePath = 'runtime/runtimeData.json';
 const operatorAppId = 'com.ppaoperator.app';
 const runtime = readJson(runtimePath);
@@ -26,7 +28,7 @@ before(async () => {
     await driver.activateApp(operatorAppId);
 
     console.log("Waiting for WebView...");
-    await operatorHomePage.ensureWebView(90000);
+    await ensureWebView();
 
     console.log("Waiting for dashboard tiles...");
 
@@ -91,33 +93,23 @@ it(`should submit goods receipt for ${mobileData.location}`, async function () {
     runtime.grnStartTime = new Date().toISOString();
     writeJson(runtimePath, runtime);
 
-    // ================= STEP 5 =================
+   // ================= STEP 5 =================
 
     console.log("STEP 5: Submit Goods Receipt");
+
     console.log("Checking form values before submit...");
+
     await goodsReceiptFormPage.submit();
 
-    // ================= STEP 6 =================
-
-   
+   // ================= STEP 6 =================
 
 console.log("STEP 6: Capture success toast");
 
-const toast = await $('ion-toast');
-
-await toast.waitForExist({ timeout: 20000 });
-await toast.waitForDisplayed({ timeout: 20000 });
-
-const toastText = await toast.getText();
+const toastText = await verifyToast("Updated");
 
 console.log("Toast message:", toastText);
 
-if (!toastText.includes("Updated")) {
-    throw new Error(`Goods Receipt failed. Toast message: ${toastText}`);
-}
-
 console.log("✅ Goods Receipt success toast validated");
-
 
 const now = new Date();
 
@@ -132,7 +124,6 @@ writeJson(runtimePath, runtime);
 
 console.log("Captured GRN Date:", runtime.grnDate);
 console.log("Captured GRN Time:", runtime.grnTime);
-await expect(toast).toBeDisplayed({ wait: 5000 });
 
 console.log("✅ Goods Receipt completed successfully");
 

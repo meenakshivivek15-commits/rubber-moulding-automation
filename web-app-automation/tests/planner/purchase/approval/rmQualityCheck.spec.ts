@@ -4,7 +4,9 @@ import { SideMenuPage } from '../../../../pages/SideMenuPage';
 import { RMQualityCheckPage } from '../../../../pages/Planner/purchase/Approval/rmQualityCheck.page';
 import { readJson, writeJson } from '../../../../../common/utils/fileHelper';
 
- const runtimePath = 'common/test-data/runtime/runtimeData.json';
+ const runtimePath = 'runtime/runtimeData.json';
+
+ 
 
 test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
 
@@ -39,7 +41,10 @@ test('TC_A3 - RM Quality Check (Dynamic Runtime)', async ({ page }) => {
 
   // ================= SAVE GRN TO RUNTIME =================
   runtime.grnId = grnId;
+
   writeJson(runtimePath, runtime);
+
+  console.log("Runtime updated with GRN ID:", runtime.grnId);
 
   // ================= FILL FORM =================
   await rmQC.fillMandatoryFields(

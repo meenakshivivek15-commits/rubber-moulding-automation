@@ -4,7 +4,7 @@ import path from 'path';
 // ================= READ JSON =================
 export function readJson(relativePath: string) {
   const fullPath = path.resolve(__dirname, '../test-data', relativePath);
-
+  console.log("Reading JSON from:", fullPath);   // 👈 ADD THIS LINE
   if (!fs.existsSync(fullPath)) {
     throw new Error(`JSON file not found: ${fullPath}`);
   }
