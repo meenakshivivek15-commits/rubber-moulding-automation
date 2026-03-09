@@ -121,15 +121,31 @@ export class BillPassingPage {
     console.log('IGST:', totalTax);
 
     // =====================================================
-    // ENTER IGST (manual workflow)
+    // DETECT WHICH TAX FIELD IS ACTIVE
     // =====================================================
-    await expect(igstField).toBeVisible({ timeout: 20000 });
 
-    await igstField.fill('');
-    await igstField.type(totalTax.toFixed(2));
-    await igstField.evaluate(el => el.blur());
+    const igstClass = await igstField.getAttribute('class');
 
-    console.log('IGST entered and blur triggered');
+    if (!igstClass?.includes('invisible_text')) {
+
+      console.log('Using IGST field');
+
+      await igstField.fill('');
+      await igstField.type(totalTax.toFixed(2));
+      await igstField.evaluate(el => el.blur());
+
+    } else {
+
+      console.log('Using CGST + SGST fields');
+
+      await cgstField.fill('');
+      await cgstField.type(halfTax.toFixed(2));
+      await cgstField.evaluate(el => el.blur());
+
+      await sgstField.fill('');
+      await sgstField.type(halfTax.toFixed(2));
+      await sgstField.evaluate(el => el.blur());
+    }
 
     // =====================================================
     // WAIT FOR GRAND TOTAL UPDATE
