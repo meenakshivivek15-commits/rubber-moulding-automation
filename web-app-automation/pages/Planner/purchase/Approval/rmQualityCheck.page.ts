@@ -26,45 +26,41 @@ export class RMQualityCheckPage extends ApprovalBasePage {
 
 
   // ================= OPEN LATEST GRN (MOST STABLE METHOD) =================
-async openNewlyCreatedGRN(runtime: {
-  supplier: string;
-  rmName: string;
-  grnTime: string;
-}): Promise<string> {
+async openNewlyCreatedGRN(runtime: any): Promise<string> {
 
-  const rows = this.page.locator('ion-row');
+  const rows = this.page.locator('tbody tr');
   const count = await rows.count();
+
+  console.log("Rows found:", count);
 
   for (let i = 0; i < count; i++) {
 
     const row = rows.nth(i);
 
-    const supplier = await row.locator('ion-col').nth(2).textContent();
-    const rmName = await row.locator('ion-col').nth(3).textContent();
-    const time = await row.locator('ion-col').nth(4).textContent();
+    const date = await row.locator('td').nth(1).textContent();
+    const supplier = await row.locator('td').nth(2).textContent();
+    const rmName = await row.locator('td').nth(3).textContent();
+    const qty = await row.locator('td').nth(4).textContent();
 
     if (
+      date?.includes(runtime.grnDate) &&
       supplier?.includes(runtime.supplier) &&
       rmName?.includes(runtime.rmName) &&
-      time?.includes(runtime.grnTime)
+      qty?.includes(runtime.quantity)
     ) {
 
-      const grnId = await row.locator('ion-col').first().textContent();
-
-      if (!grnId) throw new Error("GRN ID not found");
+      const grnId = await row.locator('td').nth(0).textContent();
 
       console.log("Matched GRN:", grnId);
 
-      await row.click();
+      await row.locator('td').nth(0).click();
 
-      return grnId.trim();
+      return grnId?.trim() || "";
     }
   }
 
   throw new Error("Matching GRN record not found");
 }
-
-
 
   // ================= FILL MANDATORY FIELDS =================
   async fillMandatoryFields(testCertRefValue: string, fileRelativePath: string) {
