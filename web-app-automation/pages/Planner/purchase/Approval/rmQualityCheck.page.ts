@@ -28,6 +28,13 @@ export class RMQualityCheckPage extends ApprovalBasePage {
   // ================= OPEN LATEST GRN (MOST STABLE METHOD) =================
 async openNewlyCreatedGRN(runtime: any): Promise<string> {
 
+  // Ensure page is fully refreshed so the latest GRN appears
+  await this.page.reload();
+  await this.page.waitForLoadState('networkidle');
+
+  // Wait until table rows are present
+  await this.page.waitForSelector('tbody tr', { timeout: 30000 });
+
   const rows = this.page.locator('tbody tr');
   const count = await rows.count();
 
@@ -41,6 +48,8 @@ async openNewlyCreatedGRN(runtime: any): Promise<string> {
     const supplier = await row.locator('td').nth(2).textContent();
     const rmName = await row.locator('td').nth(3).textContent();
     const qty = await row.locator('td').nth(4).textContent();
+
+    console.log("Checking row:", date, supplier, rmName, qty);
 
     if (
       date?.includes(runtime.grnDate) &&
