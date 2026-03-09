@@ -62,13 +62,7 @@ console.log("Searching GRN with date:", uiDate);
 
     console.log("Checking row:", date, supplier, rmName, qty);
 
-    if (
-      date?.includes(uiDate) &&
-      supplier?.includes(runtime.supplier) &&
-      rmName?.includes(runtime.rmName) &&
-      qty?.includes(runtime.quantity)
-    ) {
-
+   if (date?.includes(uiDate)) {
       const grnId = await row.locator('ion-col').first().textContent();
 
       console.log("Matched GRN:", grnId);
