@@ -28,14 +28,25 @@ export class RMQualityCheckPage extends ApprovalBasePage {
   // ================= OPEN LATEST GRN (MOST STABLE METHOD) =================
 async openNewlyCreatedGRN(runtime: any): Promise<string> {
 
-  // Ensure page is fully refreshed so the latest GRN appears
+  // Convert runtime date to UI format (09-Mar-2026)
+  const uiDate = new Date(runtime.grnDate)
+    .toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    })
+    .replace(/ /g, '-');
+
+  console.log("Searching GRN with date:", uiDate);
+
+  // Refresh page so latest GRN appears
   await this.page.reload();
   await this.page.waitForLoadState('networkidle');
 
-  // Wait until table rows are present
-  await this.page.waitForSelector('tbody tr', { timeout: 30000 });
+  // Wait for Ionic rows to appear
+  await this.page.waitForSelector('ion-row', { timeout: 30000 });
 
-  const rows = this.page.locator('tbody tr');
+  const rows = this.page.locator('ion-row');
   const count = await rows.count();
 
   console.log("Rows found:", count);
@@ -44,25 +55,25 @@ async openNewlyCreatedGRN(runtime: any): Promise<string> {
 
     const row = rows.nth(i);
 
-    const date = await row.locator('td').nth(1).textContent();
-    const supplier = await row.locator('td').nth(2).textContent();
-    const rmName = await row.locator('td').nth(3).textContent();
-    const qty = await row.locator('td').nth(4).textContent();
+    const date = await row.locator('ion-col').nth(1).textContent();
+    const supplier = await row.locator('ion-col').nth(2).textContent();
+    const rmName = await row.locator('ion-col').nth(3).textContent();
+    const qty = await row.locator('ion-col').nth(4).textContent();
 
     console.log("Checking row:", date, supplier, rmName, qty);
 
     if (
-      date?.includes(runtime.grnDate) &&
+      date?.includes(uiDate) &&
       supplier?.includes(runtime.supplier) &&
       rmName?.includes(runtime.rmName) &&
       qty?.includes(runtime.quantity)
     ) {
 
-      const grnId = await row.locator('td').nth(0).textContent();
+      const grnId = await row.locator('ion-col').first().textContent();
 
       console.log("Matched GRN:", grnId);
 
-      await row.locator('td').nth(0).click();
+      await row.click();
 
       return grnId?.trim() || "";
     }
@@ -70,7 +81,6 @@ async openNewlyCreatedGRN(runtime: any): Promise<string> {
 
   throw new Error("Matching GRN record not found");
 }
-
   // ================= FILL MANDATORY FIELDS =================
   async fillMandatoryFields(testCertRefValue: string, fileRelativePath: string) {
 
