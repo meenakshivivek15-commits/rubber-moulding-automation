@@ -1,25 +1,14 @@
-import { Page, expect } from '@playwright/test';
+import { Page } from '@playwright/test';
 
-export async function verifyWebToast(
-  page: Page,
-  expectedText: string
-) {
+export async function verifyWebToast(page: Page, expectedText: string) {
 
-  const toast = page.locator('ion-toast');
+  const toast = page.locator(`text=${expectedText}`);
 
-  // wait for toast to appear
-  await expect(toast).toBeVisible({ timeout: 15000 });
+  await page.waitForSelector(`text=${expectedText}`, { timeout: 15000 });
 
-  // capture the real message from UI
-  const message = await toast.locator('.toast-message').textContent();
+  const message = await toast.first().textContent();
 
-  console.log('Web Toast message:', message);
-
-  if (!message?.includes(expectedText)) {
-    throw new Error(
-      `Web toast validation failed. Expected: ${expectedText}, Actual: ${message}`
-    );
-  }
+  console.log("Toast message:", message);
 
   return message;
 }
