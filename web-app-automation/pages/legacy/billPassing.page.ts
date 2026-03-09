@@ -40,7 +40,7 @@ export class BillPassingPage {
   }
 
   // =========================================================
-  // CONFIRM POPUP (FINAL VALIDATED VERSION)
+  // CONFIRM POPUP
   // =========================================================
   async confirmPopup(
     taxRate: string = '18',
@@ -61,6 +61,7 @@ export class BillPassingPage {
     const basicAmountField = this.page.locator('#grn_invAmount');
     const cgstField = this.page.locator('#grn_cgstval');
     const sgstField = this.page.locator('#grn_sgstval');
+    const igstField = this.page.locator('#grn_igstval');
     const grandTotal = this.page.locator('#grn_grandtotal');
 
     // =====================================================
@@ -89,6 +90,7 @@ export class BillPassingPage {
     // SELECT TAX RATE
     // =====================================================
     await taxDropdown.selectOption({ label: taxRate });
+
     console.log(`Tax rate selected: ${taxRate}%`);
 
     // =====================================================
@@ -107,33 +109,27 @@ export class BillPassingPage {
     console.log('Base Amount:', baseAmount);
 
     // =====================================================
-    // CALCULATE CGST + SGST
+    // CALCULATE TAX
     // =====================================================
     const rate = parseFloat(taxRate);
-    const totalTax = (baseAmount * rate) / 100;
+    const totalTax = parseFloat(((baseAmount * rate) / 100).toFixed(2));
     const halfTax = parseFloat((totalTax / 2).toFixed(2));
 
-    console.log('Total Tax:', totalTax.toFixed(2));
+    console.log('Total Tax:', totalTax);
     console.log('CGST:', halfTax);
     console.log('SGST:', halfTax);
+    console.log('IGST:', totalTax);
 
     // =====================================================
-    // ENTER CGST WITH BLUR
+    // ENTER IGST (manual workflow)
     // =====================================================
-    await cgstField.click();
-    await cgstField.fill('');
-    await cgstField.type(halfTax.toString());
-    await cgstField.evaluate(el => el.blur());
-    console.log('CGST entered and blur triggered');
+    await expect(igstField).toBeVisible({ timeout: 20000 });
 
-    // =====================================================
-    // ENTER SGST WITH BLUR
-    // =====================================================
-    await sgstField.click();
-    await sgstField.fill('');
-    await sgstField.type(halfTax.toString());
-    await sgstField.evaluate(el => el.blur());
-    console.log('SGST entered and blur triggered');
+    await igstField.fill('');
+    await igstField.type(totalTax.toFixed(2));
+    await igstField.evaluate(el => el.blur());
+
+    console.log('IGST entered and blur triggered');
 
     // =====================================================
     // WAIT FOR GRAND TOTAL UPDATE
@@ -149,10 +145,10 @@ export class BillPassingPage {
     );
 
     // =====================================================
-    // FINANCIAL VALIDATION (MANDATORY)
+    // FINANCIAL VALIDATION
     // =====================================================
     const expectedTotal = parseFloat(
-      (baseAmount + halfTax + halfTax).toFixed(2)
+      (baseAmount + totalTax).toFixed(2)
     );
 
     console.log('Expected Total:', expectedTotal);
@@ -161,12 +157,14 @@ export class BillPassingPage {
     expect(actualTotal).toBeCloseTo(expectedTotal, 2);
 
     // =====================================================
-    // HANDLE JS ALERT (OPTIONAL VALIDATION)
+    // HANDLE JS ALERT
     // =====================================================
     let alertTriggered = false;
 
     this.page.once('dialog', async dialog => {
+
       alertTriggered = true;
+
       const message = dialog.message();
 
       console.log('JS Alert detected:', message);
@@ -188,6 +186,7 @@ export class BillPassingPage {
       .first();
 
     await expect(approveBtn).toBeVisible({ timeout: 20000 });
+
     await approveBtn.click();
 
     console.log('Popup Approve clicked');
@@ -213,6 +212,7 @@ export class BillPassingPage {
       .first();
 
     await expect(okBtn).toBeVisible({ timeout: 20000 });
+
     await okBtn.click();
 
     console.log('Final OK clicked');
