@@ -29,16 +29,16 @@ export class RMQualityCheckPage extends ApprovalBasePage {
 async openNewlyCreatedGRN(runtime: any): Promise<string> {
 
   // Convert runtime date to UI format (09-Mar-2026)
-  const uiDate = new Date(runtime.grnDate)
-    .toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    })
-    .replace(/ /g, '-');
+const [day, month, year] = runtime.grnDate.split('/');
 
-  console.log("Searching GRN with date:", uiDate);
+const monthNames = [
+  'Jan','Feb','Mar','Apr','May','Jun',
+  'Jul','Aug','Sep','Oct','Nov','Dec'
+];
 
+const uiDate = `${day}-${monthNames[Number(month)-1]}-${year}`;
+
+console.log("Searching GRN with date:", uiDate);
   // Refresh page so latest GRN appears
   await this.page.reload();
   await this.page.waitForLoadState('networkidle');
@@ -51,7 +51,7 @@ async openNewlyCreatedGRN(runtime: any): Promise<string> {
 
   console.log("Rows found:", count);
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 1; i < count; i++) {
 
     const row = rows.nth(i);
 
