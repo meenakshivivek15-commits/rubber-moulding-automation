@@ -58,11 +58,9 @@ export class BillPassingPage {
     // ================= LOCATORS =================
     const hsnField = this.page.locator('#grn_hsncode');
     const taxDropdown = this.page.locator('#grn_taxrate');
-    // wait until dropdown options load
-    await this.page.waitForFunction(() => {
-    const select = document.querySelector('#grn_taxrate') as HTMLSelectElement;
-    return select && select.options.length > 1;
-  });
+   // wait until dropdown options load
+    await this.page.waitForSelector('#grn_taxrate option:nth-child(2)', { timeout: 20000 });
+
 
     // use default if taxRate undefined
     taxRate = taxRate || '18';
