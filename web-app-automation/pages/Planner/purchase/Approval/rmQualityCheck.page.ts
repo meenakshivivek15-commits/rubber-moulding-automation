@@ -76,31 +76,50 @@ console.log("Searching GRN with date:", uiDate);
   throw new Error("Matching GRN record not found");
 }
   // ================= FILL MANDATORY FIELDS =================
-  async fillMandatoryFields(testCertRefValue: string, fileRelativePath: string) {
+async fillMandatoryFields(testCertRefValue: string, fileRelativePath: string) {
 
-    const absolutePath = path.resolve(process.cwd(), fileRelativePath);
+  const absolutePath = path.resolve(process.cwd(), fileRelativePath);
 
-    console.log('Uploading file from:', absolutePath);
+  console.log('Uploading file from:', absolutePath);
 
-    const testCertRef = this.page
-      .locator('text=Test Cert. Ref:')
-      .locator('xpath=following::input[1]');
+  // wait until form loads
+  await this.page.waitForLoadState('networkidle');
 
-    await testCertRef.scrollIntoViewIfNeeded();
-    await testCertRef.fill(testCertRefValue);
+  // ===== Test Cert Ref =====
+  const testCertLabel = this.page.locator('text=Test Cert. Ref:');
 
-    const testCertUpload = this.page
-      .locator('text=Test Cert. Upload:')
-      .locator('xpath=following::input[@type="file"][1]');
+  await testCertLabel.scrollIntoViewIfNeeded();
+  await testCertLabel.waitFor({ state: 'visible', timeout: 30000 });
 
-    await testCertUpload.setInputFiles(absolutePath);
+  const testCertRef = testCertLabel.locator('xpath=following::input[1]');
+  await testCertRef.fill(testCertRefValue);
 
-    const invoiceUpload = this.page
-      .locator('text=Invoice Upload:')
-      .locator('xpath=following::input[@type="file"][1]');
+  console.log('Test Cert Ref entered:', testCertRefValue);
 
-    await invoiceUpload.setInputFiles(absolutePath);
-  }
+
+  // ===== Test Cert Upload =====
+  const testCertUploadLabel = this.page.locator('text=Test Cert. Upload:');
+
+  await testCertUploadLabel.scrollIntoViewIfNeeded();
+  await testCertUploadLabel.waitFor({ state: 'visible', timeout: 30000 });
+
+  const testCertUpload = testCertUploadLabel.locator('xpath=following::input[@type="file"][1]');
+  await testCertUpload.setInputFiles(absolutePath);
+
+  console.log('Test Certificate uploaded');
+
+
+  // ===== Invoice Upload =====
+  const invoiceUploadLabel = this.page.locator('text=Invoice Upload:');
+
+  await invoiceUploadLabel.scrollIntoViewIfNeeded();
+  await invoiceUploadLabel.waitFor({ state: 'visible', timeout: 30000 });
+
+  const invoiceUpload = invoiceUploadLabel.locator('xpath=following::input[@type="file"][1]');
+  await invoiceUpload.setInputFiles(absolutePath);
+
+  console.log('Invoice uploaded');
+}
 
   // ================= CLICK SUBMIT =================
   async submit() {
