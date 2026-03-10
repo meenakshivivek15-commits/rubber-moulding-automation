@@ -86,7 +86,7 @@ export class BillPassingPage {
     // =====================================================
     // SELECT TAX RATE
     // =====================================================
-    await taxDropdown.selectOption({ label: taxRate });
+    await taxDropdown.selectOption({ label: String(taxRate) });
 
     console.log(`Tax rate selected: ${taxRate}%`);
 
