@@ -39,7 +39,7 @@ test('TC_A4 - Bill Passing (Dynamic Runtime)', async ({ page }) => {
 
   // ================= POPUP =================
   await billPassingPage.waitForBillPassingPopup();
-  await billPassingPage.confirmPopup(String(billData.taxRate));
+  await billPassingPage.confirmPopup(billData.taxRate);
   await billPassingPage.confirmFinalOk();
 
   // ================= VERIFY =================

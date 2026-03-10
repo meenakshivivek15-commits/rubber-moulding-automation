@@ -19,9 +19,15 @@ export class PlanBasePage extends BasePage {
 }
 
 async openPlanTile(tileName: string) {
-  const tile = this.page.getByText(tileName, { exact: true });
+
+  const tile = this.page
+    .locator('mat-card')
+    .filter({ hasText: tileName });
+
   await expect(tile).toBeVisible({ timeout: 60000 });
+
   await tile.click();
+
 }
 
 }

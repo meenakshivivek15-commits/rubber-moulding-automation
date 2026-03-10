@@ -43,7 +43,7 @@ export class BillPassingPage {
   // CONFIRM POPUP
   // =========================================================
   async confirmPopup(
-    taxRate: string = '18',
+    taxRate: string,
     expectAlert: boolean = false
   ) {
 
@@ -58,17 +58,6 @@ export class BillPassingPage {
     // ================= LOCATORS =================
     const hsnField = this.page.locator('#grn_hsncode');
     const taxDropdown = this.page.locator('#grn_taxrate');
-   // wait until dropdown options load
-    await this.page.waitForSelector('#grn_taxrate option:nth-child(2)', { timeout: 20000 });
-
-
-    // use default if taxRate undefined
-    taxRate = taxRate || '18';
-
-    // select tax
-    await taxDropdown.selectOption({ label: taxRate });
-
-    console.log(`Tax rate selected: ${taxRate}%`);
     const basicAmountField = this.page.locator('#grn_invAmount');
     const cgstField = this.page.locator('#grn_cgstval');
     const sgstField = this.page.locator('#grn_sgstval');
@@ -90,10 +79,7 @@ export class BillPassingPage {
     // WAIT FOR TAX DROPDOWN ENABLED
     // =====================================================
     await expect(taxDropdown).toBeVisible({ timeout: 20000 });
-
-    await expect.poll(async () => {
-      return await taxDropdown.isEnabled();
-    }, { timeout: 20000 }).toBe(true);
+    await expect(taxDropdown).toBeEnabled();
 
     console.log('Tax dropdown enabled');
 
@@ -134,7 +120,6 @@ export class BillPassingPage {
     // =====================================================
     // DETECT WHICH TAX FIELD IS ACTIVE
     // =====================================================
-
     const igstClass = await igstField.getAttribute('class');
 
     if (!igstClass?.includes('invisible_text')) {
