@@ -18,17 +18,9 @@ export class PlanBasePage extends BasePage {
   await this.page.waitForURL('**/Planhome', { timeout: 60000 });
 }
 
-async openPlanTile(tileName: string) {
-
-  await this.page.waitForLoadState('networkidle');
-
-  const tile = this.page.locator(`mat-card:has-text("${tileName}")`).first();
-
-  await expect(tile).toBeVisible({ timeout: 60000 });
-
-  await tile.click();
-
-  console.log(`${tileName} tile opened`);
-}
+async openPlanTile(tileName: string) { 
+const tile = this.page.getByText(tileName, { exact: true });
+ await expect(tile).toBeVisible({ timeout: 60000 }); 
+await tile.click(); }
 
 }
