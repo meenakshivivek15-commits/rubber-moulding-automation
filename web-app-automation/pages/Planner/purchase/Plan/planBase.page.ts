@@ -20,14 +20,15 @@ export class PlanBasePage extends BasePage {
 
 async openPlanTile(tileName: string) {
 
-  const tile = this.page
-    .locator('mat-card')
-    .filter({ hasText: tileName });
+  await this.page.waitForLoadState('networkidle');
+
+  const tile = this.page.locator(`mat-card:has-text("${tileName}")`).first();
 
   await expect(tile).toBeVisible({ timeout: 60000 });
 
   await tile.click();
 
+  console.log(`${tileName} tile opened`);
 }
 
 }
